@@ -1,4 +1,5 @@
 const moment = require('moment');
+const os = require('os');
 
 function isDate(value) {
     const formats = [
@@ -77,6 +78,7 @@ function tokenize(text) {
             i++;
             continue
         };
+
         if (char === '{' || char === '[') {
             let j = i + 1;
             let count = 1;
@@ -115,37 +117,55 @@ function tokenize(text) {
     return tokens;
 }
 
-function predictDataTypes(str) {
-    const types = {};
-    const parts = tokenize(str);
+function predictDataTypes(str, firstRowIsHeader = false) {
+    let header = "";
+    let data = str;
 
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i].trim();
+    if (firstRowIsHeader) {
+        let tmp = str.split(os.EOL);
+        if (tmp.length > 1) {
+            header = tmp[0].split(",");
+            data = tokenize(tmp[1]);
+        }else{
+            
+            return {};
+        }
+    } else {
+        data = tokenize(str);
+        header = data;
+    }
+    const types = {};
+
+    console.log(`header ${header}`)
+            console.log(`data ${data}`)
+
+    for (let i = 0; i < data.length; i++) {
+        const part = data[i].trim();
+        const field = header[i].trim();
 
         if (isBoolean(part)) {
-            types[part] = "boolean";
+            types[field] = "boolean";
         } else if (!isNaN(parseFloat(part)) && isFinite(part)) {
-            types[part] = "number";
+            types[field] = "number";
         } else if (isDate(part)) {
-            types[part] = "date";
+            types[field] = "date";
         } else if (isURL(part)) {
-            types[part] = "url";
+            types[field] = "url";
         } else if (isUUID(part)) {
-            types[part] = "uuid";
+            types[field] = "uuid";
         } else if (isPhoneNumber(part)) {
-            types[part] = "phone";
+            types[field] = "phone";
         } else if (isEmail(part)) {
-            types[part] = "email";
+            types[field] = "email";
         } else if (part.startsWith("[") && part.endsWith("]")) {
-            types[part] = "array";
+            types[field] = "array";
         } else if (part.startsWith("{") && part.endsWith("}")) {
-            types[part] = "object";
+            types[field] = "object";
         }
         else {
-            types[part] = "string";
+            types[field] = "string";
         }
     }
-    console.log(types);
     return types;
 
 }

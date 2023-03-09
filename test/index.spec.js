@@ -3,6 +3,7 @@ const expect = chai.expect;
 const predictDataTypes = require('../index');
 
 describe('predictDataTypes', () => {
+    
     it('should predict data types for string and url', () => {
         const text = 'John, http://asd.com';
         const types = predictDataTypes(text);
@@ -34,7 +35,7 @@ describe('predictDataTypes', () => {
             'invalid-phone-number': 'string'
         });
     });
-    
+
     it('should predict data types for arrays', () => {
         const text = '[["apple"], "banana", "orange"], {"name": "John", "age": 30}';
         const types = predictDataTypes(text);
@@ -45,15 +46,14 @@ describe('predictDataTypes', () => {
     });
 
     it('should predict data types for JSON objects', () => {
-        const text = 'John,30, true,1991-05-12';
-        const types = predictDataTypes(text);
+        const text = 'name, age, married, dob \n John,30, true, 1991-05-12';
+        const types = predictDataTypes(text, true);
         expect(types).to.deep.equal({
-            'John': 'string',
-            '30': 'number',
-            'true': 'boolean',
-            '1991-05-12': 'date'
+            'name': 'string',
+            'age': 'number',
+            'married': 'boolean',
+            'dob': 'date'
         });
     });
-
 
 })
