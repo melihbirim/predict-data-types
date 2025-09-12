@@ -1,6 +1,5 @@
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
-const os = require('os');
 
 // Enable dayjs plugins
 dayjs.extend(customParseFormat);
@@ -216,10 +215,11 @@ function parseHeaderAndData(str, firstRowIsHeader) {
     let data = str;
 
     if (firstRowIsHeader) {
-        const tmp = str.split(os.EOL);
-        if (tmp.length > 1) {
-            header = tmp[0].split(',');
-            data = tokenize(tmp[1]);
+        // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
+        const lines = str.split(/\r?\n|\r/);
+        if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
+            header = lines[0].split(',');
+            data = tokenize(lines[1]);
         } else {
             return { header: [], data: [] };
         }

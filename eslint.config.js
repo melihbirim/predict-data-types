@@ -1,8 +1,5 @@
-// eslint.config.js - ESLint v9 flat configuration
-const js = require('@eslint/js');
-
+// eslint.config.js - ESLint v9 flat configuration compatible with Node.js 16+
 module.exports = [
-    js.configs.recommended,
     {
         ignores: ['node_modules/**', 'coverage/**', '*.config.js']
     },
@@ -33,11 +30,31 @@ module.exports = [
             }
         },
         rules: {
+            // Core ESLint recommended rules (manual selection for Node 16 compatibility)
+            'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
+            'no-undef': 'error',
+            'no-unreachable': 'error',
+            'no-constant-condition': 'error',
+            'no-dupe-args': 'error',
+            'no-dupe-keys': 'error',
+            'no-duplicate-case': 'error',
+            'no-empty': 'error',
+            'no-ex-assign': 'error',
+            'no-extra-boolean-cast': 'error',
+            'no-extra-semi': 'error',
+            'no-func-assign': 'error',
+            'no-invalid-regexp': 'error',
+            'no-irregular-whitespace': 'error',
+            'no-obj-calls': 'error',
+            'no-regex-spaces': 'error',
+            'no-sparse-arrays': 'error',
+            'use-isnan': 'error',
+            'valid-typeof': 'error',
+            // Code style rules
             'indent': ['error', 4],
             'quotes': ['error', 'single'],
             'semi': ['error', 'always'],
             'no-console': 'off', // Allow console in this project
-            'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
             'no-trailing-spaces': 'error',
             'eol-last': ['error', 'always'],
             'prefer-const': 'error',
