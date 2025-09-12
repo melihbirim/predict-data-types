@@ -3,7 +3,7 @@ const expect = chai.expect;
 const predictDataTypes = require('../index');
 
 describe('predictDataTypes', () => {
-    
+
     it('should predict data types for string and url', () => {
         const text = 'John, http://asd.com';
         const types = predictDataTypes(text);
@@ -318,4 +318,4 @@ describe('predictDataTypes', () => {
         });
     });
 
-})
+});

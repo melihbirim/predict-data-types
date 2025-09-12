@@ -7,12 +7,12 @@ dayjs.extend(customParseFormat);
 
 // Cached compiled regex patterns for performance
 const PATTERNS = {
-    URL: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/,
+    URL: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
     UUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     PHONE: /^(\+\d{1,3}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
     EMAIL: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
     DATE_COMPONENT: /(\d{4})-(\d{1,2})-(\d{1,2})/,
-    DATE_CHARS: /^[\d\-\/\s:\.TZ\+\-]+$/,
+    DATE_CHARS: /^[\d\-/\s:.TZ+-]+$/,
     LEADING_ZERO: /^0\d/
 };
 
@@ -44,7 +44,7 @@ function isDate(value) {
         'DD-MMM-YYYY HH:mm',
         'MMM-DD-YYYY',
         'MMM-DD-YYYY HH:mm:ss',
-        'MMM-DD-YYYY HH:mm',
+        'MMM-DD-YYYY HH:mm'
     ];
 
     // First try strict parsing with specific formats
