@@ -7,6 +7,29 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --prefer-offline --no-audit
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Check TypeScript definitions
+      run: npx tsc --noEmit index.d.ts
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -29,15 +52,8 @@ jobs:
     - name: Install dependencies
       run: npm ci --prefer-offline --no-audit
       
-    - name: Run linting
-      run: npm run lint
-      
     - name: Run tests
       run: npm test
-      
-    - name: Check TypeScript definitions
-      if: matrix.node-version == '18.x'
-      run: npx tsc --noEmit index.d.ts
 
   test-cross-platform:
     runs-on: ${{ matrix.os }}
@@ -90,7 +106,7 @@ jobs:
       run: npm audit --audit-level high --production
 
   publish:
-    needs: [test, test-cross-platform]
+    needs: [lint, test, test-cross-platform]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
