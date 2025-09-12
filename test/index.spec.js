@@ -56,4 +56,44 @@ describe('predictDataTypes', () => {
         });
     });
 
-})
+    it('should handle empty string input', () => {
+        const types = predictDataTypes('');
+        expect(types).to.deep.equal({});
+    });
+
+    it('should handle whitespace-only input', () => {
+        const types = predictDataTypes('   ');
+        expect(types).to.deep.equal({});
+    });
+
+    it('should throw error for non-string input', () => {
+        expect(() => predictDataTypes(null)).to.throw('Input must be a string');
+        expect(() => predictDataTypes(123)).to.throw('Input must be a string');
+        expect(() => predictDataTypes({})).to.throw('Input must be a string');
+    });
+
+    it('should detect improved boolean values', () => {
+        const text = 'true, false, yes, no, on, off, 1, 0';
+        const types = predictDataTypes(text);
+        expect(types).to.deep.equal({
+            'true': 'boolean',
+            'false': 'boolean',
+            'yes': 'boolean',
+            'no': 'boolean',
+            'on': 'boolean',
+            'off': 'boolean',
+            '1': 'boolean',
+            '0': 'boolean'
+        });
+    });
+
+    it('should detect UUID values', () => {
+        const text = '123e4567-e89b-12d3-a456-426614174000, not-a-uuid';
+        const types = predictDataTypes(text);
+        expect(types).to.deep.equal({
+            '123e4567-e89b-12d3-a456-426614174000': 'uuid',
+            'not-a-uuid': 'string'
+        });
+    });
+
+});
