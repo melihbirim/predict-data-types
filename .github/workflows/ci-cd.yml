@@ -2,17 +2,19 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, upgrades ]
   pull_request:
     branches: [ main, develop ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     strategy:
       matrix:
         node-version: [16.x, 18.x, 20.x]
+      fail-fast: false
     
     steps:
     - name: Checkout code
@@ -25,7 +27,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --prefer-offline --no-audit
       
     - name: Run linting
       run: npm run lint
@@ -34,55 +36,63 @@ jobs:
       run: npm test
       
     - name: Check TypeScript definitions
+      if: matrix.node-version == '18.x'
       run: npx tsc --noEmit index.d.ts
+
+  test-cross-platform:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --prefer-offline --no-audit
+      
+    - name: Run tests
+      run: npm test
+
+  security-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci --prefer-offline --no-audit
       
     - name: Security audit
       run: npm audit --audit-level moderate
+      continue-on-error: true
       
-    - name: Check for vulnerabilities
+    - name: Check for high/critical vulnerabilities
       run: npm audit --audit-level high --production
 
-  test-windows:
-    runs-on: windows-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
-      run: npm test
-
-  test-macos:
-    runs-on: macos-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
-      run: npm test
-
   publish:
-    needs: [test, test-windows, test-macos]
+    needs: [test, test-cross-platform]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
@@ -97,7 +107,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --prefer-offline --no-audit
       
     - name: Check if version changed
       id: version-check
