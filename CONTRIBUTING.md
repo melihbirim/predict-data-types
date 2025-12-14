@@ -13,12 +13,14 @@ Thank you for your interest in contributing to predict-data-types! This document
 ### Setting up the Development Environment
 
 1. **Fork and clone the repository:**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/predict-data-types.git
    cd predict-data-types
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -52,17 +54,20 @@ We follow **Test-Driven Development** practices. Before implementing any changes
 ### Making Changes
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **Write tests first:**
+
    ```bash
    # Add tests to test/index.spec.js
    npm test # Should fail initially
    ```
 
 3. **Implement your changes:**
+
    ```bash
    # Make changes to index.js or other files
    npm test # Should pass now
@@ -80,7 +85,7 @@ We follow **Test-Driven Development** practices. Before implementing any changes
 We follow conventional commit messages:
 
 - `feat:` new features
-- `fix:` bug fixes  
+- `fix:` bug fixes
 - `docs:` documentation changes
 - `style:` formatting, missing semi colons, etc
 - `refactor:` code refactoring
@@ -88,6 +93,7 @@ We follow conventional commit messages:
 - `chore:` maintenance tasks
 
 Examples:
+
 ```
 feat: add support for IPv4 address detection
 fix: resolve UUID pattern variable name bug
@@ -100,6 +106,7 @@ test: add edge cases for date validation
 ### ESLint Configuration
 
 We use ESLint with the following key rules:
+
 - 4-space indentation
 - Single quotes for strings
 - Semicolons required
@@ -116,14 +123,14 @@ All public functions must have JSDoc comments:
  * @param {string} value - Description of the parameter
  * @returns {boolean} Description of what is returned
  * @throws {Error} Description of when errors are thrown
- * 
+ *
  * @example
  * // Usage example
  * functionName('example input');
  * // Returns: expected output
  */
 function functionName(value) {
-    // Implementation
+  // Implementation
 }
 ```
 
@@ -134,17 +141,17 @@ function functionName(value) {
 Tests are organized by functionality:
 
 ```javascript
-describe('Feature Name', () => {
-    it('should handle specific case', () => {
-        // Arrange
-        const input = 'test data';
-        
-        // Act  
-        const result = predictDataTypes(input);
-        
-        // Assert
-        expect(result).to.deep.equal(expectedOutput);
-    });
+describe("Feature Name", () => {
+  it("should handle specific case", () => {
+    // Arrange
+    const input = "test data";
+
+    // Act
+    const result = predictDataTypes(input);
+
+    // Assert
+    expect(result).to.deep.equal(expectedOutput);
+  });
 });
 ```
 
@@ -171,32 +178,40 @@ When reporting bugs, please include:
 1. **Description**: Clear description of the issue
 2. **Steps to Reproduce**: Minimal code example
 3. **Expected Behavior**: What should happen
-4. **Actual Behavior**: What actually happens  
+4. **Actual Behavior**: What actually happens
 5. **Environment**: Node.js version, OS, etc.
 
 **Bug Report Template:**
-```markdown
+
+````markdown
 ## Bug Description
+
 Brief description of the bug
 
 ## Steps to Reproduce
+
 ```js
-const predictDataTypes = require('predict-data-types');
-const result = predictDataTypes('your input here');
+const predictDataTypes = require("predict-data-types");
+const result = predictDataTypes("your input here");
 console.log(result); // Shows unexpected output
 ```
+````
 
 ## Expected Behavior
+
 Should return: `{ 'expected': 'result' }`
 
-## Actual Behavior  
+## Actual Behavior
+
 Actually returns: `{ 'actual': 'result' }`
 
 ## Environment
+
 - Node.js version: 18.x
 - Package version: 1.1.0
 - OS: macOS/Linux/Windows
-```
+
+````
 
 ## 💡 Feature Requests
 
@@ -221,6 +236,42 @@ How should this feature work?
 ## Additional Context
 Any other relevant information
 ```
+
+### **Proposing New Data Type Detectors**
+
+We're always looking to expand our data type detection capabilities! Here are some data types we'd love to see implemented:
+
+#### **Easy to Implement (Great for First-Time Contributors)**
+- **MAC Address** - `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`
+- **Semantic Version** - `1.0.0`, `2.3.4-beta.1`
+- **Time** - `14:30`, `14:30:45`, `2:30 PM`
+- **Hashtags** - `#javascript`, `#web_dev`
+- **Mentions** - `@username`, `@user_name123`
+- **MIME Types** - `image/png`, `application/json`
+
+#### **Medium Difficulty**
+- **Geographic Coordinates** - `40.7128,-74.0060`, `(40.7128, -74.0060)`
+- **File Paths** - `/usr/local/bin`, `C:\Program Files\`, `./src/index.js`
+- **RGB/RGBA Colors** - `rgb(255, 0, 0)`, `rgba(255, 0, 0, 0.5)`
+- **Binary/Octal/Hex Numbers** - `0b1010`, `0o755`, `0xFF`
+- **Credit Card Patterns** - `4532-1234-5678-9010` (pattern only, not validation)
+- **Duration/Time Intervals** - `2h 30m`, `1d`, `45min`
+
+#### **Advanced**
+- **ISBN** - `978-3-16-148410-0`, `0-306-40615-2`
+- **Base64 Strings** - `SGVsbG8gV29ybGQ=`
+- **JWT Tokens** - `eyJhbGci...` format
+- **SSN/Tax IDs** - With proper privacy considerations
+
+**When proposing a new data type detector, please include:**
+1. **Type name** - What should it be called?
+2. **Examples** - At least 5 valid examples
+3. **Counter-examples** - Examples that should NOT match
+4. **Regex pattern** - Proposed detection pattern
+5. **Use cases** - Where would this be useful?
+6. **Test cases** - Sample test cases
+
+See our [ROADMAP.md](ROADMAP.md) for the full list of planned data types.`
 
 ## 🔍 Code Review Process
 
@@ -256,6 +307,7 @@ Before submitting a PR, ensure:
 ## 🏷️ Release Process
 
 Maintainers handle releases following semantic versioning:
+
 - **PATCH**: Bug fixes
 - **MINOR**: New features (backward compatible)
 - **MAJOR**: Breaking changes
@@ -269,6 +321,7 @@ Maintainers handle releases following semantic versioning:
 ## 🙏 Recognition
 
 Contributors will be recognized in:
+
 - GitHub contributors list
 - Release notes for significant contributions
 - README acknowledgments
