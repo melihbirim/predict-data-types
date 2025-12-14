@@ -3,14 +3,14 @@
 [![npm version](https://img.shields.io/npm/v/predict-data-types.svg)](https://www.npmjs.com/package/predict-data-types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight npm package that automatically predicts data types for comma-separated values. Supports 14 data types including primitives, URLs, emails, UUIDs, dates, IP addresses, colors, percentages, and currency.
+A lightweight, zero-dependency npm package that automatically predicts data types for comma-separated values. Supports 14 data types including primitives, URLs, emails, UUIDs, dates, IP addresses, colors, percentages, and currency.
 
 ## Features
 
 - Automatic detection of 14 data types
 - CSV parsing with optional headers
 - TypeScript definitions included
-- Minimal dependencies (only dayjs)
+- Zero dependencies - completely standalone
 - Comprehensive test coverage
 - Optimized regex patterns
 

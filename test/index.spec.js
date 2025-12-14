@@ -221,6 +221,26 @@ describe('predictDataTypes', () => {
             });
         });
 
+        it('should detect dates with month names', () => {
+            const text = '15 Jan 2023, Jan 15 2023, 15-Feb-2024, Mar-01-2025';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '15 Jan 2023': 'date',
+                'Jan 15 2023': 'date',
+                '15-Feb-2024': 'date',
+                'Mar-01-2025': 'date'
+            });
+        });
+
+        it('should detect dates with time and month names', () => {
+            const text = '15 Jan 2023 14:30:45, Jan 15 2023 09:15:00';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '15 Jan 2023 14:30:45': 'date',
+                'Jan 15 2023 09:15:00': 'date'
+            });
+        });
+
         it('should not detect invalid dates', () => {
             const text = '2023-13-32, 32/13/2023, not-a-date';
             const types = predictDataTypes(text);

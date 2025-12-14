@@ -1,17 +1,9 @@
-const dayjs = require('dayjs');
-const customParseFormat = require('dayjs/plugin/customParseFormat');
-
-// Enable dayjs plugins
-dayjs.extend(customParseFormat);
-
 // Cached compiled regex patterns for performance
 const PATTERNS = {
     URL: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
     UUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     PHONE: /^(\+\d{1,3}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
     EMAIL: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
-    DATE_COMPONENT: /(\d{4})-(\d{1,2})-(\d{1,2})/,
-    DATE_CHARS: /^[\d\-/\s:.TZ+-]+$/,
     LEADING_ZERO: /^0\d/,
     IPV4: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
     IPV6: /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:$|^(?:[0-9a-fA-F]{1,4}:)(?::[0-9a-fA-F]{1,4}){1,6}$/,
@@ -20,75 +12,231 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/
 };
 
+// Date format patterns supported for parsing (from re-date-parser + extensions)
+const DATE_FORMATS = [
+    // ISO 8601 and variants with timezone
+    'YYYY-MM-DDTHH:mm:ss.SSSZ',
+    // With timezone offset
+    'YYYY/MM/DD HH:mm:ss.SSS z',
+    'YYYY-MM-DD HH:mm:ss.SSS z',
+    'MM/DD/YYYY HH:mm:ss.SSS z',
+    'DD/MM/YYYY HH:mm:ss.SSS z',
+    'YYYY/MM/DD HH:mm:ss z',
+    'YYYY-MM-DD HH:mm:ss z',
+    'MM/DD/YYYY HH:mm:ss z',
+    'DD/MM/YYYY HH:mm:ss z',
+    // With milliseconds
+    'YYYY/MM/DD HH:mm:ss.SSS',
+    'YYYY-MM-DD HH:mm:ss.SSS',
+    'MM/DD/YYYY HH:mm:ss.SSS',
+    'DD/MM/YYYY HH:mm:ss.SSS',
+    // With month names and milliseconds
+    'dd MMM yyyy HH:mm:ss.SSS z',
+    'MMM dd yyyy HH:mm:ss.SSS z',
+    'dd MMM yyyy HH:mm:ss.SSS',
+    'MMM dd yyyy HH:mm:ss.SSS',
+    // Standard date-time formats
+    'YYYY/MM/DD HH:mm:ss',
+    'YYYY-MM-DD HH:mm:ss',
+    'MM/DD/YYYY HH:mm:ss',
+    'DD/MM/YYYY HH:mm:ss',
+    // With month names
+    'dd MMM yyyy HH:mm:ss',
+    'MMM dd yyyy HH:mm:ss',
+    'dd-MMM-yyyy HH:mm:ss',
+    'MMM-dd-yyyy HH:mm:ss',
+    // Date with time (hours and minutes only)
+    'YYYY/MM/DD HH:mm',
+    'YYYY-MM-DD HH:mm',
+    'MM/DD/YYYY HH:mm',
+    'DD/MM/YYYY HH:mm',
+    'dd MMM yyyy HH:mm',
+    'MMM dd yyyy HH:mm',
+    // Date only formats
+    'YYYY/MM/DD',
+    'YYYY-MM-DD',
+    'MM/DD/YYYY',
+    'DD/MM/YYYY',
+    'MM-DD-YYYY',
+    'DD-MM-YYYY',
+    // With month names (date only)
+    'dd MMM yyyy',
+    'MMM dd yyyy',
+    'dd-MMM-yyyy',
+    'MMM-dd-yyyy'
+];
+
+/**
+ * Parse month name to month index
+ * @param {string} monthString - Month name (e.g., 'Jan', 'January')
+ * @returns {number|null} Month index (0-11) or null if invalid
+ */
+function parseMonth(monthString) {
+    const monthNames = [
+        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+    ];
+    const normalized = monthString.toLowerCase().substring(0, 3);
+    const monthIndex = monthNames.indexOf(normalized);
+    return monthIndex === -1 ? null : monthIndex;
+}
+
+/**
+ * Parse timezone offset string to minutes
+ * @param {string} tzString - Timezone string (e.g., '+05:30', '-08:00', 'Z')
+ * @returns {number|null} Offset in minutes or null if invalid
+ */
+function parseTimezone(tzString) {
+    if (tzString === 'Z' || tzString === 'z') return 0;
+    const match = tzString.match(/^([+-])(\d{2}):?(\d{2})?$/);
+    if (!match) return null;
+    const sign = match[1] === '+' ? 1 : -1;
+    const hours = parseInt(match[2], 10);
+    const minutes = parseInt(match[3] || '00', 10);
+    return sign * ((hours * 60) + minutes);
+}
+
+/**
+ * Parse a date string with a specific format
+ * @param {string} input - Date string to parse
+ * @param {string} format - Format pattern
+ * @returns {Date|null} Parsed Date object or null if invalid
+ */
+function parseWithFormat(input, format) {
+    const parts = input.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
+    const formatParts = format.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
+
+    if (parts.length < 3) return null; // At minimum need year, month, day
+
+    const dateValues = {};
+    let timezoneOffset = null;
+    let partIndex = 0;
+
+    for (let i = 0; i < formatParts.length && partIndex < parts.length; i++) {
+        const formatPart = formatParts[i];
+        const part = parts[partIndex];
+
+        if (formatPart === 'YYYY' || formatPart === 'yyyy') {
+            const year = parseInt(part, 10);
+            if (isNaN(year) || part.length !== 4) return null;
+            dateValues.year = year;
+            partIndex++;
+        } else if (formatPart === 'MM') {
+            const month = parseInt(part, 10);
+            if (isNaN(month) || month < 1 || month > 12) return null;
+            dateValues.month = month - 1;
+            partIndex++;
+        } else if (formatPart === 'MMM') {
+            const month = parseMonth(part);
+            if (month === null) return null;
+            dateValues.month = month;
+            partIndex++;
+        } else if (formatPart === 'DD' || formatPart === 'dd') {
+            const day = parseInt(part, 10);
+            if (isNaN(day) || day < 1 || day > 31) return null;
+            dateValues.day = day;
+            partIndex++;
+        } else if (formatPart === 'HH') {
+            const hour = parseInt(part, 10);
+            if (isNaN(hour) || hour < 0 || hour > 23) return null;
+            dateValues.hour = hour;
+            partIndex++;
+        } else if (formatPart === 'mm') {
+            const minute = parseInt(part, 10);
+            if (isNaN(minute) || minute < 0 || minute > 59) return null;
+            dateValues.minute = minute;
+            partIndex++;
+        } else if (formatPart === 'ss') {
+            const second = parseInt(part, 10);
+            if (isNaN(second) || second < 0 || second > 59) return null;
+            dateValues.second = second;
+            partIndex++;
+        } else if (formatPart === 'SSS') {
+            const ms = parseInt(part, 10);
+            if (isNaN(ms)) return null;
+            dateValues.millisecond = ms;
+            partIndex++;
+        } else if (formatPart === 'z') {
+            // Timezone offset
+            timezoneOffset = parseTimezone(part);
+            if (timezoneOffset === null) return null;
+            partIndex++;
+        }
+    }
+
+    if (dateValues.year === undefined || dateValues.month === undefined || dateValues.day === undefined) {
+        return null;
+    }
+
+    // Create date object (UTC if timezone specified, local otherwise)
+    const date = timezoneOffset !== null
+        ? new Date(Date.UTC(
+            dateValues.year,
+            dateValues.month,
+            dateValues.day,
+            dateValues.hour || 0,
+            dateValues.minute || 0,
+            dateValues.second || 0,
+            dateValues.millisecond || 0
+        ))
+        : new Date(
+            dateValues.year,
+            dateValues.month,
+            dateValues.day,
+            dateValues.hour || 0,
+            dateValues.minute || 0,
+            dateValues.second || 0,
+            dateValues.millisecond || 0
+        );
+
+    // Apply timezone offset if present
+    if (timezoneOffset !== null) {
+        const localTime = date.getTime();
+        const localOffset = date.getTimezoneOffset() * 60000;
+        const targetOffset = timezoneOffset * 60000;
+        const targetTime = localTime - localOffset + targetOffset;
+        date.setTime(targetTime);
+    }
+
+    // Check if date rolled over (invalid date like Feb 30 becomes Mar 2)
+    if (date.getFullYear() !== dateValues.year ||
+        date.getMonth() !== dateValues.month ||
+        date.getDate() !== dateValues.day) {
+        return null;
+    }
+
+    return date;
+}
+
+/**
+ * Try to parse a date string with all supported formats
+ * @param {string} input - Date string to parse
+ * @returns {Date|null} Parsed Date object or null if invalid
+ */
+function tryParseDate(input) {
+    for (const format of DATE_FORMATS) {
+        const date = parseWithFormat(input, format);
+        if (date !== null) {
+            return date;
+        }
+    }
+    return null;
+}
+
 /**
  * Checks if a given value represents a valid date in various formats
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a valid date, false otherwise
  */
 function isDate(value) {
-    const formats = [
-        'YYYY-MM-DDTHH:mm:ss.SSSZ',
-        'YYYY-MM-DDTHH:mm:ss.SSSZ',
-        'YYYY-MM-DDTHH:mm:ssZ',
-        'YYYY-MM-DDTHH:mm:ss',
-        'YYYY-MM-DDTHH:mmZ',
-        'YYYY-MM-DDTHH:mm',
-        'YYYY-MM-DD HH:mm:ss.SSS',
-        'YYYY-MM-DD HH:mm:ss',
-        'YYYY-MM-DD HH:mm',
-        'YYYY-MM-DD',
-        'DD/MM/YYYY',
-        'DD/MM/YYYY HH:mm:ss',
-        'DD/MM/YYYY HH:mm',
-        'MM/DD/YYYY',
-        'MM/DD/YYYY HH:mm:ss',
-        'MM/DD/YYYY HH:mm',
-        'DD-MMM-YYYY',
-        'DD-MMM-YYYY HH:mm:ss',
-        'DD-MMM-YYYY HH:mm',
-        'MMM-DD-YYYY',
-        'MMM-DD-YYYY HH:mm:ss',
-        'MMM-DD-YYYY HH:mm'
-    ];
+    const trimmedValue = value.trim();
 
-    // First try strict parsing with specific formats
-    for (let i = 0; i < formats.length; i++) {
-        const date = dayjs(value, formats[i], true);
-        if (date.isValid() && date.format(formats[i]) === value) {
-            return true;
-        }
-    }
+    // Basic length check
+    if (trimmedValue.length < 8) return false;
 
-    // For ISO format and basic dates, be more conservative
-    // Only accept if it looks like a valid date and doesn't contain invalid characters
-    if (!PATTERNS.DATE_CHARS.test(value)) {
-        return false;
-    }
-
-    const defaultParsed = dayjs(value);
-    if (defaultParsed.isValid() && value.length >= 8) { // At least YYYY-MM-DD length
-        // Check if the parsed date's string representation matches the input
-        // This prevents dayjs from "fixing" invalid dates like 2023-13-32
-        const reformatted = defaultParsed.format('YYYY-MM-DD');
-        if (value.startsWith(reformatted) || value === reformatted) {
-            const year = defaultParsed.year();
-            const month = defaultParsed.month() + 1;
-            const day = defaultParsed.date();
-
-            // Extract original components for validation
-            const dateMatch = value.match(PATTERNS.DATE_COMPONENT);
-            if (dateMatch) {
-                const [, origYear, origMonth, origDay] = dateMatch;
-                if (parseInt(origYear) === year &&
-                    parseInt(origMonth) === month &&
-                    parseInt(origDay) === day) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
+    // Try to parse with supported formats
+    const parsedDate = tryParseDate(trimmedValue);
+    return parsedDate !== null;
 }
 
 /**
