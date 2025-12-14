@@ -1,24 +1,35 @@
 # 🗺️ Predict Data Types - Roadmap
 
-This roadmap outlines the planned features and improvements for the predict-data-types package. Items are organized by priority and implementation complexity.
+This roadmap outlines planned features and improvements. Items are organized by priority and implementation complexity.
 
-## 🎯 **Current Status (v1.5.0)**
+## 🎯 **Current Status (v1.6.0)**
 
 ✅ **Completed Features:**
 
-- Automatic type detection for 14 data types
-- Zero runtime dependencies
+**Core Capabilities:**
+- Smart `infer()` function - handles strings, arrays, objects, and arrays of objects
+- JSON schema generation from objects and arrays
 - CSV support with optional headers
-- 45+ date format support with month names and timezones
-- IP address detection (IPv4 and IPv6)
-- Color detection (hex codes)
-- Percentage and currency detection
-- Robust input validation and error handling
-- TypeScript definitions
-- Comprehensive test coverage (43+ tests)
+- Zero runtime dependencies
+- TypeScript definitions with function overloads
+
+**Data Type Detection (14 types):**
+- Primitives: string, number, boolean
+- Specialized: email, phone, url, uuid, date, ip, color, percentage, currency
+- Structured: array, object
+
+**Date & Time:**
+- 45+ date format support
+- Month names (Jan, Feb, etc.)
+- Timezone offset handling
+- ISO 8601 and variants
+
+**Developer Experience:**
+- 53 comprehensive test cases
+- Full JSDoc documentation
+- ESLint v9 configuration
 - Performance optimizations (cached regex patterns)
-- ESLint configuration and code quality
-- JSDoc documentation
+- Robust input validation
 
 ## 🚀 **Roadmap**
 
@@ -117,7 +128,7 @@ This roadmap outlines the planned features and improvements for the predict-data
   '#javascript' -> 'hashtag'
   ```
 
-### **Phase 3: Configuration & Customization** (v1.8.0)
+### **Phase 3: Configuration & Customization** (v1.7.0)
 
 **Medium Impact, Medium Implementation**
 
@@ -135,12 +146,15 @@ This roadmap outlines the planned features and improvements for the predict-data
     confidence: true, // Return confidence scores
     locale: "en-US", // Region-specific detection
   };
+  
+  infer(data, options);
   ```
 
 - [ ] **Confidence Scores**
 
   ```javascript
-  // Returns: { value: 'email', confidence: 0.95, alternates: ['string'] }
+  infer("user@example.com", { confidence: true });
+  // Returns: { type: 'email', confidence: 0.95, alternates: ['string'] }
   ```
 
 - [ ] **Custom Pattern Support**
@@ -148,24 +162,23 @@ This roadmap outlines the planned features and improvements for the predict-data
   - Regex pattern validation
   - Pattern priority management
 
-### **Phase 4: Output Format Extensions** (v1.9.0)
+### **Phase 4: Schema Output Formats** (v1.8.0)
 
 **High Impact, Medium Implementation**
 
 - [ ] **JSON Schema Generation**
 
   ```javascript
-  predictDataTypes("John,25", { outputFormat: "jsonSchema" });
-  // Returns: { type: 'object', properties: { John: { type: 'string' } } }
+  infer([{ name: "Alice", age: "25" }], { format: "jsonSchema" });
+  // Returns full JSON Schema object
   ```
 
 - [ ] **SQL DDL Generation**
 
   ```javascript
-  predictDataTypes("name,age\nJohn,25", {
-    header: true,
-    outputFormat: "sql",
-    tableName: "users",
+  infer([{ name: "Alice", age: "25" }], { 
+    format: "sql",
+    tableName: "users"
   });
   // Returns: "CREATE TABLE users (name VARCHAR(255), age INTEGER);"
   ```
@@ -173,10 +186,9 @@ This roadmap outlines the planned features and improvements for the predict-data
 - [ ] **TypeScript Interface Generation**
 
   ```javascript
-  predictDataTypes("name,age\nJohn,25", {
-    header: true,
-    outputFormat: "typescript",
-    interfaceName: "User",
+  infer([{ name: "Alice", age: "25" }], {
+    format: "typescript",
+    interfaceName: "User"
   });
   // Returns: "interface User { name: string; age: number; }"
   ```
@@ -187,54 +199,55 @@ This roadmap outlines the planned features and improvements for the predict-data
   - GraphQL schema
   - Zod validation schema
 
-### **Phase 5: Performance & Scalability** (v2.0.0)
+### **Phase 5: Performance & Scalability** (v1.9.0)
 
 **Medium Impact, High Implementation**
 
 - [ ] **Batch Processing API**
 
   ```javascript
-  predictDataTypes.batch(
-    ["user1,25,email1@test.com", "user2,30,email2@test.com"],
-    { header: true, parallel: true }
-  );
+  const { batch } = require("predict-data-types");
+  
+  batch([
+    { id: "1", email: "user1@test.com" },
+    { id: "2", email: "user2@test.com" }
+  ], { parallel: true });
   ```
 
 - [ ] **Streaming API for Large Files**
 
   ```javascript
-  predictDataTypes
-    .stream(fs.createReadStream("large.csv"))
+  const { stream } = require("predict-data-types");
+  
+  stream(fs.createReadStream("large.csv"))
     .on("schema", (schema) => console.log(schema))
-    .on("progress", (percent) => console.log(`${percent}% complete`));
+    .on("progress", (percent) => console.log(`${percent}%`));
   ```
 
 - [ ] **Performance Optimizations**
-  - Web Workers support for browser usage
-  - Memory-efficient processing for large datasets
+  - Web Workers support for browser
+  - Memory-efficient processing
   - Incremental schema building
-  - Smart sampling for large files
+  - Smart sampling for large datasets
 
-### **Phase 6: Advanced Features** (v2.1.0)
+### **Phase 6: Advanced Features** (v2.0.0)
 
 **High Impact, High Implementation**
 
 - [ ] **Locale-Specific Detection**
-
   - Region-specific date formats (EU vs US)
-  - Localized phone number validation
+  - Localized phone validation
   - Currency format detection
   - Address format recognition
 
 - [ ] **Security-Aware Detection**
 
   ```javascript
-  '****-****-****-1234' -> 'credit_card_masked'
-  '***-**-1234' -> 'ssn_masked'
+  infer('****-****-****-1234') // → 'creditcard_masked'
+  infer('***-**-1234') // → 'ssn_masked'
   ```
 
 - [ ] **Statistical Analysis**
-
   - Data quality metrics
   - Null/empty value percentages
   - Value distribution analysis

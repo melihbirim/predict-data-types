@@ -1,3 +1,34 @@
+/**
+ * Supported data type constants
+ * Use these instead of string literals for type-safe comparisons
+ * @constant
+ */
+const DataTypes = {
+    STRING: 'string',
+    NUMBER: 'number',
+    BOOLEAN: 'boolean',
+    EMAIL: 'email',
+    PHONE: 'phone',
+    URL: 'url',
+    UUID: 'uuid',
+    DATE: 'date',
+    ARRAY: 'array',
+    OBJECT: 'object',
+    IP: 'ip',
+    COLOR: 'color',
+    PERCENTAGE: 'percentage',
+    CURRENCY: 'currency'
+};
+
+/**
+ * Output format constants for schema generation
+ * @constant
+ */
+const Formats = {
+    NONE: 'none',
+    JSONSCHEMA: 'jsonschema'
+};
+
 // Cached compiled regex patterns for performance
 const PATTERNS = {
     URL: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
@@ -536,5 +567,215 @@ function predictDataTypes(str, firstRowIsHeader = false) {
     return types;
 }
 
+/**
+ * Converts our schema format to JSON Schema
+ * @param {Object} schema - Schema object with field names and types
+ * @returns {Object} JSON Schema object
+ * @private
+ */
+function toJSONSchema(schema) {
+    // Map our data types to JSON Schema types
+    const typeMap = {
+        'string': 'string',
+        'number': 'number',
+        'boolean': 'boolean',
+        'email': 'string',
+        'phone': 'string',
+        'url': 'string',
+        'uuid': 'string',
+        'date': 'string',
+        'ip': 'string',
+        'color': 'string',
+        'percentage': 'string',
+        'currency': 'string',
+        'array': 'array',
+        'object': 'object'
+    };
+
+    // Map our data types to JSON Schema formats
+    const formatMap = {
+        'email': 'email',
+        'url': 'uri',
+        'uuid': 'uuid',
+        'date': 'date-time',
+        'ip': 'ipv4'
+    };
+
+    const properties = {};
+    const required = [];
+
+    Object.keys(schema).forEach(fieldName => {
+        const dataType = schema[fieldName];
+        const jsonSchemaType = typeMap[dataType] || 'string';
+
+        properties[fieldName] = { type: jsonSchemaType };
+
+        // Add format if applicable
+        if (formatMap[dataType]) {
+            properties[fieldName].format = formatMap[dataType];
+        }
+
+        // Add pattern for special types without standard format
+        if (dataType === 'phone') {
+            properties[fieldName].pattern = '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$';
+        } else if (dataType === 'color') {
+            properties[fieldName].pattern = '^#(?:[0-9a-fA-F]{3}){1,2}$';
+        } else if (dataType === 'percentage') {
+            properties[fieldName].pattern = '^-?\\d+(?:\\.\\d+)?%$';
+        } else if (dataType === 'currency') {
+            properties[fieldName].pattern = '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
+        }
+
+        required.push(fieldName);
+    });
+
+    return {
+        type: 'object',
+        properties,
+        required
+    };
+}
+
+/**
+ * Infers data type(s) from any input - strings, arrays, objects, or array of objects
+ * @param {string|string[]|Object|Array<Object>} input - Value(s) to analyze
+ * @param {string} [format=Formats.NONE] - Output format: Formats.NONE (default) or Formats.JSONSCHEMA
+ * @returns {string|Object} DataType for primitives, or schema object for objects
+ * @example
+ * infer("2024-01-01") // → 'date'
+ * infer(["1", "2", "3"]) // → 'number'
+ * infer({ name: "Alice", age: "25" }) // → { name: 'string', age: 'number' }
+ * infer({ name: "Alice", age: "25" }, Formats.JSONSCHEMA) // → { type: 'object', properties: {...}, required: [...] }
+ * infer([{ name: "Alice" }, { name: "Bob" }]) // → { name: 'string' }
+ */
+function infer(input, format = Formats.NONE) {
+    if (input === null || input === undefined) {
+        throw new Error('Input cannot be null or undefined');
+    }
+
+    // Handle single string value
+    if (typeof input === 'string') {
+        return detectFieldType(input);
+    }
+
+    // Handle array
+    if (Array.isArray(input)) {
+        if (input.length === 0) {
+            return 'string';
+        }
+
+        // Check if array contains objects (schema inference)
+        const firstItem = input[0];
+        if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
+            // Array of objects - infer schema
+            const schema = inferSchemaFromObjects(input);
+
+            // Convert to JSON Schema if requested
+            if (format === Formats.JSONSCHEMA) {
+                return toJSONSchema(schema);
+            }
+
+            return schema;
+        }
+
+        // Array of primitive values - find common type
+        const types = input.map(val => detectFieldType(String(val)));
+        const typeCounts = {};
+        types.forEach(type => {
+            typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+
+        const typePriority = [
+            'uuid', 'email', 'phone', 'url', 'ip', 'color',
+            'currency', 'percentage', 'date', 'boolean',
+            'number', 'array', 'object', 'string'
+        ];
+
+        for (const priorityType of typePriority) {
+            if (typeCounts[priorityType] === types.length) {
+                return priorityType;
+            }
+        }
+
+        return 'string';
+    }
+
+    // Handle single object
+    if (typeof input === 'object') {
+        const schema = inferSchemaFromObjects([input]);
+
+        // Convert to JSON Schema if requested
+        if (format === Formats.JSONSCHEMA) {
+            return toJSONSchema(schema);
+        }
+
+        return schema;
+    }
+
+    throw new Error('Input must be a string, array, or object');
+}
+
+/**
+ * Helper function to infer schema from objects
+ * @param {Array<Object>} rows - Array of objects to analyze
+ * @returns {Object} Schema with field names as keys and types as values
+ */
+function inferSchemaFromObjects(rows) {
+    if (!rows.every(row => row !== null && typeof row === 'object' && !Array.isArray(row))) {
+        throw new Error('All items must be objects');
+    }
+
+    if (rows.length === 0) {
+        return {};
+    }
+
+    // Collect all unique field names
+    const fieldNames = new Set();
+    rows.forEach(row => {
+        Object.keys(row).forEach(key => fieldNames.add(key));
+    });
+
+    // Analyze each field across all rows
+    const schema = {};
+    fieldNames.forEach(fieldName => {
+        const values = rows
+            .map(row => row[fieldName])
+            .filter(val => val !== undefined && val !== null && val !== '');
+
+        if (values.length === 0) {
+            schema[fieldName] = 'string';
+            return;
+        }
+
+        const stringValues = values.map(val => String(val));
+        const types = stringValues.map(val => detectFieldType(val));
+        const typeCounts = {};
+        types.forEach(type => {
+            typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+
+        const typePriority = [
+            'uuid', 'email', 'phone', 'url', 'ip', 'color',
+            'currency', 'percentage', 'date', 'boolean',
+            'number', 'array', 'object', 'string'
+        ];
+
+        let finalType = 'string';
+        for (const priorityType of typePriority) {
+            if (typeCounts[priorityType] === types.length) {
+                finalType = priorityType;
+                break;
+            }
+        }
+
+        schema[fieldName] = finalType;
+    });
+
+    return schema;
+}
+
 module.exports = predictDataTypes;
+module.exports.infer = infer;
+module.exports.DataTypes = DataTypes;
+module.exports.Formats = Formats;
 

@@ -1,6 +1,33 @@
 const chai = require('chai');
 const expect = chai.expect;
 const predictDataTypes = require('../index');
+const { DataTypes, Formats } = predictDataTypes;
+
+describe('DataTypes constants', () => {
+    it('should export all type constants', () => {
+        expect(DataTypes.STRING).to.equal('string');
+        expect(DataTypes.NUMBER).to.equal('number');
+        expect(DataTypes.BOOLEAN).to.equal('boolean');
+        expect(DataTypes.EMAIL).to.equal('email');
+        expect(DataTypes.PHONE).to.equal('phone');
+        expect(DataTypes.URL).to.equal('url');
+        expect(DataTypes.UUID).to.equal('uuid');
+        expect(DataTypes.DATE).to.equal('date');
+        expect(DataTypes.ARRAY).to.equal('array');
+        expect(DataTypes.OBJECT).to.equal('object');
+        expect(DataTypes.IP).to.equal('ip');
+        expect(DataTypes.COLOR).to.equal('color');
+        expect(DataTypes.PERCENTAGE).to.equal('percentage');
+        expect(DataTypes.CURRENCY).to.equal('currency');
+    });
+});
+
+describe('Formats constants', () => {
+    it('should export all format constants', () => {
+        expect(Formats.NONE).to.equal('none');
+        expect(Formats.JSONSCHEMA).to.equal('jsonschema');
+    });
+});
 
 describe('predictDataTypes', () => {
 
@@ -446,6 +473,206 @@ describe('predictDataTypes', () => {
                 '100 $': 'string',
                 'dollars': 'string'
             });
+        });
+    });
+
+    describe('infer', () => {
+        const { infer } = predictDataTypes;
+
+        it('should infer type from single string value', () => {
+            expect(infer('2024-01-01')).to.equal('date');
+            expect(infer('test@example.com')).to.equal('email');
+            expect(infer('42')).to.equal('number');
+            expect(infer('true')).to.equal('boolean');
+            expect(infer('https://example.com')).to.equal('url');
+        });
+
+        it('should infer type from array of values', () => {
+            expect(infer(['1', '2', '3'])).to.equal('number');
+            expect(infer(['true', 'false', 'yes'])).to.equal('boolean');
+            expect(infer(['2024-01-01', '2024-01-02'])).to.equal('date');
+        });
+
+        it('should infer schema from single object', () => {
+            const schema = infer({ name: 'Alice', age: '25', active: 'true' });
+            expect(schema).to.deep.equal({
+                name: 'string',
+                age: 'number',
+                active: 'boolean'
+            });
+        });
+
+        it('should infer schema from array of objects', () => {
+            const schema = infer([
+                { name: 'Alice', age: '25', email: 'alice@example.com' },
+                { name: 'Bob', age: '30', email: 'bob@example.com' }
+            ]);
+            expect(schema).to.deep.equal({
+                name: 'string',
+                age: 'number',
+                email: 'email'
+            });
+        });
+
+        it('should handle objects with different fields', () => {
+            const data = [
+                { name: 'Alice', email: 'alice@example.com' },
+                { name: 'Bob', phone: '555-555-5555' },
+                { age: '30', active: 'true' }
+            ];
+            const schema = infer(data);
+            expect(schema).to.deep.equal({
+                name: 'string',
+                email: 'email',
+                phone: 'phone',
+                age: 'number',
+                active: 'boolean'
+            });
+        });
+
+        it('should handle various data types in objects', () => {
+            const data = [
+                {
+                    url: 'https://example.com',
+                    uuid: '550e8400-e29b-41d4-a716-446655440000',
+                    ip: '192.168.1.1',
+                    color: '#ff5733',
+                    percentage: '85%',
+                    currency: '$99.99'
+                }
+            ];
+            const schema = infer(data);
+            expect(schema).to.deep.equal({
+                url: 'url',
+                uuid: 'uuid',
+                ip: 'ip',
+                color: 'color',
+                percentage: 'percentage',
+                currency: 'currency'
+            });
+        });
+
+        it('should handle null and undefined values in objects', () => {
+            const data = [
+                { name: 'Alice', age: null, email: undefined },
+                { name: 'Bob', age: '30', email: 'bob@example.com' }
+            ];
+            const schema = infer(data);
+            expect(schema).to.deep.equal({
+                name: 'string',
+                age: 'number',
+                email: 'email'
+            });
+        });
+
+        it('should handle empty array', () => {
+            expect(infer([])).to.equal('string');
+        });
+
+        it('should convert non-string values to strings before type detection', () => {
+            const data = [
+                { count: 42, active: true, price: 99.99 }
+            ];
+            const schema = infer(data);
+            expect(schema).to.deep.equal({
+                count: 'number',
+                active: 'boolean',
+                price: 'number'
+            });
+        });
+
+        it('should throw error for invalid input', () => {
+            expect(() => infer(null)).to.throw('Input cannot be null or undefined');
+            expect(() => infer(undefined)).to.throw('Input cannot be null or undefined');
+        });
+    });
+
+    describe('JSON Schema format', () => {
+        const { infer } = predictDataTypes;
+
+        it('should return JSON Schema for single object with jsonschema format', () => {
+            const data = {
+                name: 'Alice',
+                age: '25',
+                email: 'alice@example.com'
+            };
+            const result = infer(data, Formats.JSONSCHEMA);
+
+            expect(result).to.have.property('type', 'object');
+            expect(result).to.have.property('properties');
+            expect(result).to.have.property('required');
+
+            expect(result.properties.name).to.deep.equal({ type: 'string' });
+            expect(result.properties.age).to.deep.equal({ type: 'number' });
+            expect(result.properties.email).to.deep.equal({
+                type: 'string',
+                format: 'email'
+            });
+
+            expect(result.required).to.include.members(['name', 'age', 'email']);
+        });
+
+        it('should return JSON Schema for array of objects with jsonschema format', () => {
+            const data = [
+                { name: 'Alice', age: '25', active: 'true' },
+                { name: 'Bob', age: '30', active: 'false' }
+            ];
+            const result = infer(data, Formats.JSONSCHEMA);
+
+            expect(result).to.have.property('type', 'object');
+            expect(result.properties.name).to.deep.equal({ type: 'string' });
+            expect(result.properties.age).to.deep.equal({ type: 'number' });
+            expect(result.properties.active).to.deep.equal({ type: 'boolean' });
+            expect(result.required).to.include.members(['name', 'age', 'active']);
+        });
+
+        it('should include format for special types', () => {
+            const data = {
+                email: 'test@example.com',
+                website: 'https://example.com',
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                created: '2023-12-31',
+                ip: '192.168.1.1'
+            };
+            const result = infer(data, Formats.JSONSCHEMA);
+
+            expect(result.properties.email.format).to.equal('email');
+            expect(result.properties.website.format).to.equal('uri');
+            expect(result.properties.id.format).to.equal('uuid');
+            expect(result.properties.created.format).to.equal('date-time');
+            expect(result.properties.ip.format).to.equal('ipv4');
+        });
+
+        it('should include pattern for types without standard format', () => {
+            const data = {
+                phone: '555-555-5555',
+                color: '#FF0000',
+                percent: '50%',
+                price: '$99.99'
+            };
+            const result = infer(data, Formats.JSONSCHEMA);
+
+            expect(result.properties.phone).to.have.property('pattern');
+            expect(result.properties.color).to.have.property('pattern');
+            expect(result.properties.percent).to.have.property('pattern');
+            expect(result.properties.price).to.have.property('pattern');
+        });
+
+        it('should return simple schema by default (no format parameter)', () => {
+            const data = { name: 'Alice', age: '25' };
+            const result = infer(data);
+
+            // Should be simple schema, not JSON Schema
+            expect(result).to.not.have.property('type');
+            expect(result).to.not.have.property('properties');
+            expect(result).to.deep.equal({ name: 'string', age: 'number' });
+        });
+
+        it('should return simple schema when format is Formats.NONE', () => {
+            const data = { name: 'Alice', age: '25' };
+            const result = infer(data, Formats.NONE);
+
+            expect(result).to.deep.equal({ name: 'string', age: 'number' });
         });
     });
 
