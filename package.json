@@ -1,7 +1,7 @@
 {
     "name": "predict-data-types",
-    "version": "1.2.0",
-    "description": "A simple npm package that predicts data types for comma-separated values, including JSON objects, and validates URLs, phone numbers, email addresses, and geolocation data within string values.",
+    "version": "1.3.0",
+    "description": "A simple npm package that predicts data types for comma-separated values, including JSON objects, and validates URLs, phone numbers, email addresses, IP addresses, colors, percentages, and currency within string values.",
     "main": "index.js",
     "author": "Melih Birim",
     "types": "index.d.ts",
@@ -36,7 +36,12 @@
         "url",
         "phone",
         "email",
-        "geolocation"
+        "geolocation",
+        "ip",
+        "color",
+        "percentage",
+        "currency",
+        "validation"
     ],
     "license": "MIT",
     "dependencies": {

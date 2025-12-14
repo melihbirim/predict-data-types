@@ -12,7 +12,12 @@ const PATTERNS = {
     EMAIL: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
     DATE_COMPONENT: /(\d{4})-(\d{1,2})-(\d{1,2})/,
     DATE_CHARS: /^[\d\-/\s:.TZ+-]+$/,
-    LEADING_ZERO: /^0\d/
+    LEADING_ZERO: /^0\d/,
+    IPV4: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+    IPV6: /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:$|^(?:[0-9a-fA-F]{1,4}:)(?::[0-9a-fA-F]{1,4}){1,6}$/,
+    HEX_COLOR: /^#(?:[0-9a-fA-F]{3}){1,2}$/,
+    PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
+    CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/
 };
 
 /**
@@ -139,6 +144,42 @@ function isEmail(value) {
 }
 
 /**
+ * Checks if a given value is a valid IP address (IPv4 or IPv6)
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid IP address, false otherwise
+ */
+function isIPAddress(value) {
+    return PATTERNS.IPV4.test(value) || PATTERNS.IPV6.test(value);
+}
+
+/**
+ * Checks if a given value is a valid hex color code
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid hex color, false otherwise
+ */
+function isHexColor(value) {
+    return PATTERNS.HEX_COLOR.test(value);
+}
+
+/**
+ * Checks if a given value is a percentage
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a percentage, false otherwise
+ */
+function isPercentage(value) {
+    return PATTERNS.PERCENTAGE.test(value);
+}
+
+/**
+ * Checks if a given value is a currency amount
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a currency amount, false otherwise
+ */
+function isCurrency(value) {
+    return PATTERNS.CURRENCY.test(value);
+}
+
+/**
  * Tokenizes a string by splitting on commas while respecting quoted strings and nested objects/arrays
  * Optimized version with improved performance for large inputs
  * @param {string} text - The text to tokenize
@@ -241,6 +282,10 @@ function detectFieldType(value) {
 
     if (isBoolean(trimmedValue)) {
         return 'boolean';
+    } else if (isPercentage(trimmedValue)) {
+        return 'percentage';
+    } else if (isCurrency(trimmedValue)) {
+        return 'currency';
     } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
         // Numbers, but not those with leading zeros like '01'
         return 'number';
@@ -250,10 +295,14 @@ function detectFieldType(value) {
         return 'url';
     } else if (isUUID(trimmedValue)) {
         return 'uuid';
+    } else if (isIPAddress(trimmedValue)) {
+        return 'ip';
     } else if (isPhoneNumber(trimmedValue)) {
         return 'phone';
     } else if (isEmail(trimmedValue)) {
         return 'email';
+    } else if (isHexColor(trimmedValue)) {
+        return 'color';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {

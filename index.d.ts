@@ -15,7 +15,11 @@ declare type DataType =
     | 'uuid'
     | 'date'
     | 'array'
-    | 'object';
+    | 'object'
+    | 'ip'
+    | 'color'
+    | 'percentage'
+    | 'currency';
 
 /**
  * Result object mapping field names/values to their predicted data types

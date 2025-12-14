@@ -318,4 +318,115 @@ describe('predictDataTypes', () => {
         });
     });
 
+    describe('IP address detection', () => {
+        it('should detect valid IPv4 addresses', () => {
+            const text = '192.168.1.1, 8.8.8.8, 255.255.255.0';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '192.168.1.1': 'ip',
+                '8.8.8.8': 'ip',
+                '255.255.255.0': 'ip'
+            });
+        });
+
+        it('should detect valid IPv6 addresses', () => {
+            const text = '2001:0db8:85a3:0000:0000:8a2e:0370:7334, ::1';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334': 'ip',
+                '::1': 'ip'
+            });
+        });
+
+        it('should not detect invalid IP addresses', () => {
+            const text = '256.256.256.256, 192.168.1, not-an-ip';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '256.256.256.256': 'string',
+                '192.168.1': 'string',
+                'not-an-ip': 'string'
+            });
+        });
+    });
+
+    describe('Hex color detection', () => {
+        it('should detect valid hex colors', () => {
+            const text = '#FF0000, #00ff00, #ABC, #ffffff';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#FF0000': 'color',
+                '#00ff00': 'color',
+                '#ABC': 'color',
+                '#ffffff': 'color'
+            });
+        });
+
+        it('should not detect invalid hex colors', () => {
+            const text = '#GGGGGG, FF0000, #12345, #12';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#GGGGGG': 'string',
+                'FF0000': 'string',
+                '#12345': 'string',
+                '#12': 'string'
+            });
+        });
+    });
+
+    describe('Percentage detection', () => {
+        it('should detect valid percentages', () => {
+            const text = '50%, 100%, 0.5%, -25%';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '50%': 'percentage',
+                '100%': 'percentage',
+                '0.5%': 'percentage',
+                '-25%': 'percentage'
+            });
+        });
+
+        it('should not detect invalid percentages', () => {
+            const text = '% 50, 50 %, percent';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '% 50': 'string',
+                '50 %': 'string',
+                'percent': 'string'
+            });
+        });
+    });
+
+    describe('Currency detection', () => {
+        it('should detect valid currency amounts', () => {
+            const text = '$100, €50.99, £25, ¥1000, ₹500.50';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '$100': 'currency',
+                '€50.99': 'currency',
+                '£25': 'currency',
+                '¥1000': 'currency',
+                '₹500.50': 'currency'
+            });
+        });
+
+        it('should detect currency with symbol after amount', () => {
+            const text = '100$, 50.99€';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '100$': 'currency',
+                '50.99€': 'currency'
+            });
+        });
+
+        it('should not detect invalid currency formats', () => {
+            const text = '$ 100, 100 $, dollars';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '$ 100': 'string',
+                '100 $': 'string',
+                'dollars': 'string'
+            });
+        });
+    });
+
 });
