@@ -3,46 +3,45 @@
 [![npm version](https://img.shields.io/npm/v/predict-data-types.svg)](https://www.npmjs.com/package/predict-data-types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight and robust npm package that automatically predicts data types for comma-separated values, including JSON objects, and validates URLs, phone numbers, email addresses, UUIDs, dates, and more within string values.
+A lightweight npm package that automatically predicts data types for comma-separated values. Supports 14 data types including primitives, URLs, emails, UUIDs, dates, IP addresses, colors, percentages, and currency.
 
-## ✨ Features
+## Features
 
-- 🎯 **Automatic Type Detection**: Intelligently identifies 14 data types
-- 🔒 **Input Validation**: Robust error handling and input validation
-- 📊 **CSV Support**: Parse CSV-like data with optional headers
-- 🚀 **Lightweight**: Minimal dependencies (only dayjs)
-- 📝 **Well Tested**: Comprehensive test suite with edge cases
-- 🔧 **TypeScript Ready**: Type definitions included
-- ⚡ **Fast**: Optimized tokenization and regex patterns
+- Automatic detection of 14 data types
+- CSV parsing with optional headers
+- TypeScript definitions included
+- Minimal dependencies (only dayjs)
+- Comprehensive test coverage
+- Optimized regex patterns
 
-## 📦 Installation
+## Installation
 
 ```bash
 npm install predict-data-types
 ```
 
-## 🔧 Supported Data Types
+## Supported Data Types
 
-| Type         | Description             | Examples                                                  |
-| ------------ | ----------------------- | --------------------------------------------------------- |
-| `string`     | Plain text values       | `'John'`, `'Hello World'`                                 |
-| `number`     | Integers and decimals   | `42`, `3.14`, `-17`, `1e10`                               |
-| `boolean`    | Boolean representations | `true`, `false`, `yes`, `no`                              |
-| `email`      | Valid email addresses   | `user@example.com`, `test+tag@domain.co.uk`               |
-| `phone`      | Phone numbers           | `555-555-5555`, `(555) 555-5555`, `+1 555-555-5555`       |
-| `url`        | Web URLs                | `https://example.com`, `http://subdomain.site.co.uk/path` |
-| `uuid`       | UUID v1-v5              | `550e8400-e29b-41d4-a716-446655440000`                    |
-| `date`       | Various date formats    | `2023-12-31`, `31/12/2023`, `2023-12-31T23:59:59Z`        |
-| `ip`         | IPv4 and IPv6 addresses | `192.168.1.1`, `2001:0db8::1`                             |
-| `color`      | Hex color codes         | `#FF0000`, `#fff`, `#00ff00`                              |
-| `percentage` | Percentage values       | `50%`, `0.5%`, `-25%`                                     |
-| `currency`   | Currency amounts        | `$100`, `€50.99`, `£25`, `¥1000`                          |
-| `array`      | JSON arrays             | `[1, 2, 3]`, `["apple", "banana"]`                        |
-| `object`     | JSON objects            | `{"name": "John", "age": 30}`                             |
+| Type | Examples |
+|------|----------|
+| `string` | `'John'`, `'Hello World'` |
+| `number` | `42`, `3.14`, `-17`, `1e10` |
+| `boolean` | `true`, `false`, `yes`, `no` |
+| `email` | `user@example.com` |
+| `phone` | `555-555-5555`, `(555) 555-5555` |
+| `url` | `https://example.com` |
+| `uuid` | `550e8400-e29b-41d4-a716-446655440000` |
+| `date` | `2023-12-31`, `31/12/2023` |
+| `ip` | `192.168.1.1`, `2001:0db8::1` |
+| `color` | `#FF0000`, `#fff` |
+| `percentage` | `50%`, `-25%` |
+| `currency` | `$100`, `€50.99` |
+| `array` | `[1, 2, 3]` |
+| `object` | `{"name": "John"}` |
 
-## 🚀 Usage
+## Usage
 
-### Basic Usage
+### Basic Example
 
 ```javascript
 const predictDataTypes = require("predict-data-types");
@@ -51,7 +50,6 @@ const text = "John, 30, true, john@example.com, 2023-01-01";
 const types = predictDataTypes(text);
 
 console.log(types);
-// Output:
 // {
 //   'John': 'string',
 //   '30': 'number',
@@ -61,167 +59,65 @@ console.log(types);
 // }
 ```
 
-### Advanced Examples
-
-#### CSV-like Data with Headers
+### CSV with Headers
 
 ```javascript
-const csvData = `name,age,active,email,signup_date
-John,30,true,john@example.com,2023-01-01
-Jane,25,false,jane@example.com,2023-02-15`;
+const csvData = `name,age,active,email
+John,30,true,john@example.com`;
 
-const types = predictDataTypes(csvData, true); // true = first row is header
-console.log(types);
-// Output:
+const types = predictDataTypes(csvData, true);
 // {
 //   'name': 'string',
 //   'age': 'number',
 //   'active': 'boolean',
-//   'email': 'email',
-//   'signup_date': 'date'
+//   'email': 'email'
 // }
 ```
 
-#### Mixed Complex Data
+### Complex Data
 
 ```javascript
-const complexData = `
-  user@test.com,
-  555-123-4567,
-  https://github.com/user/repo,
-  550e8400-e29b-41d4-a716-446655440000,
-  {"settings": {"theme": "dark"}},
-  [1, 2, 3, 4, 5]
-`;
-
-const types = predictDataTypes(complexData);
-console.log(types);
-// Output:
+const data = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31";
+const types = predictDataTypes(data);
 // {
-//   'user@test.com': 'email',
-//   '555-123-4567': 'phone',
-//   'https://github.com/user/repo': 'url',
-//   '550e8400-e29b-41d4-a716-446655440000': 'uuid',
-//   '{"settings": {"theme": "dark"}}': 'object',
-//   '[1, 2, 3, 4, 5]': 'array'
+//   '192.168.1.1': 'ip',
+//   '#FF0000': 'color',
+//   '50%': 'percentage',
+//   '$100': 'currency',
+//   '2023-12-31': 'date'
 // }
 ```
 
-#### Date Format Detection
-
-```javascript
-const dates = "2023-12-31, 31/12/2023, 2023-12-31T23:59:59Z, Dec-31-2023";
-const types = predictDataTypes(dates);
-
-console.log(types);
-// Output:
-// {
-//   '2023-12-31': 'date',
-//   '31/12/2023': 'date',
-//   '2023-12-31T23:59:59Z': 'date',
-//   'Dec-31-2023': 'date'
-// }
-```
-
-## 📚 API Reference
+## API
 
 ### `predictDataTypes(input, firstRowIsHeader)`
 
 **Parameters:**
+- `input` (string): Comma-separated string to analyze
+- `firstRowIsHeader` (boolean): Treat first row as headers (default: `false`)
 
-- `input` (string): The comma-separated string to analyze
-- `firstRowIsHeader` (boolean, optional): Whether to treat the first row as column headers (default: `false`)
+**Returns:** Object mapping field names/values to their data types
 
-**Returns:**
+**Throws:** Error if input is null, undefined, or not a string
 
-- `Object<string, string>`: Mapping of field names/values to their predicted data types
-
-**Throws:**
-
-- `Error`: When input is null, undefined, or not a string
-
-**Supported Date Formats:**
-
-- ISO 8601: `2023-12-31T23:59:59Z`
-- Standard: `YYYY-MM-DD`, `DD/MM/YYYY`, `MM/DD/YYYY`
-- With time: `YYYY-MM-DD HH:mm:ss`
-- Month names: `DD-MMM-YYYY`, `MMM-DD-YYYY`
-
-## ⚠️ Error Handling
-
-The package includes robust error handling:
-
-```javascript
-// These will throw errors
-try {
-  predictDataTypes(null); // Error: Input cannot be null or undefined
-  predictDataTypes(123); // Error: Input must be a string
-  predictDataTypes([1, 2, 3]); // Error: Input must be a string
-} catch (error) {
-  console.error(error.message);
-}
-
-// These will return empty object or appropriate results
-predictDataTypes(""); // Returns: {}
-predictDataTypes("   "); // Returns: { '': 'string' }
-```
-
-## 🧪 Development
-
-### Running Tests
+## Development
 
 ```bash
-npm test        # Run all tests
-npm run lint    # Check code quality
-npm run lint:fix # Auto-fix lint issues
+npm test              # Run tests
+npm run test:coverage # Run tests with coverage
+npm run lint          # Check code quality
+npm run lint:fix      # Fix lint issues
 ```
 
-### Test Coverage
+## License
 
-The package includes comprehensive tests covering:
+MIT License - see [LICENSE](LICENSE) file for details.
 
-- ✅ All supported data types
-- ✅ Edge cases and error conditions
-- ✅ Input validation
-- ✅ Complex nested structures
-- ✅ Various date formats
-- ✅ Header mode functionality
+## Contributing
 
-## 📝 Changelog
-
-### v1.1.0
-
-- ✅ Fixed UUID pattern variable name bug
-- ✅ Replaced deprecated moment.js with dayjs
-- ✅ Added comprehensive input validation
-- ✅ Fixed security vulnerabilities
-- ✅ Added ESLint configuration
-- ✅ Enhanced test coverage
-- ✅ Added JSDoc documentation
-- ✅ Improved README documentation
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and development process.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests (`npm test`)
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📚 [Documentation](README.md)
-- �️ [Roadmap](ROADMAP.md) - Planned features and improvements
-- �🐛 [Issue Tracker](https://github.com/melihbirim/predict-data-types/issues)
-- 💬 [Discussions](https://github.com/melihbirim/predict-data-types/discussions)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-Made with ❤️ by [Melih Birim](https://github.com/melihbirim)
+Author: [Melih Birim](https://github.com/melihbirim)
+
