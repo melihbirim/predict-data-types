@@ -3,27 +3,41 @@
 [![npm version](https://img.shields.io/npm/v/predict-data-types.svg)](https://www.npmjs.com/package/predict-data-types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## The Problem
+
 **When users upload CSV or JSON files, everything arrives as strings.**
 
-This library infers the actual data types automatically.
+TypeScript and JavaScript can't help you here:
+
+```typescript
+// ❌ TypeScript only knows static types
+const userInput = "test@example.com";  // TypeScript thinks: string
+const csvValue = "2024-01-01";         // TypeScript thinks: string
+const formData = "42";                 // TypeScript thinks: string
+
+// TypeScript CANNOT detect these are email, date, and number at runtime
+```
+
+**This library solves that problem with runtime type detection:**
 
 ```javascript
 const { infer } = require("predict-data-types");
 
-infer("42")
-// → 'number'
+infer("test@example.com")  // → 'email' ✅
+infer("2024-01-01")        // → 'date' ✅
+infer("42")                // → 'number' ✅
 
 infer(["true", "false", "true"])
-// → 'boolean'
+// → 'boolean' ✅
 
 infer({ name: "Alice", age: "25", email: "alice@example.com" })
-// → { name: 'string', age: 'number', email: 'email' }
+// → { name: 'string', age: 'number', email: 'email' } ✅
 
 infer([
   { name: "Alice", age: "25" },
   { name: "Bob", age: "30" }
 ])
-// → { name: 'string', age: 'number' }
+// → { name: 'string', age: 'number' } ✅
 ```
 
 **One smart function. Any input type.**
@@ -229,9 +243,6 @@ const schema = infer(formData);
 if (schema.email !== DataTypes.EMAIL) {
   throw new Error("Invalid email format");
 }
-
-const schema = infer(formData);
-// Automatically validates field types
 ```
 
 **API Response Analysis**
@@ -254,6 +265,20 @@ const csvImport = `id,email,signup_date
 const schema = predictDataTypes(csvImport, true);
 // Auto-detect column types for database import
 ```
+
+## 📚 Examples
+
+Check out the [`examples/`](./examples) directory for complete, runnable examples:
+
+- **[CSV Import](./examples/csv-import)** - Parse files, detect types, transform data
+- **[Form Builder](./examples/form-builder)** - Auto-generate form fields with validation
+- **[API Analyzer](./examples/api-analyzer)** - Generate schemas and TypeScript interfaces
+- **[Data Validation](./examples/data-validation)** - Validate imported data quality
+
+Each example includes:
+- ✅ Runnable code with detailed comments
+- ✅ Real-world use cases
+- ✅ Sample data files
 
 ### Complex Data
 

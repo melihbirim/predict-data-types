@@ -1,0 +1,4 @@
+name,email,age,salary,hire_date,active,website
+Alice Johnson,alice@company.com,28,$75000,2024-01-15,true,https://alice.dev
+Bob Smith,bob@company.com,35,$95000,2023-06-20,true,https://bobsmith.io
+Carol Williams,carol@company.com,42,$120000,2022-03-10,false,https://carolw.com
