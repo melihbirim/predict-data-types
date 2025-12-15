@@ -174,12 +174,12 @@ declare namespace predictDataTypes {
     /**
      * Data type constants for type-safe comparisons
      */
-    const DataTypes: typeof import('.').DataTypes;
+    export { DataTypes };
 
     /**
      * Output format constants for schema generation
      */
-    const Formats: typeof import('.').Formats;
+    export { Formats };
 }
 
 export = predictDataTypes;
