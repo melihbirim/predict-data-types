@@ -298,51 +298,105 @@ node example.js
 ### Complex Data
 
 ```javascript
-const data = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31";
-const types = predictDataTypes(data);
-// {
-//   '192.168.1.1': 'ip',
-//   '#FF0000': 'color',
-//   '50%': 'percentage',
-//   '$100': 'currency',
-//   '2023-12-31': 'date'
-// }
+const { infer } = require('predict-data-types');
+
+const complexString = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31";
+const types = infer(complexString.split(', ').map(v => ({ value: v })));
+// { value: 'ip' } // Takes the most specific type found
+
+// Or analyze each value separately:
+const values = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31".split(', ');
+values.forEach(val => {
+  console.log(`${val}: ${infer(val)}`);
+});
+// 192.168.1.1: ip
+// #FF0000: color
+// 50%: percentage
+// $100: currency
+// 2023-12-31: date
 ```
 
 ## API
 
-### `predictDataTypes(input, firstRowIsHeader)`
+### `infer(input, format?)`
+
+**The main function - handles any input type:**
 
 **Parameters:**
 
+- `input` (string | string[] | Object | Object[]): Value(s) to analyze
+- `format` (optional): Output format - `Formats.NONE` (default) or `Formats.JSONSCHEMA`
+
+**Returns:**
+
+- `DataType` (string) - for single values and arrays of values
+- `Schema` (Object) - for objects and arrays of objects  
+- `JSONSchema` (Object) - when `format` is `Formats.JSONSCHEMA`
+
+**Examples:**
+
+```javascript
+const { infer, Formats, DataTypes } = require('predict-data-types');
+
+// Single values
+infer("42"); // → 'number'
+infer("test@example.com"); // → 'email'
+
+// Arrays
+infer(["1", "2", "3"]); // → 'number'
+
+// Objects
+infer({ age: "25", email: "test@example.com" });
+// → { age: 'number', email: 'email' }
+
+// Arrays of objects
+infer([{ age: "25" }, { age: "30" }]);
+// → { age: 'number' }
+
+// JSON Schema format
+infer({ name: "Alice", age: "25" }, Formats.JSONSCHEMA);
+// → { type: 'object', properties: {...}, required: [...] }
+```
+
+### Constants
+
+**`DataTypes`** - Type-safe constants for comparisons:
+```javascript
+DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
+DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
+DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY,
+DataTypes.ARRAY, DataTypes.OBJECT
+```
+
+**`Formats`** - Output format constants:
+```javascript
+Formats.NONE        // Default simple schema
+Formats.JSONSCHEMA  // JSON Schema format
+```
+
+### Legacy API
+
+**`predictDataTypes(input, firstRowIsHeader)`** - For CSV strings only (use `infer()` instead)
+
+<details>
+<summary>Show legacy API details</summary>
+
+**Parameters:**
 - `input` (string): Comma-separated string to analyze
 - `firstRowIsHeader` (boolean): Treat first row as headers (default: `false`)
 
 **Returns:** Object mapping field names/values to their data types
 
-**Throws:** Error if input is null, undefined, or not a string
-
-### `infer(input)`
-
-**Smart inference for any input type:**
-
-**Parameters:**
-
-- `input` (string | string[] | Object | Object[]): Value(s) to analyze
-
-**Returns:**
-
-- DataType (string) for primitive values and arrays of primitives
-- Schema (Object) for objects and arrays of objects
-
-**Examples:**
-
+**Example:**
 ```javascript
-infer("42"); // → 'number'
-infer(["1", "2"]); // → 'number'
-infer({ age: "25" }); // → { age: 'number' }
-infer([{ age: "25" }]); // → { age: 'number' }
+const types = predictDataTypes('name,age\nAlice,25', true);
+// { name: 'string', age: 'number' }
 ```
+
+**Note:** This function is maintained for backwards compatibility. New code should use `infer()`.
+
+</details>
+
 
 ## TypeScript vs. This Library
 
