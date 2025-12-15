@@ -11,9 +11,9 @@ TypeScript and JavaScript can't help you here:
 
 ```typescript
 // ❌ TypeScript only knows static types
-const userInput = "test@example.com";  // TypeScript thinks: string
-const csvValue = "2024-01-01";         // TypeScript thinks: string
-const formData = "42";                 // TypeScript thinks: string
+const userInput = "test@example.com"; // TypeScript thinks: string
+const csvValue = "2024-01-01"; // TypeScript thinks: string
+const formData = "42"; // TypeScript thinks: string
 
 // TypeScript CANNOT detect these are email, date, and number at runtime
 ```
@@ -23,20 +23,20 @@ const formData = "42";                 // TypeScript thinks: string
 ```javascript
 const { infer } = require("predict-data-types");
 
-infer("test@example.com")  // → 'email' ✅
-infer("2024-01-01")        // → 'date' ✅
-infer("42")                // → 'number' ✅
+infer("test@example.com"); // → 'email' ✅
+infer("2024-01-01"); // → 'date' ✅
+infer("42"); // → 'number' ✅
 
-infer(["true", "false", "true"])
+infer(["true", "false", "true"]);
 // → 'boolean' ✅
 
-infer({ name: "Alice", age: "25", email: "alice@example.com" })
+infer({ name: "Alice", age: "25", email: "alice@example.com" });
 // → { name: 'string', age: 'number', email: 'email' } ✅
 
 infer([
   { name: "Alice", age: "25" },
-  { name: "Bob", age: "30" }
-])
+  { name: "Bob", age: "30" },
+]);
 // → { name: 'string', age: 'number' } ✅
 ```
 
@@ -45,6 +45,8 @@ infer([
 ---
 
 Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 14+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, and currency.
+
+> **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
@@ -56,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 60 comprehensive test cases
+- **Battle-Tested**: 61 comprehensive test cases
 
 ## Installation
 
@@ -64,24 +66,63 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 npm install predict-data-types
 ```
 
+## Quick Examples
+
+Real-world use cases showing what you can build:
+
+**📊 CSV Import Tool**
+```javascript
+// Auto-detect column types and transform data
+const employees = parseCSV(file); // All values are strings
+const schema = infer(employees);
+// → { name: 'string', email: 'email', salary: 'currency', hire_date: 'date' }
+```
+
+**🎨 Form Builder**
+```javascript
+// Auto-generate form fields with correct input types
+const userData = { email: 'alice@example.com', age: '25', website: 'https://alice.dev' };
+const types = infer(userData);
+// → { email: 'email', age: 'number', website: 'url' }
+// Generate: <input type="email">, <input type="number">, <input type="url">
+```
+
+**🌐 API Analyzer**
+```javascript
+// Generate JSON Schema and TypeScript interfaces from API responses
+const response = await fetch('/api/users').then(r => r.json());
+const jsonSchema = infer(response, Formats.JSONSCHEMA);
+// Use with Ajv, joi, or generate TypeScript types
+```
+
+**✅ Data Validator**
+```javascript
+// Validate imported data quality
+const expected = { email: DataTypes.EMAIL, age: DataTypes.NUMBER };
+const actual = infer(importedData);
+// Detect mismatches, missing fields, wrong types
+```
+
+👉 **See full runnable examples in [`examples/`](./examples) directory**
+
 ## Supported Data Types
 
-| Type | Examples |
-|------|----------|
-| `string` | `'John'`, `'Hello World'` |
-| `number` | `42`, `3.14`, `-17`, `1e10` |
-| `boolean` | `true`, `false`, `yes`, `no` |
-| `email` | `user@example.com` |
-| `phone` | `555-555-5555`, `(555) 555-5555` |
-| `url` | `https://example.com` |
-| `uuid` | `550e8400-e29b-41d4-a716-446655440000` |
-| `date` | `2023-12-31`, `31/12/2023` |
-| `ip` | `192.168.1.1`, `2001:0db8::1` |
-| `color` | `#FF0000`, `#fff` |
-| `percentage` | `50%`, `-25%` |
-| `currency` | `$100`, `€50.99` |
-| `array` | `[1, 2, 3]` |
-| `object` | `{"name": "John"}` |
+| Type         | Examples                               |
+| ------------ | -------------------------------------- |
+| `string`     | `'John'`, `'Hello World'`              |
+| `number`     | `42`, `3.14`, `-17`, `1e10`            |
+| `boolean`    | `true`, `false`, `yes`, `no`           |
+| `email`      | `user@example.com`                     |
+| `phone`      | `555-555-5555`, `(555) 555-5555`       |
+| `url`        | `https://example.com`                  |
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000` |
+| `date`       | `2023-12-31`, `31/12/2023`             |
+| `ip`         | `192.168.1.1`, `2001:0db8::1`          |
+| `color`      | `#FF0000`, `#fff`                      |
+| `percentage` | `50%`, `-25%`                          |
+| `currency`   | `$100`, `€50.99`                       |
+| `array`      | `[1, 2, 3]`                            |
+| `object`     | `{"name": "John"}`                     |
 
 ## Usage
 
@@ -145,27 +186,27 @@ The `infer()` function automatically adapts to any input type:
 const { infer, DataTypes } = require("predict-data-types");
 
 // Single value → DataType
-infer("2024-01-01") // → 'date'
-infer("test@example.com") // → 'email'
-infer("42") // → 'number'
+infer("2024-01-01"); // → 'date'
+infer("test@example.com"); // → 'email'
+infer("42"); // → 'number'
 
 // Array of values → Common DataType
-infer(["1", "2", "3"]) // → 'number'
-infer(["true", "false", "yes"]) // → 'boolean'
+infer(["1", "2", "3"]); // → 'number'
+infer(["true", "false", "yes"]); // → 'boolean'
 
 // Object → Schema
-infer({ 
-  name: "Alice", 
-  age: "25", 
-  active: "true" 
-})
+infer({
+  name: "Alice",
+  age: "25",
+  active: "true",
+});
 // → { name: 'string', age: 'number', active: 'boolean' }
 
 // Array of objects → Schema
 infer([
   { name: "Alice", age: "25", email: "alice@example.com" },
-  { name: "Bob", age: "30", email: "bob@example.com" }
-])
+  { name: "Bob", age: "30", email: "bob@example.com" },
+]);
 // → { name: 'string', age: 'number', email: 'email' }
 ```
 
@@ -180,15 +221,15 @@ const data = {
   name: "Alice",
   age: "25",
   email: "alice@example.com",
-  website: "https://example.com"
+  website: "https://example.com",
 };
 
 // Simple format (default)
-infer(data)
+infer(data);
 // → { name: 'string', age: 'number', email: 'email', website: 'url' }
 
 // JSON Schema format
-infer(data, Formats.JSONSCHEMA)
+infer(data, Formats.JSONSCHEMA);
 // → {
 //     type: 'object',
 //     properties: {
@@ -201,12 +242,17 @@ infer(data, Formats.JSONSCHEMA)
 //   }
 
 // Use with validation libraries
-const Ajv = require('ajv');
+const Ajv = require("ajv");
 const ajv = new Ajv();
 
 const schema = infer(data, Formats.JSONSCHEMA);
 const validate = ajv.compile(schema);
-const valid = validate({ name: "Bob", age: 30, email: "bob@example.com", website: "https://bob.dev" });
+const valid = validate({
+  name: "Bob",
+  age: 30,
+  email: "bob@example.com",
+  website: "https://bob.dev",
+});
 ```
 
 ### CSV with Headers
@@ -224,60 +270,29 @@ const types = predictDataTypes(csvData, true);
 // }
 ```
 
-### Real-World Use Cases
+## 📚 Complete Examples
 
-**Form Validation**
-```javascript
-const { infer, DataTypes } = require("predict-data-types");
+The [`examples/`](./examples) directory contains full, runnable code for real-world scenarios:
 
-const formData = {
-  email: "user@example.com",
-  age: "25",
-  website: "https://example.com"
-};
-
-const schema = infer(formData);
-// { email: 'email', age: 'number', website: 'url' }
-
-// Type-safe validation
-if (schema.email !== DataTypes.EMAIL) {
-  throw new Error("Invalid email format");
-}
-```
-
-**API Response Analysis**
-```javascript
-const apiResponse = [
-  { id: "1", created: "2024-01-01", status: "true" },
-  { id: "2", created: "2024-01-02", status: "false" }
-];
-
-const schema = infer(apiResponse);
-// Generate schema for documentation
-```
-
-**CSV Import**
-```javascript
-const csvImport = `id,email,signup_date
-1,alice@example.com,2024-01-01
-2,bob@example.com,2024-01-02`;
-
-const schema = predictDataTypes(csvImport, true);
-// Auto-detect column types for database import
-```
-
-## 📚 Examples
-
-Check out the [`examples/`](./examples) directory for complete, runnable examples:
-
-- **[CSV Import](./examples/csv-import)** - Parse files, detect types, transform data
-- **[Form Builder](./examples/form-builder)** - Auto-generate form fields with validation
-- **[API Analyzer](./examples/api-analyzer)** - Generate schemas and TypeScript interfaces
-- **[Data Validation](./examples/data-validation)** - Validate imported data quality
+- **[CSV Import](./examples/csv-import)** - Parse CSV files, auto-detect types, transform data to proper JavaScript types
+- **[Form Builder](./examples/form-builder)** - Dynamically generate HTML forms with correct input types and validation
+- **[API Analyzer](./examples/api-analyzer)** - Generate JSON Schemas, TypeScript interfaces, and API documentation
+- **[Data Validation](./examples/data-validation)** - Validate imported data quality and detect type mismatches
 
 Each example includes:
-- ✅ Runnable code with detailed comments
-- ✅ Real-world use cases
+
+- ✅ Complete runnable code with detailed comments
+- ✅ Real-world use cases and scenarios
+- ✅ Sample data files where applicable
+
+**Run any example:**
+```bash
+cd examples/csv-import
+node example.js
+```
+
+### Complex Data
+
 - ✅ Sample data files
 
 ### Complex Data
@@ -299,6 +314,7 @@ const types = predictDataTypes(data);
 ### `predictDataTypes(input, firstRowIsHeader)`
 
 **Parameters:**
+
 - `input` (string): Comma-separated string to analyze
 - `firstRowIsHeader` (boolean): Treat first row as headers (default: `false`)
 
@@ -311,19 +327,58 @@ const types = predictDataTypes(data);
 **Smart inference for any input type:**
 
 **Parameters:**
+
 - `input` (string | string[] | Object | Object[]): Value(s) to analyze
 
-**Returns:** 
+**Returns:**
+
 - DataType (string) for primitive values and arrays of primitives
 - Schema (Object) for objects and arrays of objects
 
 **Examples:**
+
 ```javascript
-infer("42")                    // → 'number'
-infer(["1", "2"])              // → 'number'
-infer({ age: "25" })           // → { age: 'number' }
-infer([{ age: "25" }])         // → { age: 'number' }
+infer("42"); // → 'number'
+infer(["1", "2"]); // → 'number'
+infer({ age: "25" }); // → { age: 'number' }
+infer([{ age: "25" }]); // → { age: 'number' }
 ```
+
+## TypeScript vs. This Library
+
+**Common Misconception:** "Doesn't TypeScript already do this?"
+
+**No!** TypeScript and this library serve completely different purposes:
+
+| Feature | TypeScript | This Library |
+|---------|-----------|--------------|
+| **When it works** | Compile-time | Runtime |
+| **What it checks** | Your code structure | Actual data content |
+| **Scope** | Static type annotations | Dynamic string analysis |
+| **Use case** | Prevent coding errors | Analyze user-provided data |
+
+**Example:**
+
+```typescript
+// TypeScript
+const value: string = "test@example.com";
+// TypeScript knows: "value is a string"
+// TypeScript DOESN'T know: "value contains an email address"
+
+// This Library
+const type = infer("test@example.com");
+// Returns: 'email' ✅
+// Detects the ACTUAL CONTENT at runtime
+```
+
+**When to use this library:**
+- 📊 Users upload CSV/Excel files
+- 🌐 API responses with unknown structure  
+- 📝 Form data that needs validation
+- 🔄 ETL pipelines processing raw data
+- 🎨 Dynamic form/UI generation
+
+TypeScript can't help with any of these - you need runtime type detection!
 
 ## Development
 
@@ -345,4 +400,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 ---
 
 Author: [Melih Birim](https://github.com/melihbirim)
-
