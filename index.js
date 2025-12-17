@@ -17,7 +17,8 @@ const DataTypes = {
     IP: 'ip',
     COLOR: 'color',
     PERCENTAGE: 'percentage',
-    CURRENCY: 'currency'
+    CURRENCY: 'currency',
+    MENTION: 'mention'
 };
 
 /**
@@ -40,7 +41,8 @@ const PATTERNS = {
     IPV6: /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:$|^(?:[0-9a-fA-F]{1,4}:)(?::[0-9a-fA-F]{1,4}){1,6}$/,
     HEX_COLOR: /^#(?:[0-9a-fA-F]{3}){1,2}$/,
     PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
-    CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/
+    CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
+    MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -323,6 +325,17 @@ function isEmail(value) {
 }
 
 /**
+ * Checks if a given value is a social media mention (e.g., @username)
+ * Allows letters, numbers, underscores, and hyphens after the @,
+ * must start with a letter or number.
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a mention, false otherwise
+ */
+function isMention(value) {
+    return PATTERNS.MENTION.test(value);
+}
+
+/**
  * Checks if a given value is a valid IP address (IPv4 or IPv6)
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a valid IP address, false otherwise
@@ -480,6 +493,8 @@ function detectFieldType(value) {
         return 'phone';
     } else if (isEmail(trimmedValue)) {
         return 'email';
+    } else if (isMention(trimmedValue)) {
+        return 'mention';
     } else if (isHexColor(trimmedValue)) {
         return 'color';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
@@ -624,6 +639,8 @@ function toJSONSchema(schema) {
             properties[fieldName].pattern = '^-?\\d+(?:\\.\\d+)?%$';
         } else if (dataType === 'currency') {
             properties[fieldName].pattern = '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
+        } else if (dataType === 'mention') {
+            properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
         }
 
         required.push(fieldName);
@@ -686,7 +703,7 @@ function infer(input, format = Formats.NONE) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'color',
+            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
             'currency', 'percentage', 'date', 'boolean',
             'number', 'array', 'object', 'string'
         ];
@@ -755,7 +772,7 @@ function inferSchemaFromObjects(rows) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'color',
+            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
             'currency', 'percentage', 'date', 'boolean',
             'number', 'array', 'object', 'string'
         ];

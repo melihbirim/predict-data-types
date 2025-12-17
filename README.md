@@ -44,21 +44,21 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 14+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, and currency.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 15 data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, and mentions.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **14 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency
+- **15 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, mentions
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 61 comprehensive test cases
+- **Battle-Tested**: 62 comprehensive test cases
 
 ## Installation
 
@@ -107,22 +107,23 @@ const actual = infer(importedData);
 
 ## Supported Data Types
 
-| Type         | Examples                               |
-| ------------ | -------------------------------------- |
-| `string`     | `'John'`, `'Hello World'`              |
-| `number`     | `42`, `3.14`, `-17`, `1e10`            |
-| `boolean`    | `true`, `false`, `yes`, `no`           |
-| `email`      | `user@example.com`                     |
-| `phone`      | `555-555-5555`, `(555) 555-5555`       |
-| `url`        | `https://example.com`                  |
-| `uuid`       | `550e8400-e29b-41d4-a716-446655440000` |
-| `date`       | `2023-12-31`, `31/12/2023`             |
-| `ip`         | `192.168.1.1`, `2001:0db8::1`          |
-| `color`      | `#FF0000`, `#fff`                      |
-| `percentage` | `50%`, `-25%`                          |
-| `currency`   | `$100`, `€50.99`                       |
-| `array`      | `[1, 2, 3]`                            |
-| `object`     | `{"name": "John"}`                     |
+| Type         | Examples                                  |
+| ------------ |-------------------------------------------|
+| `string`     | `'John'`, `'Hello World'`                 |
+| `number`     | `42`, `3.14`, `-17`, `1e10`               |
+| `boolean`    | `true`, `false`, `yes`, `no`              |
+| `email`      | `user@example.com`                        |
+| `phone`      | `555-555-5555`, `(555) 555-5555`          |
+| `url`        | `https://example.com`                     |
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`    |
+| `date`       | `2023-12-31`, `31/12/2023`                |
+| `ip`         | `192.168.1.1`, `2001:0db8::1`             |
+| `color`      | `#FF0000`, `#fff`                         |
+| `percentage` | `50%`, `-25%`                             |
+| `currency`   | `$100`, `€50.99`                          |
+| `mention`    | `@username`, `@user_name123`, `@john-doe` |
+| `array`      | `[1, 2, 3]`                               |
+| `object`     | `{"name": "John"}`                        |
 
 ## Usage
 
@@ -158,6 +159,7 @@ DataTypes.IP          // 'ip'
 DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
+DataTypes.MENTION     // 'mention'
 ```
 
 ### Basic Example
@@ -188,6 +190,7 @@ const { infer, DataTypes } = require("predict-data-types");
 // Single value → DataType
 infer("2024-01-01"); // → 'date'
 infer("test@example.com"); // → 'email'
+infer("@username"); // → 'mention'
 infer("42"); // → 'number'
 
 // Array of values → Common DataType
