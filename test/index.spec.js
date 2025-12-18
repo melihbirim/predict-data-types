@@ -19,6 +19,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.COLOR).to.equal('color');
         expect(DataTypes.PERCENTAGE).to.equal('percentage');
         expect(DataTypes.CURRENCY).to.equal('currency');
+        expect(DataTypes.MENTION).to.equal('mention');
     });
 });
 
@@ -485,6 +486,12 @@ describe('predictDataTypes', () => {
             expect(infer('42')).to.equal('number');
             expect(infer('true')).to.equal('boolean');
             expect(infer('https://example.com')).to.equal('url');
+        });
+
+        it('should detect social media mentions/usernames', () => {
+            expect(infer('@username')).to.equal('mention');
+            expect(infer('@user_name123')).to.equal('mention');
+            expect(infer('@john-doe')).to.equal('mention');
         });
 
         it('should infer type from array of values', () => {
