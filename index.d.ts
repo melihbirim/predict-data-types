@@ -20,7 +20,8 @@ declare type DataType =
     | 'color'
     | 'percentage'
     | 'currency'
-    | 'mention';
+    | 'mention'
+    | 'cron';
 
 /**
  * Data type constants for type-safe comparisons
@@ -42,6 +43,7 @@ declare const DataTypes: {
     readonly PERCENTAGE: 'percentage';
     readonly CURRENCY: 'currency';
     readonly MENTION: 'mention';
+    readonly CRON: 'cron';
 };
 
 /**

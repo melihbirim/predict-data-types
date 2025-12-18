@@ -20,6 +20,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.PERCENTAGE).to.equal('percentage');
         expect(DataTypes.CURRENCY).to.equal('currency');
         expect(DataTypes.MENTION).to.equal('mention');
+        expect(DataTypes.CRON).to.equal('cron');
     });
 });
 
@@ -492,6 +493,17 @@ describe('predictDataTypes', () => {
             expect(infer('@username')).to.equal('mention');
             expect(infer('@user_name123')).to.equal('mention');
             expect(infer('@john-doe')).to.equal('mention');
+        });
+
+        it('should detect cron expressions', () => {
+            expect(infer('0 0 * * *')).to.equal('cron');
+            expect(infer('*/5 * * * *')).to.equal('cron');
+            expect(infer('0 9-17 * * 1-5')).to.equal('cron');
+            expect(infer('30 2 * * 0')).to.equal('cron');
+            expect(infer('* * * *')).to.equal('string'); // Too few fields
+            expect(infer('0 0 * * * *')).to.equal('string'); // Too many fields
+            expect(infer('60 0 * * *')).to.equal('string'); // Invalid minute
+            expect(infer('hello world')).to.equal('string'); // Not a cron
         });
 
         it('should infer type from array of values', () => {
