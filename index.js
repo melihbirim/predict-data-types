@@ -18,7 +18,8 @@ const DataTypes = {
     COLOR: 'color',
     PERCENTAGE: 'percentage',
     CURRENCY: 'currency',
-    MENTION: 'mention'
+    MENTION: 'mention',
+    CRON: 'cron'
 };
 
 /**
@@ -372,6 +373,104 @@ function isCurrency(value) {
 }
 
 /**
+ * Checks if a given value is a valid cron expression
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid cron expression, false otherwise
+ */
+function isCron(value) {
+    const trimmedValue = value.trim();
+    const fields = trimmedValue.split(/\s+/);
+
+    // Must have exactly 5 fields
+    if (fields.length !== 5) {
+        return false;
+    }
+
+    // Field ranges: minute(0-59), hour(0-23), day(1-31), month(1-12), weekday(0-7)
+    const ranges = [
+        { min: 0, max: 59 }, // minute
+        { min: 0, max: 23 }, // hour
+        { min: 1, max: 31 }, // day
+        { min: 1, max: 12 }, // month
+        { min: 0, max: 7 }  // weekday (0 and 7 are Sunday)
+    ];
+
+    for (let i = 0; i < fields.length; i++) {
+        const field = fields[i];
+        if (!isValidCronField(field, ranges[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Validates a single cron field
+ * @param {string} field - The field to validate
+ * @param {Object} range - The valid range {min, max}
+ * @returns {boolean} True if valid, false otherwise
+ */
+function isValidCronField(field, range) {
+    if (field === '*') {
+        return true;
+    }
+
+    // Handle step values like */5 or 1-5/2
+    const stepParts = field.split('/');
+    if (stepParts.length > 2) {
+        return false;
+    }
+
+    const baseField = stepParts[0];
+    const step = stepParts[1];
+
+    // Validate step if present
+    if (step !== undefined) {
+        const stepNum = parseInt(step, 10);
+        if (isNaN(stepNum) || stepNum < 1) {
+            return false;
+        }
+    }
+
+    // Handle ranges and lists
+    const parts = baseField.split(',');
+    for (const part of parts) {
+        if (!isValidCronPart(part, range)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Validates a single part of a cron field (before comma split)
+ * @param {string} part - The part to validate
+ * @param {Object} range - The valid range {min, max}
+ * @returns {boolean} True if valid, false otherwise
+ */
+function isValidCronPart(part, range) {
+    if (part === '*') {
+        return true;
+    }
+
+    // Handle ranges like 1-5
+    const rangeParts = part.split('-');
+    if (rangeParts.length === 1) {
+        // Single number
+        const num = parseInt(part, 10);
+        return !isNaN(num) && num >= range.min && num <= range.max;
+    } else if (rangeParts.length === 2) {
+        const start = parseInt(rangeParts[0], 10);
+        const end = parseInt(rangeParts[1], 10);
+        return !isNaN(start) && !isNaN(end) && start >= range.min && end <= range.max && start <= end;
+    }
+
+    return false;
+}
+
+/**
  * Tokenizes a string by splitting on commas while respecting quoted strings and nested objects/arrays
  * Optimized version with improved performance for large inputs
  * @param {string} text - The text to tokenize
@@ -497,6 +596,8 @@ function detectFieldType(value) {
         return 'mention';
     } else if (isHexColor(trimmedValue)) {
         return 'color';
+    } else if (isCron(trimmedValue)) {
+        return 'cron';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
@@ -704,7 +805,7 @@ function infer(input, format = Formats.NONE) {
 
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
-            'currency', 'percentage', 'date', 'boolean',
+            'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 
@@ -773,7 +874,7 @@ function inferSchemaFromObjects(rows) {
 
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
-            'currency', 'percentage', 'date', 'boolean',
+            'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 
