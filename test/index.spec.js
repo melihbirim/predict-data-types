@@ -16,6 +16,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.ARRAY).to.equal('array');
         expect(DataTypes.OBJECT).to.equal('object');
         expect(DataTypes.IP).to.equal('ip');
+        expect(DataTypes.MACADDRESS).to.equal('macaddress');
         expect(DataTypes.COLOR).to.equal('color');
         expect(DataTypes.PERCENTAGE).to.equal('percentage');
         expect(DataTypes.CURRENCY).to.equal('currency');
@@ -394,6 +395,39 @@ describe('predictDataTypes', () => {
                 '256.256.256.256': 'string',
                 '192.168.1': 'string',
                 'not-an-ip': 'string'
+            });
+        });
+    });
+
+    describe('MAC address detection', () => {
+        it('should detect valid MAC addresses with colon separators', () => {
+            const text = '00:1B:63:84:45:E6, FF:FF:FF:FF:FF:FF, 00:00:00:00:00:00';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '00:1B:63:84:45:E6': 'macaddress',
+                'FF:FF:FF:FF:FF:FF': 'macaddress',
+                '00:00:00:00:00:00': 'macaddress'
+            });
+        });
+
+        it('should detect valid MAC addresses with hyphen separators', () => {
+            const text = '00-1B-63-84-45-E6, FF-FF-FF-FF-FF-FF, 00-00-00-00-00-00';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '00-1B-63-84-45-E6': 'macaddress',
+                'FF-FF-FF-FF-FF-FF': 'macaddress',
+                '00-00-00-00-00-00': 'macaddress'
+            });
+        });
+
+        it('should not detect invalid MAC addresses', () => {
+            const text = '00:1B:63:84:45, 00:1B:63:84:45:E6:FF, not-a-mac, GG:HH:II:JJ:KK:LL';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '00:1B:63:84:45': 'string',
+                '00:1B:63:84:45:E6:FF': 'string',
+                'not-a-mac': 'string',
+                'GG:HH:II:JJ:KK:LL': 'string'
             });
         });
     });

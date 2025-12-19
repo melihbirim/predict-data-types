@@ -15,6 +15,7 @@ const DataTypes = {
     ARRAY: 'array',
     OBJECT: 'object',
     IP: 'ip',
+    MACADDRESS: 'macaddress',
     COLOR: 'color',
     PERCENTAGE: 'percentage',
     CURRENCY: 'currency',
@@ -43,7 +44,8 @@ const PATTERNS = {
     HEX_COLOR: /^#(?:[0-9a-fA-F]{3}){1,2}$/,
     PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
-    MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/
+    MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
+    MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -346,6 +348,15 @@ function isIPAddress(value) {
 }
 
 /**
+ * Checks if a given value is a valid MAC address
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid MAC address, false otherwise
+ */
+function isMACAddress(value) {
+    return PATTERNS.MAC_ADDRESS.test(value);
+}
+
+/**
  * Checks if a given value is a valid hex color code
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a valid hex color, false otherwise
@@ -588,6 +599,8 @@ function detectFieldType(value) {
         return 'uuid';
     } else if (isIPAddress(trimmedValue)) {
         return 'ip';
+    } else if (isMACAddress(trimmedValue)) {
+        return 'macaddress';
     } else if (isPhoneNumber(trimmedValue)) {
         return 'phone';
     } else if (isEmail(trimmedValue)) {
@@ -804,7 +817,7 @@ function infer(input, format = Formats.NONE) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
+            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
@@ -873,7 +886,7 @@ function inferSchemaFromObjects(rows) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
+            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
