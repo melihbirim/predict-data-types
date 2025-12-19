@@ -4,22 +4,23 @@
  * @constant
  */
 const DataTypes = {
-    STRING: 'string',
-    NUMBER: 'number',
-    BOOLEAN: 'boolean',
-    EMAIL: 'email',
-    PHONE: 'phone',
-    URL: 'url',
-    UUID: 'uuid',
-    DATE: 'date',
-    ARRAY: 'array',
-    OBJECT: 'object',
-    IP: 'ip',
-    COLOR: 'color',
-    PERCENTAGE: 'percentage',
-    CURRENCY: 'currency',
-    MENTION: 'mention',
-    CRON: 'cron'
+  STRING: "string",
+  NUMBER: "number",
+  BOOLEAN: "boolean",
+  EMAIL: "email",
+  PHONE: "phone",
+  URL: "url",
+  UUID: "uuid",
+  DATE: "date",
+  ARRAY: "array",
+  OBJECT: "object",
+  IP: "ip",
+  COLOR: "color",
+  PERCENTAGE: "percentage",
+  CURRENCY: "currency",
+  MENTION: "mention",
+  CRON: "cron",
+  HASHTAG: "hashtag",
 };
 
 /**
@@ -27,77 +28,78 @@ const DataTypes = {
  * @constant
  */
 const Formats = {
-    NONE: 'none',
-    JSONSCHEMA: 'jsonschema'
+  NONE: "none",
+  JSONSCHEMA: "jsonschema",
 };
 
 // Cached compiled regex patterns for performance
 const PATTERNS = {
-    URL: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
-    UUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    PHONE: /^(\+\d{1,3}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
-    EMAIL: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
-    LEADING_ZERO: /^0\d/,
-    IPV4: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-    IPV6: /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:$|^(?:[0-9a-fA-F]{1,4}:)(?::[0-9a-fA-F]{1,4}){1,6}$/,
-    HEX_COLOR: /^#(?:[0-9a-fA-F]{3}){1,2}$/,
-    PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
-    CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
-    MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/
+  URL: /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
+  UUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  PHONE: /^(\+\d{1,3}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
+  EMAIL: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
+  LEADING_ZERO: /^0\d/,
+  IPV4: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+  IPV6: /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:$|^(?:[0-9a-fA-F]{1,4}:)(?::[0-9a-fA-F]{1,4}){1,6}$/,
+  HEX_COLOR: /^#(?:[0-9a-fA-F]{3}){1,2}$/,
+  PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
+  CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
+  MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
+  HASHTAG: /^#[A-Za-z0-9_]+$/,
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
 const DATE_FORMATS = [
-    // ISO 8601 and variants with timezone
-    'YYYY-MM-DDTHH:mm:ss.SSSZ',
-    // With timezone offset
-    'YYYY/MM/DD HH:mm:ss.SSS z',
-    'YYYY-MM-DD HH:mm:ss.SSS z',
-    'MM/DD/YYYY HH:mm:ss.SSS z',
-    'DD/MM/YYYY HH:mm:ss.SSS z',
-    'YYYY/MM/DD HH:mm:ss z',
-    'YYYY-MM-DD HH:mm:ss z',
-    'MM/DD/YYYY HH:mm:ss z',
-    'DD/MM/YYYY HH:mm:ss z',
-    // With milliseconds
-    'YYYY/MM/DD HH:mm:ss.SSS',
-    'YYYY-MM-DD HH:mm:ss.SSS',
-    'MM/DD/YYYY HH:mm:ss.SSS',
-    'DD/MM/YYYY HH:mm:ss.SSS',
-    // With month names and milliseconds
-    'dd MMM yyyy HH:mm:ss.SSS z',
-    'MMM dd yyyy HH:mm:ss.SSS z',
-    'dd MMM yyyy HH:mm:ss.SSS',
-    'MMM dd yyyy HH:mm:ss.SSS',
-    // Standard date-time formats
-    'YYYY/MM/DD HH:mm:ss',
-    'YYYY-MM-DD HH:mm:ss',
-    'MM/DD/YYYY HH:mm:ss',
-    'DD/MM/YYYY HH:mm:ss',
-    // With month names
-    'dd MMM yyyy HH:mm:ss',
-    'MMM dd yyyy HH:mm:ss',
-    'dd-MMM-yyyy HH:mm:ss',
-    'MMM-dd-yyyy HH:mm:ss',
-    // Date with time (hours and minutes only)
-    'YYYY/MM/DD HH:mm',
-    'YYYY-MM-DD HH:mm',
-    'MM/DD/YYYY HH:mm',
-    'DD/MM/YYYY HH:mm',
-    'dd MMM yyyy HH:mm',
-    'MMM dd yyyy HH:mm',
-    // Date only formats
-    'YYYY/MM/DD',
-    'YYYY-MM-DD',
-    'MM/DD/YYYY',
-    'DD/MM/YYYY',
-    'MM-DD-YYYY',
-    'DD-MM-YYYY',
-    // With month names (date only)
-    'dd MMM yyyy',
-    'MMM dd yyyy',
-    'dd-MMM-yyyy',
-    'MMM-dd-yyyy'
+  // ISO 8601 and variants with timezone
+  "YYYY-MM-DDTHH:mm:ss.SSSZ",
+  // With timezone offset
+  "YYYY/MM/DD HH:mm:ss.SSS z",
+  "YYYY-MM-DD HH:mm:ss.SSS z",
+  "MM/DD/YYYY HH:mm:ss.SSS z",
+  "DD/MM/YYYY HH:mm:ss.SSS z",
+  "YYYY/MM/DD HH:mm:ss z",
+  "YYYY-MM-DD HH:mm:ss z",
+  "MM/DD/YYYY HH:mm:ss z",
+  "DD/MM/YYYY HH:mm:ss z",
+  // With milliseconds
+  "YYYY/MM/DD HH:mm:ss.SSS",
+  "YYYY-MM-DD HH:mm:ss.SSS",
+  "MM/DD/YYYY HH:mm:ss.SSS",
+  "DD/MM/YYYY HH:mm:ss.SSS",
+  // With month names and milliseconds
+  "dd MMM yyyy HH:mm:ss.SSS z",
+  "MMM dd yyyy HH:mm:ss.SSS z",
+  "dd MMM yyyy HH:mm:ss.SSS",
+  "MMM dd yyyy HH:mm:ss.SSS",
+  // Standard date-time formats
+  "YYYY/MM/DD HH:mm:ss",
+  "YYYY-MM-DD HH:mm:ss",
+  "MM/DD/YYYY HH:mm:ss",
+  "DD/MM/YYYY HH:mm:ss",
+  // With month names
+  "dd MMM yyyy HH:mm:ss",
+  "MMM dd yyyy HH:mm:ss",
+  "dd-MMM-yyyy HH:mm:ss",
+  "MMM-dd-yyyy HH:mm:ss",
+  // Date with time (hours and minutes only)
+  "YYYY/MM/DD HH:mm",
+  "YYYY-MM-DD HH:mm",
+  "MM/DD/YYYY HH:mm",
+  "DD/MM/YYYY HH:mm",
+  "dd MMM yyyy HH:mm",
+  "MMM dd yyyy HH:mm",
+  // Date only formats
+  "YYYY/MM/DD",
+  "YYYY-MM-DD",
+  "MM/DD/YYYY",
+  "DD/MM/YYYY",
+  "MM-DD-YYYY",
+  "DD-MM-YYYY",
+  // With month names (date only)
+  "dd MMM yyyy",
+  "MMM dd yyyy",
+  "dd-MMM-yyyy",
+  "MMM-dd-yyyy",
 ];
 
 /**
@@ -106,13 +108,23 @@ const DATE_FORMATS = [
  * @returns {number|null} Month index (0-11) or null if invalid
  */
 function parseMonth(monthString) {
-    const monthNames = [
-        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
-    ];
-    const normalized = monthString.toLowerCase().substring(0, 3);
-    const monthIndex = monthNames.indexOf(normalized);
-    return monthIndex === -1 ? null : monthIndex;
+  const monthNames = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+  ];
+  const normalized = monthString.toLowerCase().substring(0, 3);
+  const monthIndex = monthNames.indexOf(normalized);
+  return monthIndex === -1 ? null : monthIndex;
 }
 
 /**
@@ -121,13 +133,13 @@ function parseMonth(monthString) {
  * @returns {number|null} Offset in minutes or null if invalid
  */
 function parseTimezone(tzString) {
-    if (tzString === 'Z' || tzString === 'z') return 0;
-    const match = tzString.match(/^([+-])(\d{2}):?(\d{2})?$/);
-    if (!match) return null;
-    const sign = match[1] === '+' ? 1 : -1;
-    const hours = parseInt(match[2], 10);
-    const minutes = parseInt(match[3] || '00', 10);
-    return sign * ((hours * 60) + minutes);
+  if (tzString === "Z" || tzString === "z") return 0;
+  const match = tzString.match(/^([+-])(\d{2}):?(\d{2})?$/);
+  if (!match) return null;
+  const sign = match[1] === "+" ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const minutes = parseInt(match[3] || "00", 10);
+  return sign * (hours * 60 + minutes);
 }
 
 /**
@@ -137,74 +149,86 @@ function parseTimezone(tzString) {
  * @returns {Date|null} Parsed Date object or null if invalid
  */
 function parseWithFormat(input, format) {
-    const parts = input.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
-    const formatParts = format.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
+  const parts = input
+    .trim()
+    .split(/[\s\/\-\:\.TZ]+/)
+    .filter((p) => p);
+  const formatParts = format
+    .trim()
+    .split(/[\s\/\-\:\.TZ]+/)
+    .filter((p) => p);
 
-    if (parts.length < 3) return null; // At minimum need year, month, day
+  if (parts.length < 3) return null; // At minimum need year, month, day
 
-    const dateValues = {};
-    let timezoneOffset = null;
-    let partIndex = 0;
+  const dateValues = {};
+  let timezoneOffset = null;
+  let partIndex = 0;
 
-    for (let i = 0; i < formatParts.length && partIndex < parts.length; i++) {
-        const formatPart = formatParts[i];
-        const part = parts[partIndex];
+  for (let i = 0; i < formatParts.length && partIndex < parts.length; i++) {
+    const formatPart = formatParts[i];
+    const part = parts[partIndex];
 
-        if (formatPart === 'YYYY' || formatPart === 'yyyy') {
-            const year = parseInt(part, 10);
-            if (isNaN(year) || part.length !== 4) return null;
-            dateValues.year = year;
-            partIndex++;
-        } else if (formatPart === 'MM') {
-            const month = parseInt(part, 10);
-            if (isNaN(month) || month < 1 || month > 12) return null;
-            dateValues.month = month - 1;
-            partIndex++;
-        } else if (formatPart === 'MMM') {
-            const month = parseMonth(part);
-            if (month === null) return null;
-            dateValues.month = month;
-            partIndex++;
-        } else if (formatPart === 'DD' || formatPart === 'dd') {
-            const day = parseInt(part, 10);
-            if (isNaN(day) || day < 1 || day > 31) return null;
-            dateValues.day = day;
-            partIndex++;
-        } else if (formatPart === 'HH') {
-            const hour = parseInt(part, 10);
-            if (isNaN(hour) || hour < 0 || hour > 23) return null;
-            dateValues.hour = hour;
-            partIndex++;
-        } else if (formatPart === 'mm') {
-            const minute = parseInt(part, 10);
-            if (isNaN(minute) || minute < 0 || minute > 59) return null;
-            dateValues.minute = minute;
-            partIndex++;
-        } else if (formatPart === 'ss') {
-            const second = parseInt(part, 10);
-            if (isNaN(second) || second < 0 || second > 59) return null;
-            dateValues.second = second;
-            partIndex++;
-        } else if (formatPart === 'SSS') {
-            const ms = parseInt(part, 10);
-            if (isNaN(ms)) return null;
-            dateValues.millisecond = ms;
-            partIndex++;
-        } else if (formatPart === 'z') {
-            // Timezone offset
-            timezoneOffset = parseTimezone(part);
-            if (timezoneOffset === null) return null;
-            partIndex++;
-        }
+    if (formatPart === "YYYY" || formatPart === "yyyy") {
+      const year = parseInt(part, 10);
+      if (isNaN(year) || part.length !== 4) return null;
+      dateValues.year = year;
+      partIndex++;
+    } else if (formatPart === "MM") {
+      const month = parseInt(part, 10);
+      if (isNaN(month) || month < 1 || month > 12) return null;
+      dateValues.month = month - 1;
+      partIndex++;
+    } else if (formatPart === "MMM") {
+      const month = parseMonth(part);
+      if (month === null) return null;
+      dateValues.month = month;
+      partIndex++;
+    } else if (formatPart === "DD" || formatPart === "dd") {
+      const day = parseInt(part, 10);
+      if (isNaN(day) || day < 1 || day > 31) return null;
+      dateValues.day = day;
+      partIndex++;
+    } else if (formatPart === "HH") {
+      const hour = parseInt(part, 10);
+      if (isNaN(hour) || hour < 0 || hour > 23) return null;
+      dateValues.hour = hour;
+      partIndex++;
+    } else if (formatPart === "mm") {
+      const minute = parseInt(part, 10);
+      if (isNaN(minute) || minute < 0 || minute > 59) return null;
+      dateValues.minute = minute;
+      partIndex++;
+    } else if (formatPart === "ss") {
+      const second = parseInt(part, 10);
+      if (isNaN(second) || second < 0 || second > 59) return null;
+      dateValues.second = second;
+      partIndex++;
+    } else if (formatPart === "SSS") {
+      const ms = parseInt(part, 10);
+      if (isNaN(ms)) return null;
+      dateValues.millisecond = ms;
+      partIndex++;
+    } else if (formatPart === "z") {
+      // Timezone offset
+      timezoneOffset = parseTimezone(part);
+      if (timezoneOffset === null) return null;
+      partIndex++;
     }
+  }
 
-    if (dateValues.year === undefined || dateValues.month === undefined || dateValues.day === undefined) {
-        return null;
-    }
+  if (
+    dateValues.year === undefined ||
+    dateValues.month === undefined ||
+    dateValues.day === undefined
+  ) {
+    return null;
+  }
 
-    // Create date object (UTC if timezone specified, local otherwise)
-    const date = timezoneOffset !== null
-        ? new Date(Date.UTC(
+  // Create date object (UTC if timezone specified, local otherwise)
+  const date =
+    timezoneOffset !== null
+      ? new Date(
+          Date.UTC(
             dateValues.year,
             dateValues.month,
             dateValues.day,
@@ -212,34 +236,37 @@ function parseWithFormat(input, format) {
             dateValues.minute || 0,
             dateValues.second || 0,
             dateValues.millisecond || 0
-        ))
-        : new Date(
-            dateValues.year,
-            dateValues.month,
-            dateValues.day,
-            dateValues.hour || 0,
-            dateValues.minute || 0,
-            dateValues.second || 0,
-            dateValues.millisecond || 0
+          )
+        )
+      : new Date(
+          dateValues.year,
+          dateValues.month,
+          dateValues.day,
+          dateValues.hour || 0,
+          dateValues.minute || 0,
+          dateValues.second || 0,
+          dateValues.millisecond || 0
         );
 
-    // Apply timezone offset if present
-    if (timezoneOffset !== null) {
-        const localTime = date.getTime();
-        const localOffset = date.getTimezoneOffset() * 60000;
-        const targetOffset = timezoneOffset * 60000;
-        const targetTime = localTime - localOffset + targetOffset;
-        date.setTime(targetTime);
-    }
+  // Apply timezone offset if present
+  if (timezoneOffset !== null) {
+    const localTime = date.getTime();
+    const localOffset = date.getTimezoneOffset() * 60000;
+    const targetOffset = timezoneOffset * 60000;
+    const targetTime = localTime - localOffset + targetOffset;
+    date.setTime(targetTime);
+  }
 
-    // Check if date rolled over (invalid date like Feb 30 becomes Mar 2)
-    if (date.getFullYear() !== dateValues.year ||
-        date.getMonth() !== dateValues.month ||
-        date.getDate() !== dateValues.day) {
-        return null;
-    }
+  // Check if date rolled over (invalid date like Feb 30 becomes Mar 2)
+  if (
+    date.getFullYear() !== dateValues.year ||
+    date.getMonth() !== dateValues.month ||
+    date.getDate() !== dateValues.day
+  ) {
+    return null;
+  }
 
-    return date;
+  return date;
 }
 
 /**
@@ -248,13 +275,13 @@ function parseWithFormat(input, format) {
  * @returns {Date|null} Parsed Date object or null if invalid
  */
 function tryParseDate(input) {
-    for (const format of DATE_FORMATS) {
-        const date = parseWithFormat(input, format);
-        if (date !== null) {
-            return date;
-        }
+  for (const format of DATE_FORMATS) {
+    const date = parseWithFormat(input, format);
+    if (date !== null) {
+      return date;
     }
-    return null;
+  }
+  return null;
 }
 
 /**
@@ -263,14 +290,14 @@ function tryParseDate(input) {
  * @returns {boolean} True if the value is a valid date, false otherwise
  */
 function isDate(value) {
-    const trimmedValue = value.trim();
+  const trimmedValue = value.trim();
 
-    // Basic length check
-    if (trimmedValue.length < 8) return false;
+  // Basic length check
+  if (trimmedValue.length < 8) return false;
 
-    // Try to parse with supported formats
-    const parsedDate = tryParseDate(trimmedValue);
-    return parsedDate !== null;
+  // Try to parse with supported formats
+  const parsedDate = tryParseDate(trimmedValue);
+  return parsedDate !== null;
 }
 
 /**
@@ -279,13 +306,18 @@ function isDate(value) {
  * @returns {boolean} True if the value is a boolean representation, false otherwise
  */
 function isBoolean(val) {
-    if (typeof val === 'string') {
-        const lower = val.toLowerCase();
-        return lower === 'true' || lower === 'false' ||
-               lower === 'yes' || lower === 'no' ||
-               lower === 'on' || lower === 'off';
-    }
-    return val === 1 || val === 0;
+  if (typeof val === "string") {
+    const lower = val.toLowerCase();
+    return (
+      lower === "true" ||
+      lower === "false" ||
+      lower === "yes" ||
+      lower === "no" ||
+      lower === "on" ||
+      lower === "off"
+    );
+  }
+  return val === 1 || val === 0;
 }
 
 /**
@@ -294,7 +326,7 @@ function isBoolean(val) {
  * @returns {boolean} True if the value is a valid URL, false otherwise
  */
 function isURL(value) {
-    return PATTERNS.URL.test(value);
+  return PATTERNS.URL.test(value);
 }
 
 /**
@@ -303,9 +335,8 @@ function isURL(value) {
  * @returns {boolean} True if the value is a valid UUID, false otherwise
  */
 function isUUID(value) {
-    return PATTERNS.UUID.test(value);
+  return PATTERNS.UUID.test(value);
 }
-
 
 /**
  * Checks if a given value is a valid phone number
@@ -313,7 +344,7 @@ function isUUID(value) {
  * @returns {boolean} True if the value is a valid phone number, false otherwise
  */
 function isPhoneNumber(value) {
-    return PATTERNS.PHONE.test(value);
+  return PATTERNS.PHONE.test(value);
 }
 
 /**
@@ -322,7 +353,7 @@ function isPhoneNumber(value) {
  * @returns {boolean} True if the value is a valid email address, false otherwise
  */
 function isEmail(value) {
-    return PATTERNS.EMAIL.test(value);
+  return PATTERNS.EMAIL.test(value);
 }
 
 /**
@@ -333,7 +364,7 @@ function isEmail(value) {
  * @returns {boolean} True if the value is a mention, false otherwise
  */
 function isMention(value) {
-    return PATTERNS.MENTION.test(value);
+  return PATTERNS.MENTION.test(value);
 }
 
 /**
@@ -342,7 +373,7 @@ function isMention(value) {
  * @returns {boolean} True if the value is a valid IP address, false otherwise
  */
 function isIPAddress(value) {
-    return PATTERNS.IPV4.test(value) || PATTERNS.IPV6.test(value);
+  return PATTERNS.IPV4.test(value) || PATTERNS.IPV6.test(value);
 }
 
 /**
@@ -351,7 +382,7 @@ function isIPAddress(value) {
  * @returns {boolean} True if the value is a valid hex color, false otherwise
  */
 function isHexColor(value) {
-    return PATTERNS.HEX_COLOR.test(value);
+  return PATTERNS.HEX_COLOR.test(value);
 }
 
 /**
@@ -360,7 +391,7 @@ function isHexColor(value) {
  * @returns {boolean} True if the value is a percentage, false otherwise
  */
 function isPercentage(value) {
-    return PATTERNS.PERCENTAGE.test(value);
+  return PATTERNS.PERCENTAGE.test(value);
 }
 
 /**
@@ -369,7 +400,7 @@ function isPercentage(value) {
  * @returns {boolean} True if the value is a currency amount, false otherwise
  */
 function isCurrency(value) {
-    return PATTERNS.CURRENCY.test(value);
+  return PATTERNS.CURRENCY.test(value);
 }
 
 /**
@@ -378,31 +409,31 @@ function isCurrency(value) {
  * @returns {boolean} True if the value is a valid cron expression, false otherwise
  */
 function isCron(value) {
-    const trimmedValue = value.trim();
-    const fields = trimmedValue.split(/\s+/);
+  const trimmedValue = value.trim();
+  const fields = trimmedValue.split(/\s+/);
 
-    // Must have exactly 5 fields
-    if (fields.length !== 5) {
-        return false;
+  // Must have exactly 5 fields
+  if (fields.length !== 5) {
+    return false;
+  }
+
+  // Field ranges: minute(0-59), hour(0-23), day(1-31), month(1-12), weekday(0-7)
+  const ranges = [
+    { min: 0, max: 59 }, // minute
+    { min: 0, max: 23 }, // hour
+    { min: 1, max: 31 }, // day
+    { min: 1, max: 12 }, // month
+    { min: 0, max: 7 }, // weekday (0 and 7 are Sunday)
+  ];
+
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i];
+    if (!isValidCronField(field, ranges[i])) {
+      return false;
     }
+  }
 
-    // Field ranges: minute(0-59), hour(0-23), day(1-31), month(1-12), weekday(0-7)
-    const ranges = [
-        { min: 0, max: 59 }, // minute
-        { min: 0, max: 23 }, // hour
-        { min: 1, max: 31 }, // day
-        { min: 1, max: 12 }, // month
-        { min: 0, max: 7 }  // weekday (0 and 7 are Sunday)
-    ];
-
-    for (let i = 0; i < fields.length; i++) {
-        const field = fields[i];
-        if (!isValidCronField(field, ranges[i])) {
-            return false;
-        }
-    }
-
-    return true;
+  return true;
 }
 
 /**
@@ -412,36 +443,36 @@ function isCron(value) {
  * @returns {boolean} True if valid, false otherwise
  */
 function isValidCronField(field, range) {
-    if (field === '*') {
-        return true;
-    }
-
-    // Handle step values like */5 or 1-5/2
-    const stepParts = field.split('/');
-    if (stepParts.length > 2) {
-        return false;
-    }
-
-    const baseField = stepParts[0];
-    const step = stepParts[1];
-
-    // Validate step if present
-    if (step !== undefined) {
-        const stepNum = parseInt(step, 10);
-        if (isNaN(stepNum) || stepNum < 1) {
-            return false;
-        }
-    }
-
-    // Handle ranges and lists
-    const parts = baseField.split(',');
-    for (const part of parts) {
-        if (!isValidCronPart(part, range)) {
-            return false;
-        }
-    }
-
+  if (field === "*") {
     return true;
+  }
+
+  // Handle step values like */5 or 1-5/2
+  const stepParts = field.split("/");
+  if (stepParts.length > 2) {
+    return false;
+  }
+
+  const baseField = stepParts[0];
+  const step = stepParts[1];
+
+  // Validate step if present
+  if (step !== undefined) {
+    const stepNum = parseInt(step, 10);
+    if (isNaN(stepNum) || stepNum < 1) {
+      return false;
+    }
+  }
+
+  // Handle ranges and lists
+  const parts = baseField.split(",");
+  for (const part of parts) {
+    if (!isValidCronPart(part, range)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -451,23 +482,39 @@ function isValidCronField(field, range) {
  * @returns {boolean} True if valid, false otherwise
  */
 function isValidCronPart(part, range) {
-    if (part === '*') {
-        return true;
-    }
+  if (part === "*") {
+    return true;
+  }
 
-    // Handle ranges like 1-5
-    const rangeParts = part.split('-');
-    if (rangeParts.length === 1) {
-        // Single number
-        const num = parseInt(part, 10);
-        return !isNaN(num) && num >= range.min && num <= range.max;
-    } else if (rangeParts.length === 2) {
-        const start = parseInt(rangeParts[0], 10);
-        const end = parseInt(rangeParts[1], 10);
-        return !isNaN(start) && !isNaN(end) && start >= range.min && end <= range.max && start <= end;
-    }
+  // Handle ranges like 1-5
+  const rangeParts = part.split("-");
+  if (rangeParts.length === 1) {
+    // Single number
+    const num = parseInt(part, 10);
+    return !isNaN(num) && num >= range.min && num <= range.max;
+  } else if (rangeParts.length === 2) {
+    const start = parseInt(rangeParts[0], 10);
+    const end = parseInt(rangeParts[1], 10);
+    return (
+      !isNaN(start) &&
+      !isNaN(end) &&
+      start >= range.min &&
+      end <= range.max &&
+      start <= end
+    );
+  }
 
-    return false;
+  return false;
+}
+
+/**
+ * Checks if a given value is a valid hashtag
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid hashtag, false otherwise
+ */
+function isHashtag(value) {
+  // identifies hex colors separately
+  return !PATTERNS.HEX_COLOR.test(value) ? PATTERNS.HASHTAG.test(value) : false;
 }
 
 /**
@@ -477,63 +524,68 @@ function isValidCronPart(part, range) {
  * @returns {string[]} Array of tokens
  */
 function tokenize(text) {
-    const tokens = [];
-    const textLength = text.length;
-    let i = 0;
+  const tokens = [];
+  const textLength = text.length;
+  let i = 0;
 
-    while (i < textLength) {
-        // Skip whitespace at the beginning
-        while (i < textLength && text[i] === ' ') {
-            i++;
-        }
-
-        if (i >= textLength) break;
-
-        const char = text[i];
-        const tokenStart = i;
-
-        if (char === '{' || char === '[') {
-            // Handle nested objects/arrays
-            const openChar = char;
-            const closeChar = char === '{' ? '}' : ']';
-            let depth = 1;
-            i++;
-
-            while (i < textLength && depth > 0) {
-                if (text[i] === openChar) {
-                    depth++;
-                } else if (text[i] === closeChar) {
-                    depth--;
-                }
-                i++;
-            }
-            tokens.push(text.substring(tokenStart, i));
-        } else if (char === '"') {
-            // Handle quoted strings
-            i++;
-            while (i < textLength && text[i] !== '"') {
-                if (text[i] === '\\') {
-                    i++; // Skip escaped character
-                }
-                i++;
-            }
-            i++; // Include closing quote
-            tokens.push(text.substring(tokenStart, i));
-        } else {
-            // Handle regular tokens
-            while (i < textLength && text[i] !== ',' && text[i] !== '{' && text[i] !== '[') {
-                i++;
-            }
-            tokens.push(text.substring(tokenStart, i));
-        }
-
-        // Skip comma separator
-        if (i < textLength && text[i] === ',') {
-            i++;
-        }
+  while (i < textLength) {
+    // Skip whitespace at the beginning
+    while (i < textLength && text[i] === " ") {
+      i++;
     }
 
-    return tokens;
+    if (i >= textLength) break;
+
+    const char = text[i];
+    const tokenStart = i;
+
+    if (char === "{" || char === "[") {
+      // Handle nested objects/arrays
+      const openChar = char;
+      const closeChar = char === "{" ? "}" : "]";
+      let depth = 1;
+      i++;
+
+      while (i < textLength && depth > 0) {
+        if (text[i] === openChar) {
+          depth++;
+        } else if (text[i] === closeChar) {
+          depth--;
+        }
+        i++;
+      }
+      tokens.push(text.substring(tokenStart, i));
+    } else if (char === '"') {
+      // Handle quoted strings
+      i++;
+      while (i < textLength && text[i] !== '"') {
+        if (text[i] === "\\") {
+          i++; // Skip escaped character
+        }
+        i++;
+      }
+      i++; // Include closing quote
+      tokens.push(text.substring(tokenStart, i));
+    } else {
+      // Handle regular tokens
+      while (
+        i < textLength &&
+        text[i] !== "," &&
+        text[i] !== "{" &&
+        text[i] !== "["
+      ) {
+        i++;
+      }
+      tokens.push(text.substring(tokenStart, i));
+    }
+
+    // Skip comma separator
+    if (i < textLength && text[i] === ",") {
+      i++;
+    }
+  }
+
+  return tokens;
 }
 
 /**
@@ -543,24 +595,24 @@ function tokenize(text) {
  * @returns {{header: string[], data: string[]}} Parsed header and data
  */
 function parseHeaderAndData(str, firstRowIsHeader) {
-    let header = '';
-    let data = str;
+  let header = "";
+  let data = str;
 
-    if (firstRowIsHeader) {
-        // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
-        const lines = str.split(/\r?\n|\r/);
-        if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
-            header = lines[0].split(',');
-            data = tokenize(lines[1]);
-        } else {
-            return { header: [], data: [] };
-        }
+  if (firstRowIsHeader) {
+    // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
+    const lines = str.split(/\r?\n|\r/);
+    if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
+      header = lines[0].split(",");
+      data = tokenize(lines[1]);
     } else {
-        data = tokenize(str);
-        header = data;
+      return { header: [], data: [] };
     }
+  } else {
+    data = tokenize(str);
+    header = data;
+  }
 
-    return { header, data };
+  return { header, data };
 }
 
 /**
@@ -569,42 +621,48 @@ function parseHeaderAndData(str, firstRowIsHeader) {
  * @returns {string} The detected data type
  */
 function detectFieldType(value) {
-    const trimmedValue = value.trim();
+  const trimmedValue = value.trim();
 
-    if (isBoolean(trimmedValue)) {
-        return 'boolean';
-    } else if (isPercentage(trimmedValue)) {
-        return 'percentage';
-    } else if (isCurrency(trimmedValue)) {
-        return 'currency';
-    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-        // Numbers, but not those with leading zeros like '01'
-        return 'number';
-    } else if (isDate(trimmedValue)) {
-        return 'date';
-    } else if (isURL(trimmedValue)) {
-        return 'url';
-    } else if (isUUID(trimmedValue)) {
-        return 'uuid';
-    } else if (isIPAddress(trimmedValue)) {
-        return 'ip';
-    } else if (isPhoneNumber(trimmedValue)) {
-        return 'phone';
-    } else if (isEmail(trimmedValue)) {
-        return 'email';
-    } else if (isMention(trimmedValue)) {
-        return 'mention';
-    } else if (isHexColor(trimmedValue)) {
-        return 'color';
-    } else if (isCron(trimmedValue)) {
-        return 'cron';
-    } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
-        return 'array';
-    } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
-        return 'object';
-    } else {
-        return 'string';
-    }
+  if (isBoolean(trimmedValue)) {
+    return "boolean";
+  } else if (isPercentage(trimmedValue)) {
+    return "percentage";
+  } else if (isCurrency(trimmedValue)) {
+    return "currency";
+  } else if (
+    !isNaN(parseFloat(trimmedValue)) &&
+    isFinite(trimmedValue) &&
+    !PATTERNS.LEADING_ZERO.test(trimmedValue)
+  ) {
+    // Numbers, but not those with leading zeros like '01'
+    return "number";
+  } else if (isDate(trimmedValue)) {
+    return "date";
+  } else if (isURL(trimmedValue)) {
+    return "url";
+  } else if (isUUID(trimmedValue)) {
+    return "uuid";
+  } else if (isIPAddress(trimmedValue)) {
+    return "ip";
+  } else if (isPhoneNumber(trimmedValue)) {
+    return "phone";
+  } else if (isEmail(trimmedValue)) {
+    return "email";
+  } else if (isMention(trimmedValue)) {
+    return "mention";
+  } else if (isHexColor(trimmedValue)) {
+    return "color";
+  } else if (isCron(trimmedValue)) {
+    return "cron";
+  } else if (isHashtag(trimmedValue)) {
+    return "hashtag";
+  } else if (trimmedValue.startsWith("[") && trimmedValue.endsWith("]")) {
+    return "array";
+  } else if (trimmedValue.startsWith("{") && trimmedValue.endsWith("}")) {
+    return "object";
+  } else {
+    return "string";
+  }
 }
 
 /**
@@ -615,21 +673,21 @@ function detectFieldType(value) {
  * @returns {Object<string, string>} Object mapping field names to types
  */
 function processFields(data, header, firstRowIsHeader) {
-    const types = {};
+  const types = {};
 
-    for (let i = 0; i < data.length; i++) {
-        // When using headers, only process fields that have corresponding headers
-        if (firstRowIsHeader && i >= header.length) {
-            continue; // Skip extra data fields beyond header length
-        }
-
-        // Handle missing header fields gracefully
-        const field = (header[i] && header[i].trim) ? header[i].trim() : `field_${i}`;
-        const fieldType = detectFieldType(data[i]);
-        types[field] = fieldType;
+  for (let i = 0; i < data.length; i++) {
+    // When using headers, only process fields that have corresponding headers
+    if (firstRowIsHeader && i >= header.length) {
+      continue; // Skip extra data fields beyond header length
     }
 
-    return types;
+    // Handle missing header fields gracefully
+    const field = header[i] && header[i].trim ? header[i].trim() : `field_${i}`;
+    const fieldType = detectFieldType(data[i]);
+    types[field] = fieldType;
+  }
+
+  return types;
 }
 
 /**
@@ -650,37 +708,37 @@ function processFields(data, header, firstRowIsHeader) {
  * // Returns: { 'name': 'string', 'age': 'number', 'active': 'boolean' }
  */
 function predictDataTypes(str, firstRowIsHeader = false) {
-    // Input validation
-    if (str === null || str === undefined) {
-        throw new Error('Input must be a string');
-    }
+  // Input validation
+  if (str === null || str === undefined) {
+    throw new Error("Input must be a string");
+  }
 
-    if (typeof str !== 'string') {
-        throw new Error('Input must be a string');
-    }
+  if (typeof str !== "string") {
+    throw new Error("Input must be a string");
+  }
 
-    // Handle empty string case or whitespace-only strings
-    if (str.length === 0 || str.trim().length === 0) {
-        return {};
-    }
+  // Handle empty string case or whitespace-only strings
+  if (str.length === 0 || str.trim().length === 0) {
+    return {};
+  }
 
-    // Parse input into header and data components
-    const { header, data } = parseHeaderAndData(str, firstRowIsHeader);
+  // Parse input into header and data components
+  const { header, data } = parseHeaderAndData(str, firstRowIsHeader);
 
-    // Handle case where no valid data was parsed
-    if (data.length === 0) {
-        return {};
-    }
+  // Handle case where no valid data was parsed
+  if (data.length === 0) {
+    return {};
+  }
 
-    // Process fields and detect their types
-    const types = processFields(data, header, firstRowIsHeader);
+  // Process fields and detect their types
+  const types = processFields(data, header, firstRowIsHeader);
 
-    // If no data was processed but we have non-empty input, treat as single empty string
-    if (Object.keys(types).length === 0 && str.length > 0) {
-        types[''] = 'string';
-    }
+  // If no data was processed but we have non-empty input, treat as single empty string
+  if (Object.keys(types).length === 0 && str.length > 0) {
+    types[""] = "string";
+  }
 
-    return types;
+  return types;
 }
 
 /**
@@ -690,68 +748,73 @@ function predictDataTypes(str, firstRowIsHeader = false) {
  * @private
  */
 function toJSONSchema(schema) {
-    // Map our data types to JSON Schema types
-    const typeMap = {
-        'string': 'string',
-        'number': 'number',
-        'boolean': 'boolean',
-        'email': 'string',
-        'phone': 'string',
-        'url': 'string',
-        'uuid': 'string',
-        'date': 'string',
-        'ip': 'string',
-        'color': 'string',
-        'percentage': 'string',
-        'currency': 'string',
-        'array': 'array',
-        'object': 'object'
-    };
+  // Map our data types to JSON Schema types
+  const typeMap = {
+    string: "string",
+    number: "number",
+    boolean: "boolean",
+    email: "string",
+    phone: "string",
+    url: "string",
+    uuid: "string",
+    date: "string",
+    ip: "string",
+    color: "string",
+    percentage: "string",
+    currency: "string",
+    array: "array",
+    object: "object",
+    hashtag: "string",
+  };
 
-    // Map our data types to JSON Schema formats
-    const formatMap = {
-        'email': 'email',
-        'url': 'uri',
-        'uuid': 'uuid',
-        'date': 'date-time',
-        'ip': 'ipv4'
-    };
+  // Map our data types to JSON Schema formats
+  const formatMap = {
+    email: "email",
+    url: "uri",
+    uuid: "uuid",
+    date: "date-time",
+    ip: "ipv4",
+  };
 
-    const properties = {};
-    const required = [];
+  const properties = {};
+  const required = [];
 
-    Object.keys(schema).forEach(fieldName => {
-        const dataType = schema[fieldName];
-        const jsonSchemaType = typeMap[dataType] || 'string';
+  Object.keys(schema).forEach((fieldName) => {
+    const dataType = schema[fieldName];
+    const jsonSchemaType = typeMap[dataType] || "string";
 
-        properties[fieldName] = { type: jsonSchemaType };
+    properties[fieldName] = { type: jsonSchemaType };
 
-        // Add format if applicable
-        if (formatMap[dataType]) {
-            properties[fieldName].format = formatMap[dataType];
-        }
+    // Add format if applicable
+    if (formatMap[dataType]) {
+      properties[fieldName].format = formatMap[dataType];
+    }
 
-        // Add pattern for special types without standard format
-        if (dataType === 'phone') {
-            properties[fieldName].pattern = '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$';
-        } else if (dataType === 'color') {
-            properties[fieldName].pattern = '^#(?:[0-9a-fA-F]{3}){1,2}$';
-        } else if (dataType === 'percentage') {
-            properties[fieldName].pattern = '^-?\\d+(?:\\.\\d+)?%$';
-        } else if (dataType === 'currency') {
-            properties[fieldName].pattern = '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
-        } else if (dataType === 'mention') {
-            properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
-        }
+    // Add pattern for special types without standard format
+    if (dataType === "phone") {
+      properties[fieldName].pattern =
+        "^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
+    } else if (dataType === "color") {
+      properties[fieldName].pattern = "^#(?:[0-9a-fA-F]{3}){1,2}$";
+    } else if (dataType === "percentage") {
+      properties[fieldName].pattern = "^-?\\d+(?:\\.\\d+)?%$";
+    } else if (dataType === "currency") {
+      properties[fieldName].pattern =
+        "^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$";
+    } else if (dataType === "mention") {
+      properties[fieldName].pattern = "^@[A-Za-z0-9][A-Za-z0-9_-]*$";
+    } else if (dataType==="hashtag") {
+        properties[fieldName].pattern ="^#[A-Za-z0-9_]+$"
+    }
 
-        required.push(fieldName);
-    });
+    required.push(fieldName);
+  });
 
-    return {
-        type: 'object',
-        properties,
-        required
-    };
+  return {
+    type: "object",
+    properties,
+    required,
+  };
 }
 
 /**
@@ -767,70 +830,88 @@ function toJSONSchema(schema) {
  * infer([{ name: "Alice" }, { name: "Bob" }]) // → { name: 'string' }
  */
 function infer(input, format = Formats.NONE) {
-    if (input === null || input === undefined) {
-        throw new Error('Input cannot be null or undefined');
+  if (input === null || input === undefined) {
+    throw new Error("Input cannot be null or undefined");
+  }
+
+  // Handle single string value
+  if (typeof input === "string") {
+    return detectFieldType(input);
+  }
+
+  // Handle array
+  if (Array.isArray(input)) {
+    if (input.length === 0) {
+      return "string";
     }
 
-    // Handle single string value
-    if (typeof input === 'string') {
-        return detectFieldType(input);
+    // Check if array contains objects (schema inference)
+    const firstItem = input[0];
+    if (
+      firstItem !== null &&
+      typeof firstItem === "object" &&
+      !Array.isArray(firstItem)
+    ) {
+      // Array of objects - infer schema
+      const schema = inferSchemaFromObjects(input);
+
+      // Convert to JSON Schema if requested
+      if (format === Formats.JSONSCHEMA) {
+        return toJSONSchema(schema);
+      }
+
+      return schema;
     }
 
-    // Handle array
-    if (Array.isArray(input)) {
-        if (input.length === 0) {
-            return 'string';
-        }
+    // Array of primitive values - find common type
+    const types = input.map((val) => detectFieldType(String(val)));
+    const typeCounts = {};
+    types.forEach((type) => {
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
 
-        // Check if array contains objects (schema inference)
-        const firstItem = input[0];
-        if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
-            // Array of objects - infer schema
-            const schema = inferSchemaFromObjects(input);
+    const typePriority = [
+      "uuid",
+      "email",
+      "phone",
+      "url",
+      "ip",
+      "mention",
+      "color",
+      "currency",
+      "percentage",
+      "date",
+      "cron",
+      "hashtag",
+      "boolean",
+      "number",
+      "array",
+      "object",
+      "string",
+    ];
 
-            // Convert to JSON Schema if requested
-            if (format === Formats.JSONSCHEMA) {
-                return toJSONSchema(schema);
-            }
-
-            return schema;
-        }
-
-        // Array of primitive values - find common type
-        const types = input.map(val => detectFieldType(String(val)));
-        const typeCounts = {};
-        types.forEach(type => {
-            typeCounts[type] = (typeCounts[type] || 0) + 1;
-        });
-
-        const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
-        ];
-
-        for (const priorityType of typePriority) {
-            if (typeCounts[priorityType] === types.length) {
-                return priorityType;
-            }
-        }
-
-        return 'string';
+    for (const priorityType of typePriority) {
+      if (typeCounts[priorityType] === types.length) {
+        return priorityType;
+      }
     }
 
-    // Handle single object
-    if (typeof input === 'object') {
-        const schema = inferSchemaFromObjects([input]);
+    return "string";
+  }
 
-        // Convert to JSON Schema if requested
-        if (format === Formats.JSONSCHEMA) {
-            return toJSONSchema(schema);
-        }
+  // Handle single object
+  if (typeof input === "object") {
+    const schema = inferSchemaFromObjects([input]);
 
-        return schema;
+    // Convert to JSON Schema if requested
+    if (format === Formats.JSONSCHEMA) {
+      return toJSONSchema(schema);
     }
 
-    throw new Error('Input must be a string, array, or object');
+    return schema;
+  }
+
+  throw new Error("Input must be a string, array, or object");
 }
 
 /**
@@ -839,61 +920,78 @@ function infer(input, format = Formats.NONE) {
  * @returns {Object} Schema with field names as keys and types as values
  */
 function inferSchemaFromObjects(rows) {
-    if (!rows.every(row => row !== null && typeof row === 'object' && !Array.isArray(row))) {
-        throw new Error('All items must be objects');
+  if (
+    !rows.every(
+      (row) => row !== null && typeof row === "object" && !Array.isArray(row)
+    )
+  ) {
+    throw new Error("All items must be objects");
+  }
+
+  if (rows.length === 0) {
+    return {};
+  }
+
+  // Collect all unique field names
+  const fieldNames = new Set();
+  rows.forEach((row) => {
+    Object.keys(row).forEach((key) => fieldNames.add(key));
+  });
+
+  // Analyze each field across all rows
+  const schema = {};
+  fieldNames.forEach((fieldName) => {
+    const values = rows
+      .map((row) => row[fieldName])
+      .filter((val) => val !== undefined && val !== null && val !== "");
+
+    if (values.length === 0) {
+      schema[fieldName] = "string";
+      return;
     }
 
-    if (rows.length === 0) {
-        return {};
+    const stringValues = values.map((val) => String(val));
+    const types = stringValues.map((val) => detectFieldType(val));
+    const typeCounts = {};
+    types.forEach((type) => {
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+
+    const typePriority = [
+      "uuid",
+      "email",
+      "phone",
+      "url",
+      "ip",
+      "mention",
+      "color",
+      "currency",
+      "percentage",
+      "date",
+      "cron",
+      "hashtag",
+      "boolean",
+      "number",
+      "array",
+      "object",
+      "string",
+    ];
+
+    let finalType = "string";
+    for (const priorityType of typePriority) {
+      if (typeCounts[priorityType] === types.length) {
+        finalType = priorityType;
+        break;
+      }
     }
 
-    // Collect all unique field names
-    const fieldNames = new Set();
-    rows.forEach(row => {
-        Object.keys(row).forEach(key => fieldNames.add(key));
-    });
+    schema[fieldName] = finalType;
+  });
 
-    // Analyze each field across all rows
-    const schema = {};
-    fieldNames.forEach(fieldName => {
-        const values = rows
-            .map(row => row[fieldName])
-            .filter(val => val !== undefined && val !== null && val !== '');
-
-        if (values.length === 0) {
-            schema[fieldName] = 'string';
-            return;
-        }
-
-        const stringValues = values.map(val => String(val));
-        const types = stringValues.map(val => detectFieldType(val));
-        const typeCounts = {};
-        types.forEach(type => {
-            typeCounts[type] = (typeCounts[type] || 0) + 1;
-        });
-
-        const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
-        ];
-
-        let finalType = 'string';
-        for (const priorityType of typePriority) {
-            if (typeCounts[priorityType] === types.length) {
-                finalType = priorityType;
-                break;
-            }
-        }
-
-        schema[fieldName] = finalType;
-    });
-
-    return schema;
+  return schema;
 }
 
 module.exports = predictDataTypes;
 module.exports.infer = infer;
 module.exports.DataTypes = DataTypes;
 module.exports.Formats = Formats;
-
