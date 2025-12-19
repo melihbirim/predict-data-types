@@ -306,18 +306,18 @@ function isURL(value) {
  * @returns {boolean} True if the value is a valid UUID, false otherwise
  */
 function isUUID(value) {
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidPattern.test(value);
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidPattern.test(value);
 }
 
 function isHash(value) {
-  // Check if it's a string first
-  if (typeof value !== 'string') return false;
-  
-  // Pattern: only 0-9 and a-f (case insensitive), 8 or more characters
-  const hashPattern = /^[0-9a-fA-F]{8,}$/;
-  
-  return hashPattern.test(value);
+    // Check if it's a string first
+    if (typeof value !== 'string') return false;
+
+    // Pattern: only 0-9 and a-f (case insensitive), 8 or more characters
+    const hashPattern = /^[0-9a-fA-F]{8,}$/;
+
+    return hashPattern.test(value);
 }
 // function isHash(value) {
 //   if (typeof value !== 'string') return false;
@@ -606,7 +606,7 @@ function detectFieldType(value) {
 
     // Early boolean check (highest priority for ambiguous cases)
     if (isBoolean(trimmedValue)) return 'boolean';
-    
+
     // Check for percentage and currency (before number check)
     if (isPercentage(trimmedValue)) return 'percentage';
     if (isCurrency(trimmedValue)) return 'currency';
@@ -614,7 +614,7 @@ function detectFieldType(value) {
     // CRITICAL FIX: Check for leading zero OR hex-like patterns BEFORE number check
     const hasLeadingZero = PATTERNS.LEADING_ZERO.test(trimmedValue);
     const looksLikeHex = /^0x[0-9a-fA-F]+$/i.test(trimmedValue);
-    
+
     // Only treat as number if it's numeric AND doesn't have leading zero AND doesn't look like hex
     if (!hasLeadingZero && !looksLikeHex && !isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue)) {
         return 'number';
@@ -632,7 +632,7 @@ function detectFieldType(value) {
     if (isMention(trimmedValue)) return 'mention';
     if (isHexColor(trimmedValue)) return 'color';
     if (isCron(trimmedValue)) return 'cron';
-    
+
     // Array and object checks
     if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) return 'array';
     if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) return 'object';
