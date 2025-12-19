@@ -51,7 +51,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **15 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, mentions
+- **16 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, mentions, hashtag
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
@@ -124,6 +124,7 @@ const actual = infer(importedData);
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `array`      | `[1, 2, 3]`                               |
 | `object`     | `{"name": "John"}`                        |
+| `hashtag`    | `#100DaysOfCoding`                        |
 
 ## Usage
 
@@ -160,6 +161,7 @@ DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
+DataTypes.HASHTAG
 ```
 
 ### Basic Example
@@ -303,17 +305,18 @@ node example.js
 ```javascript
 const { infer } = require('predict-data-types');
 
-const complexString = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31";
+const complexString = "192.168.1.1, #FF0000,#100DaysOfCode, 50%, $100, 2023-12-31";
 const types = infer(complexString.split(', ').map(v => ({ value: v })));
 // { value: 'ip' } // Takes the most specific type found
 
 // Or analyze each value separately:
-const values = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31".split(', ');
+const values = "192.168.1.1, #FF0000,#100DaysOfCode, 50%, $100, 2023-12-31".split(', ');
 values.forEach(val => {
   console.log(`${val}: ${infer(val)}`);
 });
 // 192.168.1.1: ip
 // #FF0000: color
+// #100DaysOfCode: hashtag
 // 50%: percentage
 // $100: currency
 // 2023-12-31: date
@@ -344,6 +347,7 @@ const { infer, Formats, DataTypes } = require('predict-data-types');
 // Single values
 infer("42"); // → 'number'
 infer("test@example.com"); // → 'email'
+infer("#topic"); // → 'hashtag'
 
 // Arrays
 infer(["1", "2", "3"]); // → 'number'
@@ -368,7 +372,7 @@ infer({ name: "Alice", age: "25" }, Formats.JSONSCHEMA);
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
 DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY,
-DataTypes.ARRAY, DataTypes.OBJECT
+DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.HASHTAG
 ```
 
 **`Formats`** - Output format constants:
