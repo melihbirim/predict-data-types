@@ -24,6 +24,26 @@ describe('DataTypes constants', () => {
         expect(DataTypes.CRON).to.equal('cron');
     });
 });
+describe('Hash detection', () => {
+    it('should detect hex hashes', () => {
+        const text = 'a1b2c3d4, 5f7e9a1b2c3d4e5f6789abcd';
+        const types = predictDataTypes(text);
+        expect(types).to.deep.equal({
+            'a1b2c3d4': 'hash',
+            '5f7e9a1b2c3d4e5f6789abcd': 'hash'
+        });
+    });
+
+    it('should not detect invalid hashes', () => {
+        const text = 'hello123, 0xdeadbeef';
+        const types = predictDataTypes(text);
+        expect(types).to.deep.equal({
+            'hello123': 'string',
+            '0xdeadbeef': 'string'
+        });
+    });
+});
+
 
 describe('Formats constants', () => {
     it('should export all format constants', () => {
