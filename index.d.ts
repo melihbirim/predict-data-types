@@ -17,6 +17,7 @@ declare type DataType =
     | 'array'
     | 'object'
     | 'ip'
+    | 'macaddress'
     | 'color'
     | 'percentage'
     | 'currency'
@@ -39,6 +40,7 @@ declare const DataTypes: {
     readonly ARRAY: 'array';
     readonly OBJECT: 'object';
     readonly IP: 'ip';
+    readonly MACADDRESS: 'macaddress';
     readonly COLOR: 'color';
     readonly PERCENTAGE: 'percentage';
     readonly CURRENCY: 'currency';
