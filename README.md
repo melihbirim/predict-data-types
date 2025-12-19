@@ -51,14 +51,14 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **16 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, mentions, hashtag
+- **17 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs,MAC addresses, colors, percentages, currency, mentions, hashtag
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 62 comprehensive test cases
+- **Battle-Tested**: 66 comprehensive test cases
 
 ## Installation
 
@@ -118,6 +118,7 @@ const actual = infer(importedData);
 | `uuid`       | `550e8400-e29b-41d4-a716-446655440000`    |
 | `date`       | `2023-12-31`, `31/12/2023`                |
 | `ip`         | `192.168.1.1`, `2001:0db8::1`             |
+| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`   |
 | `color`      | `#FF0000`, `#fff`                         |
 | `percentage` | `50%`, `-25%`                             |
 | `currency`   | `$100`, `€50.99`                          |
@@ -157,6 +158,7 @@ DataTypes.DATE        // 'date'
 DataTypes.ARRAY       // 'array'
 DataTypes.OBJECT      // 'object'
 DataTypes.IP          // 'ip'
+DataTypes.MACADDRESS  // 'macaddress'
 DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
