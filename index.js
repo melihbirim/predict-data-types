@@ -640,7 +640,6 @@ function detectFieldType(value) {
     // Check for percentage and currency (before number check)
     if (isPercentage(trimmedValue)) return 'percentage';
     if (isCurrency(trimmedValue)) return 'currency';
-  
     if (isCreditCard(trimmedValue)) return 'creditcard';
 
     // CRITICAL FIX: Check for leading zero OR hex-like patterns BEFORE number check
