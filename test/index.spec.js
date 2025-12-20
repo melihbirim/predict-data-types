@@ -452,6 +452,47 @@ describe('predictDataTypes', () => {
         });
     });
 
+    describe('Credit card detection', () => {
+        it('should detect valid credit card numbers with hyphens', () => {
+            const text = '4111-1111-1111-1111, 5425-2334-3010-9903';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '4111-1111-1111-1111': 'creditcard',
+                '5425-2334-3010-9903': 'creditcard'
+            });
+        });
+
+        it('should detect valid credit card numbers with spaces', () => {
+            const text = '4111 1111 1111 1111, 3782 822463 10005';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '4111 1111 1111 1111': 'creditcard',
+                '3782 822463 10005': 'creditcard'
+            });
+        });
+
+        it('should detect valid credit card numbers without separators', () => {
+            const text = '5425233430109903, 4111111111111111, 4242424242424242, 6011111111111117';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '5425233430109903': 'creditcard',
+                '4111111111111111': 'creditcard',
+                '4242424242424242': 'creditcard',
+                '6011111111111117': 'creditcard'
+            });
+        });
+
+        it('should not detect invalid credit card numbers', () => {
+            const text = '1234-5678-9012-3456, 123456, abcd-efgh-ijkl-mnop';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '1234-5678-9012-3456': 'string',
+                '123456': 'number',
+                'abcd-efgh-ijkl-mnop': 'string'
+            });
+        });
+    });
+
     describe('Hex color detection', () => {
         it('should detect valid hex colors', () => {
             const text = '#FF0000, #00ff00, #ABC, #ffffff';
