@@ -22,28 +22,10 @@ describe('DataTypes constants', () => {
         expect(DataTypes.CURRENCY).to.equal('currency');
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
+        expect(DataTypes.HASHTAG).to.equal('hashtag');
+
     });
 });
-describe('Hash detection', () => {
-    it('should detect hex hashes', () => {
-        const text = 'a1b2c3d4, 5f7e9a1b2c3d4e5f6789abcd';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            'a1b2c3d4': 'hash',
-            '5f7e9a1b2c3d4e5f6789abcd': 'hash'
-        });
-    });
-
-    it('should not detect invalid hashes', () => {
-        const text = 'hello123, 0xdeadbeef';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            'hello123': 'string',
-            '0xdeadbeef': 'string'
-        });
-    });
-});
-
 
 describe('Formats constants', () => {
     it('should export all format constants', () => {
@@ -452,47 +434,6 @@ describe('predictDataTypes', () => {
         });
     });
 
-    describe('Credit card detection', () => {
-        it('should detect valid credit card numbers with hyphens', () => {
-            const text = '4111-1111-1111-1111, 5425-2334-3010-9903';
-            const types = predictDataTypes(text);
-            expect(types).to.deep.equal({
-                '4111-1111-1111-1111': 'creditcard',
-                '5425-2334-3010-9903': 'creditcard'
-            });
-        });
-
-        it('should detect valid credit card numbers with spaces', () => {
-            const text = '4111 1111 1111 1111, 3782 822463 10005';
-            const types = predictDataTypes(text);
-            expect(types).to.deep.equal({
-                '4111 1111 1111 1111': 'creditcard',
-                '3782 822463 10005': 'creditcard'
-            });
-        });
-
-        it('should detect valid credit card numbers without separators', () => {
-            const text = '5425233430109903, 4111111111111111, 4242424242424242, 6011111111111117';
-            const types = predictDataTypes(text);
-            expect(types).to.deep.equal({
-                '5425233430109903': 'creditcard',
-                '4111111111111111': 'creditcard',
-                '4242424242424242': 'creditcard',
-                '6011111111111117': 'creditcard'
-            });
-        });
-
-        it('should not detect invalid credit card numbers', () => {
-            const text = '1234-5678-9012-3456, 123456, abcd-efgh-ijkl-mnop';
-            const types = predictDataTypes(text);
-            expect(types).to.deep.equal({
-                '1234-5678-9012-3456': 'string',
-                '123456': 'number',
-                'abcd-efgh-ijkl-mnop': 'string'
-            });
-        });
-    });
-
     describe('Hex color detection', () => {
         it('should detect valid hex colors', () => {
             const text = '#FF0000, #00ff00, #ABC, #ffffff';
@@ -572,6 +513,31 @@ describe('predictDataTypes', () => {
             });
         });
     });
+    describe('Hashtag detection', () => {
+        it('should detect valid hashtags', () => {
+            const text = '#hello, #HelloWorld, #test123, #HELLO';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#hello': 'hashtag',
+                '#HelloWorld': 'hashtag',
+                '#test123': 'hashtag',
+                '#HELLO': 'hashtag'
+            });
+        });
+
+        it('should not detect invalid hashtags', () => {
+            const text = '#, #!, #hello-world, hello#, ##double';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#': 'string',
+                '#!': 'string',
+                '#hello-world': 'string',
+                'hello#': 'string',
+                '##double': 'string'
+            });
+        });
+    });
+
 
     describe('infer', () => {
         const { infer } = predictDataTypes;
@@ -699,6 +665,18 @@ describe('predictDataTypes', () => {
             expect(() => infer(null)).to.throw('Input cannot be null or undefined');
             expect(() => infer(undefined)).to.throw('Input cannot be null or undefined');
         });
+
+        it('should infer hashtag from single value', () => {
+            expect(infer('#hello')).to.equal('hashtag');
+        });
+
+        it('should infer hashtag from array of values', () => {
+            expect(infer(['#one', '#two', '#three'])).to.equal('hashtag');
+        });
+
+        it('should not infer hashtag when mixed with non-hashtag', () => {
+            expect(infer(['#one', 'two'])).to.equal('string');
+        });
     });
 
     describe('JSON Schema format', () => {
@@ -788,6 +766,15 @@ describe('predictDataTypes', () => {
 
             expect(result).to.deep.equal({ name: 'string', age: 'number' });
         });
+        it('should include pattern for hashtag in JSON Schema', () => {
+            const data = { tag: '#helloWorld' };
+            const schema = infer(data, Formats.JSONSCHEMA);
+
+            expect(schema.properties.tag.type).to.equal('string');
+            expect(schema.properties.tag).to.have.property('pattern');
+        });
+
+
     });
 
 });

@@ -16,13 +16,12 @@ const DataTypes = {
     OBJECT: 'object',
     IP: 'ip',
     MACADDRESS: 'macaddress',
-    CREDITCARD: 'creditcard',
     COLOR: 'color',
     PERCENTAGE: 'percentage',
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASH: 'hash'
+    HASHTAG: 'hashtag'
 };
 
 /**
@@ -47,7 +46,8 @@ const PATTERNS = {
     PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
-    MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/
+    MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -307,30 +307,8 @@ function isURL(value) {
  * @returns {boolean} True if the value is a valid UUID, false otherwise
  */
 function isUUID(value) {
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidPattern.test(value);
+    return PATTERNS.UUID.test(value);
 }
-
-function isHash(value) {
-    // Check if it's a string first
-    if (typeof value !== 'string') return false;
-
-    // Pattern: only 0-9 and a-f (case insensitive), 8 or more characters
-    const hashPattern = /^[0-9a-fA-F]{8,}$/;
-
-    return hashPattern.test(value);
-}
-// function isHash(value) {
-//   if (typeof value !== 'string') return false;
-
-//   const len = value.length;
-//   const validLengths = [8, 16, 32, 40, 64];
-
-//   if (!validLengths.includes(len)) return false;
-
-//   return /^[0-9a-fA-F]+$/.test(value);
-// }
-
 
 
 /**
@@ -381,35 +359,6 @@ function isMACAddress(value) {
 }
 
 /**
- * Checks if a given value is a valid credit card number (supports spaces/hyphens)
- * Implements the Luhn algorithm using functional array operations
- * @param {string} value - The value to check
- * @returns {boolean} True if the value is a valid credit card number, false otherwise
- */
-function isCreditCard(value) {
-    const digits = String(value).trim().replace(/[\s-]/g, '');
-
-    // Typical credit card lengths are between 13 and 19 digits
-    if (!/^[0-9]{13,19}$/.test(digits)) return false;
-
-    // Compute Luhn checksum using a clear modern loop and Number()
-    let sum = 0;
-    const rev = digits.split('').reverse();
-    for (const [idx, ch] of rev.entries()) {
-        const n = Number(ch);
-        if (Number.isNaN(n)) return false;
-        if (idx % 2 === 1) {
-            const dbl = n * 2;
-            sum += dbl > 9 ? dbl - 9 : dbl;
-        } else {
-            sum += n;
-        }
-    }
-
-    return sum % 10 === 0;
-}
-
-/**
  * Checks if a given value is a valid hex color code
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a valid hex color, false otherwise
@@ -434,6 +383,17 @@ function isPercentage(value) {
  */
 function isCurrency(value) {
     return PATTERNS.CURRENCY.test(value);
+}
+function isHashtag(value) {
+    if (!value.startsWith('#')) return false;
+
+    // Reject hex colors (valid ones)
+    if (isHexColor(value)) return false;
+
+    // Reject hex-like garbage (same length as hex)
+    if (value.length === 4 || value.length === 7) return false;
+
+    return PATTERNS.HASHTAG.test(value);
 }
 
 /**
@@ -626,6 +586,7 @@ function parseHeaderAndData(str, firstRowIsHeader) {
 
     return { header, data };
 }
+
 /**
  * Detects the data type for a single field value
  * @param {string} value - The value to analyze
@@ -634,42 +595,44 @@ function parseHeaderAndData(str, firstRowIsHeader) {
 function detectFieldType(value) {
     const trimmedValue = value.trim();
 
-    // Early boolean check (highest priority for ambiguous cases)
-    if (isBoolean(trimmedValue)) return 'boolean';
-
-    // Check for percentage and currency (before number check)
-    if (isPercentage(trimmedValue)) return 'percentage';
-    if (isCurrency(trimmedValue)) return 'currency';
-    if (isCreditCard(trimmedValue)) return 'creditcard';
-
-    // CRITICAL FIX: Check for leading zero OR hex-like patterns BEFORE number check
-    const hasLeadingZero = PATTERNS.LEADING_ZERO.test(trimmedValue);
-    const looksLikeHex = /^0x[0-9a-fA-F]+$/i.test(trimmedValue);
-
-    // Only treat as number if it's numeric AND doesn't have leading zero AND doesn't look like hex
-    if (!hasLeadingZero && !looksLikeHex && !isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue)) {
+    if (isBoolean(trimmedValue)) {
+        return 'boolean';
+    } else if (isPercentage(trimmedValue)) {
+        return 'percentage';
+    } else if (isCurrency(trimmedValue)) {
+        return 'currency';
+    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
+        // Numbers, but not those with leading zeros like '01'
         return 'number';
+    } else if (isDate(trimmedValue)) {
+        return 'date';
+    } else if (isURL(trimmedValue)) {
+        return 'url';
+    } else if (isUUID(trimmedValue)) {
+        return 'uuid';
+    } else if (isIPAddress(trimmedValue)) {
+        return 'ip';
+    } else if (isMACAddress(trimmedValue)) {
+        return 'macaddress';
+    } else if (isPhoneNumber(trimmedValue)) {
+        return 'phone';
+    } else if (isEmail(trimmedValue)) {
+        return 'email';
+    } else if (isMention(trimmedValue)) {
+        return 'mention';
+    } else if (isHexColor(trimmedValue)) {
+        return 'color';
+    } else if (isHashtag(trimmedValue)) {
+        return 'hashtag';
+    } else if (isCron(trimmedValue)) {
+        return 'cron';
+    } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
+        return 'array';
+    } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
+        return 'object';
+    } else {
+        return 'string';
     }
-
-    // Continue with other type checks
-    if (isDate(trimmedValue)) return 'date';
-    if (isURL(trimmedValue)) return 'url';
-    if (isUUID(trimmedValue)) return 'uuid';
-    if (isHash(trimmedValue)) return 'hash';
-    if (isIPAddress(trimmedValue)) return 'ip';
-    if (isMACAddress(trimmedValue)) return 'macaddress';
-    if (isPhoneNumber(trimmedValue)) return 'phone';
-    if (isEmail(trimmedValue)) return 'email';
-    if (isMention(trimmedValue)) return 'mention';
-    if (isHexColor(trimmedValue)) return 'color';
-    if (isCron(trimmedValue)) return 'cron';
-
-    // Array and object checks
-    if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) return 'array';
-    if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) return 'object';
-
-    // Default to string
-    return 'string';
 }
 
 /**
@@ -769,13 +732,13 @@ function toJSONSchema(schema) {
         'color': 'string',
         'percentage': 'string',
         'currency': 'string',
+        'hashtag': 'string',
         'array': 'array',
         'object': 'object'
     };
 
     // Map our data types to JSON Schema formats
     const formatMap = {
-        'hash': 'string',
         'email': 'email',
         'url': 'uri',
         'uuid': 'uuid',
@@ -808,6 +771,8 @@ function toJSONSchema(schema) {
             properties[fieldName].pattern = '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
         } else if (dataType === 'mention') {
             properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
+        } else if (dataType === 'hashtag') {
+            properties[fieldName].pattern = '^#[A-Za-z][A-Za-z0-9_]*$';
         }
 
         required.push(fieldName);
@@ -870,13 +835,16 @@ function infer(input, format = Formats.NONE) {
         });
 
         const typePriority = [
-            'uuid', 'hash', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color',
+            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
-            'creditcard', 'number', 'array', 'object', 'string'
+            'number', 'array', 'object', 'string'
         ];
 
         for (const priorityType of typePriority) {
-            if (typeCounts[priorityType] === types.length) {
+            const count = typeCounts[priorityType] || 0;
+            const stringCount = typeCounts['string'] || 0;
+
+            if (count > 0 && count + stringCount === types.length) {
                 return priorityType;
             }
         }
@@ -939,18 +907,23 @@ function inferSchemaFromObjects(rows) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color',
+            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
-            'creditcard', 'number', 'array', 'object', 'string'
+            'number', 'array', 'object', 'string'
         ];
 
         let finalType = 'string';
+
         for (const priorityType of typePriority) {
-            if (typeCounts[priorityType] === types.length) {
+            const count = typeCounts[priorityType] || 0;
+            const stringCount = typeCounts['string'] || 0;
+
+            if (count > 0 && count + stringCount === types.length) {
                 finalType = priorityType;
                 break;
             }
         }
+
 
         schema[fieldName] = finalType;
     });
