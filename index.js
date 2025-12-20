@@ -21,8 +21,11 @@ const DataTypes = {
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASHTAG: 'hashtag'
+    HASHTAG: 'hashtag',
+    MIME: 'mime'
+
 };
+
 
 /**
  * Output format constants for schema generation
@@ -47,7 +50,9 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
-    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    MIME: /^[a-z]+\/[a-z0-9.+-]+$/i
+
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -645,6 +650,8 @@ function detectFieldType(value, options = {}) {
         return 'phone';
     } else if (isEmail(trimmedValue)) {
         return 'email';
+    }else if (PATTERNS.MIME.test(trimmedValue)) {
+        return 'mime';
     } else if (isMention(trimmedValue)) {
         return 'mention';
     } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
