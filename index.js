@@ -16,6 +16,7 @@ const DataTypes = {
     OBJECT: 'object',
     IP: 'ip',
     MACADDRESS: 'macaddress',
+    CREDITCARD: 'creditcard',
     COLOR: 'color',
     PERCENTAGE: 'percentage',
     CURRENCY: 'currency',
@@ -357,6 +358,35 @@ function isMACAddress(value) {
 }
 
 /**
+ * Checks if a given value is a valid credit card number (supports spaces/hyphens)
+ * Implements the Luhn algorithm using functional array operations
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid credit card number, false otherwise
+ */
+function isCreditCard(value) {
+    const digits = String(value).trim().replace(/[\s-]/g, '');
+
+    // Typical credit card lengths are between 13 and 19 digits
+    if (!/^[0-9]{13,19}$/.test(digits)) return false;
+
+    // Compute Luhn checksum using a clear modern loop and Number()
+    let sum = 0;
+    const rev = digits.split('').reverse();
+    for (const [idx, ch] of rev.entries()) {
+        const n = Number(ch);
+        if (Number.isNaN(n)) return false;
+        if (idx % 2 === 1) {
+            const dbl = n * 2;
+            sum += dbl > 9 ? dbl - 9 : dbl;
+        } else {
+            sum += n;
+        }
+    }
+
+    return sum % 10 === 0;
+}
+
+/**
  * Checks if a given value is a valid hex color code
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a valid hex color, false otherwise
@@ -588,6 +618,8 @@ function detectFieldType(value) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
+    } else if (isCreditCard(trimmedValue)) {
+        return 'creditcard';
     } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
         // Numbers, but not those with leading zeros like '01'
         return 'number';
@@ -819,7 +851,7 @@ function infer(input, format = Formats.NONE) {
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color',
             'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
+            'creditcard', 'number', 'array', 'object', 'string'
         ];
 
         for (const priorityType of typePriority) {
@@ -888,7 +920,7 @@ function inferSchemaFromObjects(rows) {
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color',
             'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
+            'creditcard', 'number', 'array', 'object', 'string'
         ];
 
         let finalType = 'string';
