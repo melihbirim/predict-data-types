@@ -44,21 +44,21 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 16+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, and currency.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 18+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, and currency.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **16 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, and mentions
+- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, and hashes
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 66 comprehensive test cases
+- **Battle-Tested**: 75+ comprehensive test cases
 
 ## Installation
 
@@ -198,6 +198,10 @@ infer("42"); // → 'number'
 infer("#OpenSource"); // → 'hashtag'
 infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
 
+// Ambiguous 3-char values (can be hex color or hashtag)
+infer("#bad"); // → 'color' (default: hex takes priority)
+infer("#bad", "none", { preferHashtagOver3CharHex: true }); // → 'hashtag'
+
 // Array of values → Common DataType
 infer(["1", "2", "3"]); // → 'number'
 infer(["true", "false", "yes"]); // → 'boolean'
@@ -328,7 +332,7 @@ values.forEach(val => {
 
 ## API
 
-### `infer(input, format?)`
+### `infer(input, format?, options?)`
 
 **The main function - handles any input type:**
 
@@ -336,6 +340,8 @@ values.forEach(val => {
 
 - `input` (string | string[] | Object | Object[]): Value(s) to analyze
 - `format` (optional): Output format - `Formats.NONE` (default) or `Formats.JSONSCHEMA`
+- `options` (optional): Configuration options
+  - `preferHashtagOver3CharHex` (boolean, default: false): When true, treats ambiguous 3-character values like `#bad`, `#ace` as hashtags instead of hex colors
 
 **Returns:**
 
