@@ -118,11 +118,13 @@ const actual = infer(importedData);
 | `uuid`       | `550e8400-e29b-41d4-a716-446655440000` |
 | `date`       | `2023-12-31`, `31/12/2023`             |
 | `ip`         | `192.168.1.1`, `2001:0db8::1`          |
+| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6` |
 | `color`      | `#FF0000`, `#fff`                      |
 | `percentage` | `50%`, `-25%`                          |
 | `currency`   | `$100`, `€50.99`                       |
 | `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
+| `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
 
@@ -162,6 +164,7 @@ DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
+DataTypes.CRON        // 'cron'
 DataTypes.HASHTAG     // 'hashtag'
 ```
 
