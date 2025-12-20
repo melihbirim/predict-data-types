@@ -28,10 +28,12 @@ Fixes #
 - [ ] ✅ **JSDoc documentation** added for new functions
 
 ### Code Quality:
-- [ ] Followed conventional commit format (`feat:`, `fix:`, etc.)
+- [ ] Followed conventional commit format (`feat:`, `fix:`, `style:`, etc.)
+- [ ] Used **single quotes** (`'`) not double quotes (`"`) 
 - [ ] No `console.log` statements in code
 - [ ] Functions added at the end of file (minimizes conflicts)
 - [ ] Test cases added at the end of test file
+- [ ] Pre-commit hook ran automatically (auto-fixed linting)
 
 ## Test Results
 <!-- Paste the output of `npm test` showing all tests pass -->

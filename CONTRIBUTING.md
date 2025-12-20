@@ -119,7 +119,7 @@ We follow conventional commit messages:
 - `feat:` new features
 - `fix:` bug fixes
 - `docs:` documentation changes
-- `style:` formatting, missing semi colons, etc
+- `style:` formatting, missing semi colons, etc (use this for lint fixes)
 - `refactor:` code refactoring
 - `test:` adding missing tests
 - `chore:` maintenance tasks
@@ -131,7 +131,33 @@ feat: add support for IPv4 address detection
 fix: resolve UUID pattern variable name bug
 docs: update README with better examples
 test: add edge cases for date validation
+style: fix linting issues
 ```
+
+### Automatic Linting on Commit
+
+We use **husky** and **lint-staged** to automatically fix linting issues before commits:
+
+- ✨ ESLint will **automatically run and fix** issues when you commit
+- ✅ If auto-fix works, changes are added to your commit automatically
+- ❌ If there are unfixable errors, the commit will be **blocked**
+- 🔧 Fix the errors manually and try committing again
+
+**Our code style standards:**
+- ✅ **Single quotes** (`'`) for strings - **NOT double quotes** (`"`)
+- ✅ **Semicolons** required at end of statements
+- ✅ **4-space indentation** (not 2, not tabs)
+- ✅ **No trailing spaces**
+- ✅ **Prefer const** over let/var
+- ✅ Object curly spacing: `{ foo: 'bar' }` not `{foo: 'bar'}`
+
+You can also manually fix linting:
+```bash
+npm run lint        # Check for issues
+npm run lint:fix    # Auto-fix all issues
+```
+
+💡 **Tip**: The pre-commit hook ensures code quality automatically, so you don't need to worry about formatting!
 
 ## 🔧 Code Style
 
