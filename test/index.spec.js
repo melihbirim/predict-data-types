@@ -677,6 +677,30 @@ describe('predictDataTypes', () => {
         it('should not infer hashtag when mixed with non-hashtag', () => {
             expect(infer(['#one', 'two'])).to.equal('string');
         });
+
+        it('should prefer hex color over hashtag for 3-char ambiguous values by default', () => {
+            expect(infer('#bad')).to.equal('color');
+            expect(infer('#ace')).to.equal('color');
+            expect(infer('#cab')).to.equal('color');
+        });
+
+        it('should prefer hashtag over 3-char hex when option is enabled', () => {
+            expect(infer('#bad', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            expect(infer('#ace', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            expect(infer('#cab', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            expect(infer('#fff', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+        });
+
+        it('should keep non-ambiguous values unchanged with option', () => {
+            // Non-hex letters stay hashtag
+            expect(infer('#zzz', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            // Numbers start stays color (doesn't match hashtag pattern)
+            expect(infer('#123', 'none', { preferHashtagOver3CharHex: true })).to.equal('color');
+            // 6-char hex stays color
+            expect(infer('#abcdef', 'none', { preferHashtagOver3CharHex: true })).to.equal('color');
+            // Long hashtag stays hashtag
+            expect(infer('#developer', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+        });
     });
 
     describe('JSON Schema format', () => {

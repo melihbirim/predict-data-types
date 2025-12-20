@@ -384,15 +384,40 @@ function isPercentage(value) {
 function isCurrency(value) {
     return PATTERNS.CURRENCY.test(value);
 }
-function isHashtag(value) {
+function isHashtag(value, options = {}) {
     if (!value.startsWith('#')) return false;
+
+    // If preferring hashtags over 3-char hex, check hashtag pattern first
+    if (options.preferHashtagOver3CharHex && value.length === 4) {
+        // Check if it matches hashtag pattern before checking hex
+        if (PATTERNS.HASHTAG.test(value)) {
+            return true;
+        }
+    }
 
     // Reject hex colors (valid ones)
     if (isHexColor(value)) return false;
 
-    // Reject hex-like garbage (same length as hex)
-    if (value.length === 4 || value.length === 7) return false;
+    // Reject hex-like patterns (invalid hex but looks like hex format)
+    // E.g., #GGGGGG (6 chars, all letters) or #GGG (3 chars, all letters)
+    // These should be treated as invalid strings, not hashtags
+    if ((value.length === 4 || value.length === 7)) {
+        // Check if it's all hex-like characters (letters and numbers only)
+        const withoutHash = value.slice(1);
+        const isHexLike = /^[A-Fa-f0-9]+$/.test(withoutHash);
+        if (isHexLike) {
+            // It's already handled by isHexColor above, so this won't be reached
+            // But if somehow a malformed hex gets here, reject it
+            return false;
+        }
+        // If it has non-hex characters at hex length, could be malformed hex
+        // Check if it looks like someone tried to write hex (all caps letters)
+        if (/^[A-Z]+$/.test(withoutHash)) {
+            return false; // Looks like failed hex attempt
+        }
+    }
 
+    // Test against hashtag pattern
     return PATTERNS.HASHTAG.test(value);
 }
 
@@ -590,9 +615,11 @@ function parseHeaderAndData(str, firstRowIsHeader) {
 /**
  * Detects the data type for a single field value
  * @param {string} value - The value to analyze
+ * @param {Object} [options={}] - Detection options
+ * @param {boolean} [options.preferHashtagOver3CharHex=false] - Prefer hashtags over 3-char hex colors for ambiguous values like #dev, #bad
  * @returns {string} The detected data type
  */
-function detectFieldType(value) {
+function detectFieldType(value, options = {}) {
     const trimmedValue = value.trim();
 
     if (isBoolean(trimmedValue)) {
@@ -620,9 +647,12 @@ function detectFieldType(value) {
         return 'email';
     } else if (isMention(trimmedValue)) {
         return 'mention';
+    } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
+        // When preferring hashtags, check 3-char values as hashtags first
+        return 'hashtag';
     } else if (isHexColor(trimmedValue)) {
         return 'color';
-    } else if (isHashtag(trimmedValue)) {
+    } else if (isHashtag(trimmedValue, options)) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
@@ -789,6 +819,8 @@ function toJSONSchema(schema) {
  * Infers data type(s) from any input - strings, arrays, objects, or array of objects
  * @param {string|string[]|Object|Array<Object>} input - Value(s) to analyze
  * @param {string} [format=Formats.NONE] - Output format: Formats.NONE (default) or Formats.JSONSCHEMA
+ * @param {Object} [options={}] - Detection options
+ * @param {boolean} [options.preferHashtagOver3CharHex=false] - Prefer hashtags over 3-char hex colors for ambiguous values like #dev, #bad
  * @returns {string|Object} DataType for primitives, or schema object for objects
  * @example
  * infer("2024-01-01") // → 'date'
@@ -796,15 +828,17 @@ function toJSONSchema(schema) {
  * infer({ name: "Alice", age: "25" }) // → { name: 'string', age: 'number' }
  * infer({ name: "Alice", age: "25" }, Formats.JSONSCHEMA) // → { type: 'object', properties: {...}, required: [...] }
  * infer([{ name: "Alice" }, { name: "Bob" }]) // → { name: 'string' }
+ * infer("#dev") // → 'color' (default: 3-char hex takes priority)
+ * infer("#dev", Formats.NONE, { preferHashtagOver3CharHex: true }) // → 'hashtag'
  */
-function infer(input, format = Formats.NONE) {
+function infer(input, format = Formats.NONE, options = {}) {
     if (input === null || input === undefined) {
         throw new Error('Input cannot be null or undefined');
     }
 
     // Handle single string value
     if (typeof input === 'string') {
-        return detectFieldType(input);
+        return detectFieldType(input, options);
     }
 
     // Handle array
@@ -817,7 +851,7 @@ function infer(input, format = Formats.NONE) {
         const firstItem = input[0];
         if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
             // Array of objects - infer schema
-            const schema = inferSchemaFromObjects(input);
+            const schema = inferSchemaFromObjects(input, options);
 
             // Convert to JSON Schema if requested
             if (format === Formats.JSONSCHEMA) {
@@ -828,7 +862,7 @@ function infer(input, format = Formats.NONE) {
         }
 
         // Array of primitive values - find common type
-        const types = input.map(val => detectFieldType(String(val)));
+        const types = input.map(val => detectFieldType(String(val), options));
         const typeCounts = {};
         types.forEach(type => {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
@@ -841,10 +875,7 @@ function infer(input, format = Formats.NONE) {
         ];
 
         for (const priorityType of typePriority) {
-            const count = typeCounts[priorityType] || 0;
-            const stringCount = typeCounts['string'] || 0;
-
-            if (count > 0 && count + stringCount === types.length) {
+            if (typeCounts[priorityType] === types.length) {
                 return priorityType;
             }
         }
@@ -870,9 +901,10 @@ function infer(input, format = Formats.NONE) {
 /**
  * Helper function to infer schema from objects
  * @param {Array<Object>} rows - Array of objects to analyze
+ * @param {Object} [options={}] - Detection options
  * @returns {Object} Schema with field names as keys and types as values
  */
-function inferSchemaFromObjects(rows) {
+function inferSchemaFromObjects(rows, options = {}) {
     if (!rows.every(row => row !== null && typeof row === 'object' && !Array.isArray(row))) {
         throw new Error('All items must be objects');
     }
@@ -900,7 +932,7 @@ function inferSchemaFromObjects(rows) {
         }
 
         const stringValues = values.map(val => String(val));
-        const types = stringValues.map(val => detectFieldType(val));
+        const types = stringValues.map(val => detectFieldType(val, options));
         const typeCounts = {};
         types.forEach(type => {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
@@ -915,10 +947,7 @@ function inferSchemaFromObjects(rows) {
         let finalType = 'string';
 
         for (const priorityType of typePriority) {
-            const count = typeCounts[priorityType] || 0;
-            const stringCount = typeCounts['string'] || 0;
-
-            if (count > 0 && count + stringCount === types.length) {
+            if (typeCounts[priorityType] === types.length) {
                 finalType = priorityType;
                 break;
             }
