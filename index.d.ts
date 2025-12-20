@@ -17,13 +17,13 @@ declare type DataType =
     | 'array'
     | 'object'
     | 'ip'
-    | 'creditcard'
     | 'macaddress'
     | 'color'
     | 'percentage'
     | 'currency'
     | 'mention'
-    | 'cron';
+    | 'cron'
+    | 'hashtag';
 
 /**
  * Data type constants for type-safe comparisons
@@ -42,12 +42,12 @@ declare const DataTypes: {
     readonly OBJECT: 'object';
     readonly IP: 'ip';
     readonly MACADDRESS: 'macaddress';
-    readonly CREDITCARD: 'creditcard';
     readonly COLOR: 'color';
     readonly PERCENTAGE: 'percentage';
     readonly CURRENCY: 'currency';
     readonly MENTION: 'mention';
     readonly CRON: 'cron';
+    readonly HASHTAG: 'hashtag';
 };
 
 /**
