@@ -44,21 +44,21 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 17 data types including primitives, emails, URLs, UUIDs, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, and mentions.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 18 data types including primitives, emails, URLs, UUIDs, hex hashes, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, and mentions.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **17 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, mentions
+- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, mentions, hex hashes
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 70 comprehensive test cases
+- **Battle-Tested**: 72 comprehensive test cases
 
 ## Installation
 
@@ -95,7 +95,7 @@ const jsonSchema = infer(response, Formats.JSONSCHEMA);
 // Use with Ajv, joi, or generate TypeScript types
 ```
 
-**✅ Data Validator**
+**✅ Data Validator** 
 ```javascript
 // Validate imported data quality
 const expected = { email: DataTypes.EMAIL, age: DataTypes.NUMBER };
@@ -109,13 +109,14 @@ const actual = infer(importedData);
 
 | Type         | Examples                                  |
 | ------------ |-------------------------------------------|
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`    |
+| `hash`       | `deadbeef`, `a3f1c9e8`, `deadbeefcafebabe`|
 | `string`     | `'John'`, `'Hello World'`                 |
 | `number`     | `42`, `3.14`, `-17`, `1e10`               |
 | `boolean`    | `true`, `false`, `yes`, `no`              |
 | `email`      | `user@example.com`                        |
 | `phone`      | `555-555-5555`, `(555) 555-5555`          |
 | `url`        | `https://example.com`                     |
-| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`    |
 | `date`       | `2023-12-31`, `31/12/2023`                |
 | `ip`         | `192.168.1.1`, `2001:0db8::1`             |
 | `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`   |
@@ -166,7 +167,9 @@ DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
+DataTypes.HASH        // 'hash'
 ```
+
 
 ### Basic Example
 
@@ -198,6 +201,7 @@ infer("2024-01-01"); // → 'date'
 infer("test@example.com"); // → 'email'
 infer("@username"); // → 'mention'
 infer("42"); // → 'number'
+infer("deadbeefcafebabe"); // → 'hash'
 
 // Array of values → Common DataType
 infer(["1", "2", "3"]); // → 'number'
@@ -304,7 +308,6 @@ node example.js
 
 - ✅ Sample data files
 
-### Complex Data
 
 ```javascript
 const { infer } = require('predict-data-types');
