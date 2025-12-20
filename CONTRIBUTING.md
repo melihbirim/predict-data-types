@@ -23,7 +23,14 @@ Thank you for your interest in contributing to predict-data-types! This document
 
    ```bash
    npm install
+   # This creates/updates package-lock.json with exact dependency versions
    ```
+
+   **Note about package-lock.json:**
+   - ✅ **DO commit** `package-lock.json` when it changes
+   - ✅ This ensures everyone has the exact same dependencies
+   - ✅ Keeps CI/CD builds consistent and reproducible
+   - ✅ If you add new dev dependencies, package-lock.json will update
 
 3. **Run tests to ensure everything works:**
    ```bash
@@ -110,7 +117,15 @@ We follow **Test-Driven Development** practices. Before implementing any changes
    ```bash
    git add .
    git commit -m "feat: add awesome new feature"
+   # Note: If package-lock.json changed, it will be included (this is correct!)
    ```
+
+   **What to commit:**
+   - ✅ Your code changes (index.js, tests, etc.)
+   - ✅ README.md updates
+   - ✅ package-lock.json (if you added dependencies or it was updated)
+   - ✅ TypeScript definitions (index.d.ts)
+   - ❌ Don't commit node_modules/ (already in .gitignore)
 
 ## 📝 Commit Message Guidelines
 
