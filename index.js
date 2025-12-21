@@ -21,7 +21,8 @@ const DataTypes = {
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASHTAG: 'hashtag'
+    HASHTAG: 'hashtag',
+    DURATION: 'duration'
 };
 
 /**
@@ -47,7 +48,8 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
-    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    DURATION: /^(\d+(\.\d+)?\s*(d|day|days|h|hour|hours|m|min|minute|minutes|s|sec|second|seconds))+$/i
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -420,6 +422,31 @@ function isHashtag(value, options = {}) {
     // Test against hashtag pattern
     return PATTERNS.HASHTAG.test(value);
 }
+/**
+ * Checks if a given value is a duration / time interval
+ * Examples: 2h 30m, 1d, 45min, 30s, 1h30m, 2.5h
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isDuration(value) {
+    if (typeof value !== 'string') return false;
+
+    const str = value.trim().toLowerCase();
+
+    // Reject word-based durations explicitly
+    if (/\b(hours?|minutes?|seconds?|days?)\b/.test(str)) {
+        return false;
+    }
+
+    const number = '\\d+(?:\\.\\d+)?';
+    const unit = '(?:d|day|days|h|hour|hours|m|min|minute|minutes|s|sec|second|seconds)';
+
+    const token = `${number}\\s*${unit}`;
+    const pattern = new RegExp(`^${token}(?:\\s*${token})*$`, 'i');
+
+    return pattern.test(str);
+}
+
 
 /**
  * Checks if a given value is a valid cron expression
@@ -628,7 +655,11 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
-    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
+
+    } else if (isDuration(trimmedValue)) {
+        return 'duration';
+    }
+    else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
         // Numbers, but not those with leading zeros like '01'
         return 'number';
     } else if (isDate(trimmedValue)) {
@@ -870,7 +901,7 @@ function infer(input, format = Formats.NONE, options = {}) {
 
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
+            'currency', 'percentage', 'duration', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 
@@ -940,7 +971,7 @@ function inferSchemaFromObjects(rows, options = {}) {
 
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
+            'currency', 'percentage', 'duration', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 

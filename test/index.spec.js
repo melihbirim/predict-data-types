@@ -2,6 +2,8 @@ const chai = require('chai');
 const expect = chai.expect;
 const predictDataTypes = require('../index');
 const { DataTypes, Formats } = predictDataTypes;
+const { infer } = predictDataTypes;
+
 
 describe('DataTypes constants', () => {
     it('should export all type constants', () => {
@@ -800,5 +802,81 @@ describe('predictDataTypes', () => {
 
 
     });
+    // Duration / Time Interval detection tests
+    describe('Duration detection', () => {
+
+        it('should detect valid duration formats', () => {
+            const text = '2h 30m, 1d, 45min, 30s, 1h30m, 3d 5h, 2.5h';
+            const types = predictDataTypes(text);
+
+            expect(types).to.deep.equal({
+                '2h 30m': 'duration',
+                '1d': 'duration',
+                '45min': 'duration',
+                '30s': 'duration',
+                '1h30m': 'duration',
+                '3d 5h': 'duration',
+                '2.5h': 'duration'
+            });
+        });
+
+        it('should detect complex duration combinations', () => {
+            const text = '1h30m45s, 2d4h, 10m5s';
+            const types = predictDataTypes(text);
+
+            expect(types).to.deep.equal({
+                '1h30m45s': 'duration',
+                '2d4h': 'duration',
+                '10m5s': 'duration'
+            });
+        });
+
+        it('should not detect invalid or word-based durations', () => {
+            const text = '2 hours, five minutes, abc, 2x';
+            const types = predictDataTypes(text);
+
+            expect(types).to.deep.equal({
+                '2 hours': 'string',
+                'five minutes': 'string',
+                'abc': 'string',
+                '2x': 'string'
+            });
+        });
+
+        it('should not misclassify plain numbers as duration', () => {
+            const text = '123, 45.6';
+            const types = predictDataTypes(text);
+
+            expect(types).to.deep.equal({
+                '123': 'number',
+                '45.6': 'number'
+            });
+        });
+    });
+
+    describe('infer duration detection', () => {
+
+        it('should infer duration from single value', () => {
+            expect(infer('2h 30m')).to.equal('duration');
+            expect(infer('1d')).to.equal('duration');
+            expect(infer('45min')).to.equal('duration');
+            expect(infer('1h30m45s')).to.equal('duration');
+            expect(infer('2.5h')).to.equal('duration');
+        });
+
+        it('should infer duration from array of values', () => {
+            expect(infer(['1h', '2h', '3h30m'])).to.equal('duration');
+        });
+
+        it('should not infer duration when mixed with non-duration values', () => {
+            expect(infer(['1h', 'abc'])).to.equal('string');
+        });
+
+        it('should prefer duration over number', () => {
+            expect(infer('2h')).to.equal('duration');
+            expect(infer('30m')).to.equal('duration');
+        });
+    });
+
 
 });
