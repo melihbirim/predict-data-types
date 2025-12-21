@@ -21,7 +21,7 @@ const DataTypes = {
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASHTAG: 'hashtag'
+    HASHTAG: 'hashtag',
     EMOJI: 'emoji'
 };
 
@@ -341,7 +341,6 @@ function isUUID(value) {
     return PATTERNS.UUID.test(value);
 }
 
-
 /**
  * Checks if a given value is a valid phone number
  * @param {string} value - The value to check
@@ -420,7 +419,7 @@ function isHashtag(value, options = {}) {
 
     // If preferring hashtags over 3-char hex, check hashtag pattern first
     if (options.preferHashtagOver3CharHex && value.length === 4) {
-        // Check if it matches hashtag pattern before checking hex
+    // Check if it matches hashtag pattern before checking hex
         if (PATTERNS.HASHTAG.test(value)) {
             return true;
         }
@@ -432,8 +431,8 @@ function isHashtag(value, options = {}) {
     // Reject hex-like patterns (invalid hex but looks like hex format)
     // E.g., #GGGGGG (6 chars, all letters) or #GGG (3 chars, all letters)
     // These should be treated as invalid strings, not hashtags
-    if ((value.length === 4 || value.length === 7)) {
-        // Check if it's all hex-like characters (letters and numbers only)
+    if (value.length === 4 || value.length === 7) {
+    // Check if it's all hex-like characters (letters and numbers only)
         const withoutHash = value.slice(1);
         const isHexLike = /^[A-Fa-f0-9]+$/.test(withoutHash);
         if (isHexLike) {
@@ -687,8 +686,12 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
-    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-        // Numbers, but not those with leading zeros like '01'
+    } else if (
+        !isNaN(parseFloat(trimmedValue)) &&
+    isFinite(trimmedValue) &&
+    !PATTERNS.LEADING_ZERO.test(trimmedValue)
+    ) {
+    // Numbers, but not those with leading zeros like '01'
         return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
@@ -706,8 +709,12 @@ function detectFieldType(value, options = {}) {
         return 'email';
     } else if (isMention(trimmedValue)) {
         return 'mention';
-    } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
-        // When preferring hashtags, check 3-char values as hashtags first
+    } else if (
+        options.preferHashtagOver3CharHex &&
+    trimmedValue.length === 4 &&
+    isHashtag(trimmedValue, options)
+    ) {
+    // When preferring hashtags, check 3-char values as hashtags first
         return 'hashtag';
     } else if (isHexColor(trimmedValue)) {
         return 'color';
@@ -715,6 +722,8 @@ function detectFieldType(value, options = {}) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
+    } else if (isEmoji(trimmedValue)) {
+        return 'emoji';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
@@ -722,30 +731,6 @@ function detectFieldType(value, options = {}) {
     } else {
         return 'string';
     }
-
-    // Continue with other type checks
-
-    if (isDate(trimmedValue)) return 'date';
-    if (isURL(trimmedValue)) return 'url';
-    if (isUUID(trimmedValue)) return 'uuid';
-    if (isHash(trimmedValue)) return 'hash';
-    if (isIPAddress(trimmedValue)) return 'ip';
-    if (isMACAddress(trimmedValue)) return 'macaddress';
-    if (isPhoneNumber(trimmedValue)) return 'phone';
-    if (isEmail(trimmedValue)) return 'email';
-    if (isMention(trimmedValue)) return 'mention';
-    if (isHexColor(trimmedValue)) return 'color';
-    if (isCron(trimmedValue)) return 'cron';
-    if (isEmoji(trimmedValue)) return 'emoji';
-
-    // Array and object checks
-    if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']'))
-        return 'array';
-    if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}'))
-        return 'object';
-
-    // Default to string
-    return 'string';
 }
 
 /**
@@ -833,30 +818,30 @@ function predictDataTypes(str, firstRowIsHeader = false) {
 function toJSONSchema(schema) {
     // Map our data types to JSON Schema types
     const typeMap = {
-        'string': 'string',
-        'number': 'number',
-        'boolean': 'boolean',
-        'email': 'string',
-        'phone': 'string',
-        'url': 'string',
-        'uuid': 'string',
-        'date': 'string',
-        'ip': 'string',
-        'color': 'string',
-        'percentage': 'string',
-        'currency': 'string',
-        'hashtag': 'string',
-        'array': 'array',
-        'object': 'object'
+        string: 'string',
+        number: 'number',
+        boolean: 'boolean',
+        email: 'string',
+        phone: 'string',
+        url: 'string',
+        uuid: 'string',
+        date: 'string',
+        ip: 'string',
+        color: 'string',
+        percentage: 'string',
+        currency: 'string',
+        hashtag: 'string',
+        array: 'array',
+        object: 'object'
     };
 
     // Map our data types to JSON Schema formats
     const formatMap = {
-        'email': 'email',
-        'url': 'uri',
-        'uuid': 'uuid',
-        'date': 'date-time',
-        'ip': 'ipv4'
+        email: 'email',
+        url: 'uri',
+        uuid: 'uuid',
+        date: 'date-time',
+        ip: 'ipv4'
     };
 
     const properties = {};
@@ -951,16 +936,31 @@ function infer(input, format = Formats.NONE, options = {}) {
         }
 
         // Array of primitive values - find common type
-        const types = input.map(val => detectFieldType(String(val), options));
+        const types = input.map((val) => detectFieldType(String(val), options));
         const typeCounts = {};
         types.forEach((type) => {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
+            'uuid',
+            'email',
+            'phone',
+            'url',
+            'ip',
+            'macaddress',
+            'mention',
+            'color',
+            'hashtag',
+            'currency',
+            'percentage',
+            'date',
+            'cron',
+            'boolean',
+            'number',
+            'array',
+            'object',
+            'string'
         ];
 
         for (const priorityType of typePriority) {
@@ -994,7 +994,11 @@ function infer(input, format = Formats.NONE, options = {}) {
  * @returns {Object} Schema with field names as keys and types as values
  */
 function inferSchemaFromObjects(rows, options = {}) {
-    if (!rows.every(row => row !== null && typeof row === 'object' && !Array.isArray(row))) {
+    if (
+        !rows.every(
+            (row) => row !== null && typeof row === 'object' && !Array.isArray(row)
+        )
+    ) {
         throw new Error('All items must be objects');
     }
 
@@ -1020,17 +1024,32 @@ function inferSchemaFromObjects(rows, options = {}) {
             return;
         }
 
-        const stringValues = values.map(val => String(val));
-        const types = stringValues.map(val => detectFieldType(val, options));
+        const stringValues = values.map((val) => String(val));
+        const types = stringValues.map((val) => detectFieldType(val, options));
         const typeCounts = {};
         types.forEach((type) => {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
+            'uuid',
+            'email',
+            'phone',
+            'url',
+            'ip',
+            'macaddress',
+            'mention',
+            'color',
+            'hashtag',
+            'currency',
+            'percentage',
+            'date',
+            'cron',
+            'boolean',
+            'number',
+            'array',
+            'object',
+            'string'
         ];
 
         let finalType = 'string';
@@ -1041,7 +1060,6 @@ function inferSchemaFromObjects(rows, options = {}) {
                 break;
             }
         }
-
 
         schema[fieldName] = finalType;
     });

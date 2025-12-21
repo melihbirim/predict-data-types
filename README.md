@@ -58,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 77 comprehensive test cases
+- **Battle-Tested**: 75+ comprehensive test cases
 
 ## Installation
 
@@ -103,6 +103,7 @@ const jsonSchema = infer(response, Formats.JSONSCHEMA);
 ```
 
 **✅ Data Validator**
+
 ```javascript
 // Validate imported data quality
 const expected = { email: DataTypes.EMAIL, age: DataTypes.NUMBER };
@@ -114,27 +115,27 @@ const actual = infer(importedData);
 
 ## Supported Data Types
 
-| Type         | Examples                               |
-| ------------ | -------------------------------------- |
-| `string`     | `'John'`, `'Hello World'`              |
-| `number`     | `42`, `3.14`, `-17`, `1e10`            |
-| `boolean`    | `true`, `false`, `yes`, `no`           |
-| `email`      | `user@example.com`                     |
-| `phone`      | `555-555-5555`, `(555) 555-5555`       |
-| `url`        | `https://example.com`                  |
-| `uuid`       | `550e8400-e29b-41d4-a716-446655440000` |
-| `date`       | `2023-12-31`, `31/12/2023`             |
-| `ip`         | `192.168.1.1`, `2001:0db8::1`          |
-| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6` |
-| `color`      | `#FF0000`, `#fff`                      |
-| `percentage` | `50%`, `-25%`                          |
-| `currency`   | `$100`, `€50.99`                       |
-| `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
-| `mention`    | `@username`, `@user_name123`, `@john-doe` |
+| Type         | Examples                                     |
+| ------------ | -------------------------------------------- |
+| `string`     | `'John'`, `'Hello World'`                    |
+| `number`     | `42`, `3.14`, `-17`, `1e10`                  |
+| `boolean`    | `true`, `false`, `yes`, `no`                 |
+| `email`      | `user@example.com`                           |
+| `phone`      | `555-555-5555`, `(555) 555-5555`             |
+| `url`        | `https://example.com`                        |
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`       |
+| `date`       | `2023-12-31`, `31/12/2023`                   |
+| `ip`         | `192.168.1.1`, `2001:0db8::1`                |
+| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`     |
+| `color`      | `#FF0000`, `#fff`                            |
+| `percentage` | `50%`, `-25%`                                |
+| `currency`   | `$100`, `€50.99`                             |
+| `hashtag`    | `#hello`, `#OpenSource`, `#dev_community`    |
+| `mention`    | `@username`, `@user_name123`, `@john-doe`    |
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
-| `array`      | `[1, 2, 3]`                            |
-| `object`     | `{"name": "John"}`                     |
-| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`        |
+| `array`      | `[1, 2, 3]`                                  |
+| `object`     | `{"name": "John"}`                           |
+| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`                 |
 
 ## Usage
 
@@ -214,8 +215,8 @@ infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
 infer("#bad"); // → 'color' (default: hex takes priority)
 infer("#bad", "none", { preferHashtagOver3CharHex: true }); // → 'hashtag'
 
-infer("😀");               // → 'emoji' 
-infer("Hello 🎉");         // → 'string' 
+infer("😀");               // → 'emoji'
+infer("Hello 🎉");         // → 'string'
 infer(["😀", "🎉"]);       // → 'string'  (multiple emoji treated as string)
 // Array of values → Common DataType
 infer(["1", "2", "3"]); // → 'number'
@@ -237,7 +238,6 @@ infer([
 
 // → { name: 'string', age: 'number', email: 'email' }
 ```
-
 
 ### JSON Schema Format
 
@@ -396,7 +396,6 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 // }
 
 ```
-
 
 ### Constants
 
