@@ -1,55 +1,62 @@
 {
-    "name": "predict-data-types",
-    "version": "1.7.0",
-    "description": "A lightweight, zero-dependency npm package that predicts data types for comma-separated values, including JSON objects, and validates URLs, phone numbers, email addresses, IP addresses, colors, percentages, and currency within string values.",
-    "main": "index.js",
-    "author": "Melih Birim",
-    "types": "index.d.ts",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/melihbirim/predict-data-types.git"
-    },
-    "bugs": {
-        "url": "https://github.com/melihbirim/predict-data-types/issues"
-    },
-    "homepage": "https://github.com/melihbirim/predict-data-types#readme",
-    "engines": {
-        "node": ">=16.0.0"
-    },
-    "files": [
-        "index.js",
-        "index.d.ts",
-        "README.md",
-        "LICENSE"
-    ],
-    "scripts": {
-        "test": "mocha test",
-        "test:coverage": "npx c8 mocha test",
-        "lint": "eslint .",
-        "lint:fix": "eslint . --fix"
-    },
-    "keywords": [
-        "predict",
-        "data",
-        "types",
-        "json",
-        "url",
-        "phone",
-        "email",
-        "geolocation",
-        "ip",
-        "color",
-        "percentage",
-        "currency",
-        "validation"
-    ],
-    "license": "MIT",
-    "dependencies": {},
-    "devDependencies": {
-        "@types/node": "^24.10.4",
-        "chai": "^4.5.0",
-        "eslint": "^9.39.2",
-        "mocha": "^10.8.2",
-        "typescript": "^5.9.3"
-    }
+  "name": "predict-data-types",
+  "version": "1.7.1",
+  "description": "A lightweight, zero-dependency npm package that predicts data types for comma-separated values, including JSON objects, and validates URLs, phone numbers, email addresses, IP addresses, colors, percentages, and currency within string values.",
+  "main": "index.js",
+  "author": "Melih Birim",
+  "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/melihbirim/predict-data-types.git"
+  },
+  "bugs": {
+    "url": "https://github.com/melihbirim/predict-data-types/issues"
+  },
+  "homepage": "https://github.com/melihbirim/predict-data-types#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "mocha test",
+    "test:coverage": "npx c8 mocha test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix"
+    ]
+  },
+  "keywords": [
+    "predict",
+    "data",
+    "types",
+    "json",
+    "url",
+    "phone",
+    "email",
+    "geolocation",
+    "ip",
+    "color",
+    "percentage",
+    "currency",
+    "validation"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.10.4",
+    "chai": "^4.5.0",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "mocha": "^10.8.2",
+    "typescript": "^5.9.3"
+  }
 }

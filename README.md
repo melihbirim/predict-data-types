@@ -44,14 +44,14 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 18 data types including primitives, emails, URLs, UUIDs, hex hashes, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, and mentions.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 18+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, and currency.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, mentions, hex hashes, emoji
+- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, emoji and hashes
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
@@ -103,7 +103,6 @@ const jsonSchema = infer(response, Formats.JSONSCHEMA);
 ```
 
 **✅ Data Validator**
-
 ```javascript
 // Validate imported data quality
 const expected = { email: DataTypes.EMAIL, age: DataTypes.NUMBER };
@@ -115,29 +114,27 @@ const actual = infer(importedData);
 
 ## Supported Data Types
 
-| Type         | Examples                                   |
-| ------------ | ------------------------------------------ |
-| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`     |
-| `hash`       | `deadbeef`, `a3f1c9e8`, `deadbeefcafebabe` |
-| `string`     | `'John'`, `'Hello World'`                  |
-| `number`     | `42`, `3.14`, `-17`, `1e10`                |
-| `boolean`    | `true`, `false`, `yes`, `no`               |
-| `email`      | `user@example.com`                         |
-| `phone`      | `555-555-5555`, `(555) 555-5555`           |
-| `url`        | `https://example.com`                      |
-| `date`       | `2023-12-31`, `31/12/2023`                 |
-| `ip`         | `192.168.1.1`, `2001:0db8::1`              |
-| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`   |
-| `creditcard` | `4111 1111 1111 1111`, `5425233430109903`  |
-| `color`      | `#FF0000`, `#fff`                          |
-| `percentage` | `50%`, `-25%`                              |
-| `currency`   | `$100`, `€50.99`                           |
-| `mention`    | `@username`, `@user_name123`, `@john-doe`  |
-| `array`      | `[1, 2, 3]`                                |
-| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`               |
-| `object`     | `{"name": "John"}`                         |
-
-> ⚠️ Security note: This library only detects the presence and format of credit card numbers for inference purposes. Always mask, tokenize, or remove raw credit card numbers in production logs and databases. Do not rely on this library for PCI compliance or secure handling of sensitive payment data.
+| Type         | Examples                               |
+| ------------ | -------------------------------------- |
+| `string`     | `'John'`, `'Hello World'`              |
+| `number`     | `42`, `3.14`, `-17`, `1e10`            |
+| `boolean`    | `true`, `false`, `yes`, `no`           |
+| `email`      | `user@example.com`                     |
+| `phone`      | `555-555-5555`, `(555) 555-5555`       |
+| `url`        | `https://example.com`                  |
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000` |
+| `date`       | `2023-12-31`, `31/12/2023`             |
+| `ip`         | `192.168.1.1`, `2001:0db8::1`          |
+| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6` |
+| `color`      | `#FF0000`, `#fff`                      |
+| `percentage` | `50%`, `-25%`                          |
+| `currency`   | `$100`, `€50.99`                       |
+| `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
+| `mention`    | `@username`, `@user_name123`, `@john-doe` |
+| `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
+| `array`      | `[1, 2, 3]`                            |
+| `object`     | `{"name": "John"}`                     |
+| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`        |
 
 ## Usage
 
@@ -171,12 +168,12 @@ DataTypes.ARRAY       // 'array'
 DataTypes.OBJECT      // 'object'
 DataTypes.IP          // 'ip'
 DataTypes.MACADDRESS  // 'macaddress'
-DataTypes.CREDITCARD // 'creditcard'
 DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
-DataTypes.HASH        // 'hash'
+DataTypes.CRON        // 'cron'
+DataTypes.HASHTAG     // 'hashtag'
 DataTypes.EMOJI       // 'emoji
 ```
 
@@ -210,11 +207,16 @@ infer("2024-01-01"); // → 'date'
 infer("test@example.com"); // → 'email'
 infer("@username"); // → 'mention'
 infer("42"); // → 'number'
-infer("deadbeefcafebabe"); // → 'hash'
-infer("😀");               // → 'emoji' ✅
-infer("Hello 🎉");         // → 'string' ✅
-infer(["😀", "🎉"]);       // → 'string' ✅ (multiple emoji treated as string)
+infer("#OpenSource"); // → 'hashtag'
+infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
 
+// Ambiguous 3-char values (can be hex color or hashtag)
+infer("#bad"); // → 'color' (default: hex takes priority)
+infer("#bad", "none", { preferHashtagOver3CharHex: true }); // → 'hashtag'
+
+infer("😀");               // → 'emoji' 
+infer("Hello 🎉");         // → 'string' 
+infer(["😀", "🎉"]);       // → 'string'  (multiple emoji treated as string)
 // Array of values → Common DataType
 infer(["1", "2", "3"]); // → 'number'
 infer(["true", "false", "yes"]); // → 'boolean'
@@ -232,8 +234,10 @@ infer([
   { name: "Alice", age: "25", email: "alice@example.com" },
   { name: "Bob", age: "30", email: "bob@example.com" },
 ]);
+
 // → { name: 'string', age: 'number', email: 'email' }
 ```
+
 
 ### JSON Schema Format
 
@@ -278,6 +282,8 @@ const valid = validate({
   email: "bob@example.com",
   website: "https://bob.dev",
 });
+
+
 ```
 
 ### CSV with Headers
@@ -317,9 +323,9 @@ cd examples/csv-import
 node example.js
 ```
 
-### Complex Data
-
 - ✅ Sample data files
+
+### Complex Data
 
 ```javascript
 const { infer } = require("predict-data-types");
@@ -342,7 +348,7 @@ values.forEach((val) => {
 
 ## API
 
-### `infer(input, format?)`
+### `infer(input, format?, options?)`
 
 **The main function - handles any input type:**
 
@@ -350,6 +356,8 @@ values.forEach((val) => {
 
 - `input` (string | string[] | Object | Object[]): Value(s) to analyze
 - `format` (optional): Output format - `Formats.NONE` (default) or `Formats.JSONSCHEMA`
+- `options` (optional): Configuration options
+  - `preferHashtagOver3CharHex` (boolean, default: false): When true, treats ambiguous 3-character values like `#bad`, `#ace` as hashtags instead of hex colors
 
 **Returns:**
 
@@ -380,27 +388,25 @@ infer([{ age: "25" }, { age: "30" }]);
 // JSON Schema format
 infer({ name: "Alice", age: "25" }, Formats.JSONSCHEMA);
 // → { type: 'object', properties: {...}, required: [...] }
+
+// Hashtag field example
+infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
+// {
+//   tag: { type: 'string', pattern: '^#[A-Za-z0-9_]+$' }
+// }
+
 ```
+
 
 ### Constants
 
 **`DataTypes`** - Type-safe constants for comparisons:
 
 ```javascript
-DataTypes.STRING,
-  DataTypes.NUMBER,
-  DataTypes.BOOLEAN,
-  DataTypes.EMAIL,
-  DataTypes.PHONE,
-  DataTypes.URL,
-  DataTypes.UUID,
-  DataTypes.DATE,
-  DataTypes.IP,
-  DataTypes.COLOR,
-  DataTypes.PERCENTAGE,
-  DataTypes.CURRENCY,
-  DataTypes.ARRAY,
-  DataTypes.OBJECT;
+DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
+DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
+DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG,
+DataTypes.ARRAY, DataTypes.OBJECT
 ```
 
 **`Formats`** - Output format constants:
