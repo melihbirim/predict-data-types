@@ -71,7 +71,7 @@ declare type JSONSchema = {
     type: 'object';
     properties: Record<string, {
         type: 'string' | 'number' | 'boolean' | 'array' | 'object';
-        format?: 'email' | 'uri' | 'uuid' | 'date-time' | 'ipv4';
+        format?: 'email' | 'uri' | 'uuid' | 'date-time' | 'ipv4'| 'color';
         pattern?: string;
     }>;
     required: string[];

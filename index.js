@@ -47,7 +47,8 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
-    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    RGB_COLOR: /^rgba?\(\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -366,7 +367,9 @@ function isMACAddress(value) {
 function isHexColor(value) {
     return PATTERNS.HEX_COLOR.test(value);
 }
-
+function isRgbColor(value) {
+    return PATTERNS.RGB_COLOR.test(value);
+}
 /**
  * Checks if a given value is a percentage
  * @param {string} value - The value to check
@@ -650,7 +653,7 @@ function detectFieldType(value, options = {}) {
     } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
         // When preferring hashtags, check 3-char values as hashtags first
         return 'hashtag';
-    } else if (isHexColor(trimmedValue)) {
+    }else if (isHexColor(trimmedValue) || isRgbColor(trimmedValue)) {
         return 'color';
     } else if (isHashtag(trimmedValue, options)) {
         return 'hashtag';
