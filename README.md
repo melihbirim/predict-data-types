@@ -51,14 +51,14 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, mentions, hex hashes
+- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, MAC addresses, credit card numbers, colors, percentages, currency, mentions, hex hashes, emoji
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 72 comprehensive test cases
+- **Battle-Tested**: 77 comprehensive test cases
 
 ## Installation
 
@@ -134,6 +134,7 @@ const actual = infer(importedData);
 | `currency`   | `$100`, `€50.99`                           |
 | `mention`    | `@username`, `@user_name123`, `@john-doe`  |
 | `array`      | `[1, 2, 3]`                                |
+| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`               |
 | `object`     | `{"name": "John"}`                         |
 
 > ⚠️ Security note: This library only detects the presence and format of credit card numbers for inference purposes. Always mask, tokenize, or remove raw credit card numbers in production logs and databases. Do not rely on this library for PCI compliance or secure handling of sensitive payment data.
@@ -176,6 +177,7 @@ DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
 DataTypes.HASH        // 'hash'
+DataTypes.EMOJI       // 'emoji
 ```
 
 ### Basic Example
@@ -209,6 +211,9 @@ infer("test@example.com"); // → 'email'
 infer("@username"); // → 'mention'
 infer("42"); // → 'number'
 infer("deadbeefcafebabe"); // → 'hash'
+infer("😀");               // → 'emoji' ✅
+infer("Hello 🎉");         // → 'string' ✅
+infer(["😀", "🎉"]);       // → 'string' ✅ (multiple emoji treated as string)
 
 // Array of values → Common DataType
 infer(["1", "2", "3"]); // → 'number'

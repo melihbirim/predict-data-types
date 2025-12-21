@@ -804,5 +804,25 @@ describe('predictDataTypes', () => {
             expect(predictDataTypes.infer('❌')).to.equal('emoji');
             expect(predictDataTypes.infer('👩‍👩‍👧‍👦')).to.equal('emoji');
         });
+        it('should infer emoji with text as string', () => {
+            expect(predictDataTypes.infer('Hello, world! 🌍')).to.equal('string');
+            expect(predictDataTypes.infer('👍 Great job!')).to.equal('string');
+            expect(predictDataTypes.infer('🎉 Happy Birthday!')).to.equal('string');
+        });
+        it('should detect multiple emoji as \'string\'', () => {
+            expect(predictDataTypes.infer('😀😀')).to.equal('string');
+            expect(predictDataTypes.infer('🎉🎉')).to.equal('string');
+            expect(predictDataTypes.infer('👍❤️')).to.equal('string');
+        });
+        it('should detect emoji around whitespace as \'emoji\'', () => {
+            expect(predictDataTypes.infer(' 🌍 ')).to.equal('emoji');
+            expect(predictDataTypes.infer(' 👍 ')).to.equal('emoji');
+            expect(predictDataTypes.infer(' 🎉 ')).to.equal('emoji');
+        });
+        it('should detect mixed emoji and symbols as \'string\'', () => {
+            expect(predictDataTypes.infer('😀!')).to.equal('string');
+            expect(predictDataTypes.infer('🎉?')).to.equal('string');
+            expect(predictDataTypes.infer('👍.')).to.equal('string');
+        });
     });
 });
