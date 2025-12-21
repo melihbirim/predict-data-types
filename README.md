@@ -71,6 +71,7 @@ npm install predict-data-types
 Real-world use cases showing what you can build:
 
 **📊 CSV Import Tool**
+
 ```javascript
 // Auto-detect column types and transform data
 const employees = parseCSV(file); // All values are strings
@@ -79,23 +80,30 @@ const schema = infer(employees);
 ```
 
 **🎨 Form Builder**
+
 ```javascript
 // Auto-generate form fields with correct input types
-const userData = { email: 'alice@example.com', age: '25', website: 'https://alice.dev' };
+const userData = {
+  email: "alice@example.com",
+  age: "25",
+  website: "https://alice.dev",
+};
 const types = infer(userData);
 // → { email: 'email', age: 'number', website: 'url' }
 // Generate: <input type="email">, <input type="number">, <input type="url">
 ```
 
 **🌐 API Analyzer**
+
 ```javascript
 // Generate JSON Schema and TypeScript interfaces from API responses
-const response = await fetch('/api/users').then(r => r.json());
+const response = await fetch("/api/users").then((r) => r.json());
 const jsonSchema = infer(response, Formats.JSONSCHEMA);
 // Use with Ajv, joi, or generate TypeScript types
 ```
 
-**✅ Data Validator** 
+**✅ Data Validator**
+
 ```javascript
 // Validate imported data quality
 const expected = { email: DataTypes.EMAIL, age: DataTypes.NUMBER };
@@ -107,26 +115,26 @@ const actual = infer(importedData);
 
 ## Supported Data Types
 
-| Type         | Examples                                  |
-| ------------ |-------------------------------------------|
-| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`    |
-| `hash`       | `deadbeef`, `a3f1c9e8`, `deadbeefcafebabe`|
-| `string`     | `'John'`, `'Hello World'`                 |
-| `number`     | `42`, `3.14`, `-17`, `1e10`               |
-| `boolean`    | `true`, `false`, `yes`, `no`              |
-| `email`      | `user@example.com`                        |
-| `phone`      | `555-555-5555`, `(555) 555-5555`          |
-| `url`        | `https://example.com`                     |
-| `date`       | `2023-12-31`, `31/12/2023`                |
-| `ip`         | `192.168.1.1`, `2001:0db8::1`             |
+| Type         | Examples                                   |
+| ------------ | ------------------------------------------ |
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`     |
+| `hash`       | `deadbeef`, `a3f1c9e8`, `deadbeefcafebabe` |
+| `string`     | `'John'`, `'Hello World'`                  |
+| `number`     | `42`, `3.14`, `-17`, `1e10`                |
+| `boolean`    | `true`, `false`, `yes`, `no`               |
+| `email`      | `user@example.com`                         |
+| `phone`      | `555-555-5555`, `(555) 555-5555`           |
+| `url`        | `https://example.com`                      |
+| `date`       | `2023-12-31`, `31/12/2023`                 |
+| `ip`         | `192.168.1.1`, `2001:0db8::1`              |
 | `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`   |
-| `creditcard` | `4111 1111 1111 1111`, `5425233430109903`   |
-| `color`      | `#FF0000`, `#fff`                         |
-| `percentage` | `50%`, `-25%`                             |
-| `currency`   | `$100`, `€50.99`                          |
-| `mention`    | `@username`, `@user_name123`, `@john-doe` |
-| `array`      | `[1, 2, 3]`                               |
-| `object`     | `{"name": "John"}`                        |
+| `creditcard` | `4111 1111 1111 1111`, `5425233430109903`  |
+| `color`      | `#FF0000`, `#fff`                          |
+| `percentage` | `50%`, `-25%`                              |
+| `currency`   | `$100`, `€50.99`                           |
+| `mention`    | `@username`, `@user_name123`, `@john-doe`  |
+| `array`      | `[1, 2, 3]`                                |
+| `object`     | `{"name": "John"}`                         |
 
 > ⚠️ Security note: This library only detects the presence and format of credit card numbers for inference purposes. Always mask, tokenize, or remove raw credit card numbers in production logs and databases. Do not rely on this library for PCI compliance or secure handling of sensitive payment data.
 
@@ -169,7 +177,6 @@ DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
 DataTypes.HASH        // 'hash'
 ```
-
 
 ### Basic Example
 
@@ -299,6 +306,7 @@ Each example includes:
 - ✅ Sample data files where applicable
 
 **Run any example:**
+
 ```bash
 cd examples/csv-import
 node example.js
@@ -308,17 +316,16 @@ node example.js
 
 - ✅ Sample data files
 
-
 ```javascript
-const { infer } = require('predict-data-types');
+const { infer } = require("predict-data-types");
 
 const complexString = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31";
-const types = infer(complexString.split(', ').map(v => ({ value: v })));
+const types = infer(complexString.split(", ").map((v) => ({ value: v })));
 // { value: 'ip' } // Takes the most specific type found
 
 // Or analyze each value separately:
-const values = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31".split(', ');
-values.forEach(val => {
+const values = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31".split(", ");
+values.forEach((val) => {
   console.log(`${val}: ${infer(val)}`);
 });
 // 192.168.1.1: ip
@@ -342,13 +349,13 @@ values.forEach(val => {
 **Returns:**
 
 - `DataType` (string) - for single values and arrays of values
-- `Schema` (Object) - for objects and arrays of objects  
+- `Schema` (Object) - for objects and arrays of objects
 - `JSONSchema` (Object) - when `format` is `Formats.JSONSCHEMA`
 
 **Examples:**
 
 ```javascript
-const { infer, Formats, DataTypes } = require('predict-data-types');
+const { infer, Formats, DataTypes } = require("predict-data-types");
 
 // Single values
 infer("42"); // → 'number'
@@ -373,17 +380,29 @@ infer({ name: "Alice", age: "25" }, Formats.JSONSCHEMA);
 ### Constants
 
 **`DataTypes`** - Type-safe constants for comparisons:
+
 ```javascript
-DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
-DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
-DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY,
-DataTypes.ARRAY, DataTypes.OBJECT
+DataTypes.STRING,
+  DataTypes.NUMBER,
+  DataTypes.BOOLEAN,
+  DataTypes.EMAIL,
+  DataTypes.PHONE,
+  DataTypes.URL,
+  DataTypes.UUID,
+  DataTypes.DATE,
+  DataTypes.IP,
+  DataTypes.COLOR,
+  DataTypes.PERCENTAGE,
+  DataTypes.CURRENCY,
+  DataTypes.ARRAY,
+  DataTypes.OBJECT;
 ```
 
 **`Formats`** - Output format constants:
+
 ```javascript
-Formats.NONE        // Default simple schema
-Formats.JSONSCHEMA  // JSON Schema format
+Formats.NONE; // Default simple schema
+Formats.JSONSCHEMA; // JSON Schema format
 ```
 
 ### Legacy API
@@ -394,14 +413,16 @@ Formats.JSONSCHEMA  // JSON Schema format
 <summary>Show legacy API details</summary>
 
 **Parameters:**
+
 - `input` (string): Comma-separated string to analyze
 - `firstRowIsHeader` (boolean): Treat first row as headers (default: `false`)
 
 **Returns:** Object mapping field names/values to their data types
 
 **Example:**
+
 ```javascript
-const types = predictDataTypes('name,age\nAlice,25', true);
+const types = predictDataTypes("name,age\nAlice,25", true);
 // { name: 'string', age: 'number' }
 ```
 
@@ -409,19 +430,18 @@ const types = predictDataTypes('name,age\nAlice,25', true);
 
 </details>
 
-
 ## TypeScript vs. This Library
 
 **Common Misconception:** "Doesn't TypeScript already do this?"
 
 **No!** TypeScript and this library serve completely different purposes:
 
-| Feature | TypeScript | This Library |
-|---------|-----------|--------------|
-| **When it works** | Compile-time | Runtime |
-| **What it checks** | Your code structure | Actual data content |
-| **Scope** | Static type annotations | Dynamic string analysis |
-| **Use case** | Prevent coding errors | Analyze user-provided data |
+| Feature            | TypeScript              | This Library               |
+| ------------------ | ----------------------- | -------------------------- |
+| **When it works**  | Compile-time            | Runtime                    |
+| **What it checks** | Your code structure     | Actual data content        |
+| **Scope**          | Static type annotations | Dynamic string analysis    |
+| **Use case**       | Prevent coding errors   | Analyze user-provided data |
 
 **Example:**
 
@@ -438,8 +458,9 @@ const type = infer("test@example.com");
 ```
 
 **When to use this library:**
+
 - 📊 Users upload CSV/Excel files
-- 🌐 API responses with unknown structure  
+- 🌐 API responses with unknown structure
 - 📝 Form data that needs validation
 - 🔄 ETL pipelines processing raw data
 - 🎨 Dynamic form/UI generation
