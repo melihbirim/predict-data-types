@@ -22,7 +22,7 @@ const DataTypes = {
     MENTION: 'mention',
     CRON: 'cron',
     HASHTAG: 'hashtag',
-    SEMVER: 'semver'
+    ISBN: 'isbn'
 };
 
 /**
@@ -49,90 +49,8 @@ const PATTERNS = {
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
     HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
-    SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+    ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i
 };
-
-/**
- * Type priority order for resolving conflicts when multiple types are detected
- * More specific types should come before more general ones
- * @constant
- */
-const TYPE_PRIORITY = [
-    'uuid', 'email', 'phone', 'url', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
-    'currency', 'percentage', 'date', 'cron', 'boolean',
-    'number', 'array', 'object', 'string'
-];
-
-/**
- * Map our data types to JSON Schema types
- * @constant
- */
-const JSON_SCHEMA_TYPE_MAP = {
-    'string': 'string',
-    'number': 'number',
-    'boolean': 'boolean',
-    'email': 'string',
-    'phone': 'string',
-    'url': 'string',
-    'uuid': 'string',
-    'date': 'string',
-    'ip': 'string',
-    'semver': 'string',
-    'color': 'string',
-    'percentage': 'string',
-    'currency': 'string',
-    'mention': 'string',
-    'cron': 'string',
-    'hashtag': 'string',
-    'macaddress': 'string',
-    'array': 'array',
-    'object': 'object'
-};
-
-/**
- * Map our data types to JSON Schema formats
- * @constant
- */
-const JSON_SCHEMA_FORMAT_MAP = {
-    'email': 'email',
-    'url': 'uri',
-    'uuid': 'uuid',
-    'date': 'date-time',
-    'ip': 'ipv4'
-};
-
-/**
- * Map our data types to JSON Schema patterns
- * @constant
- */
-const JSON_SCHEMA_PATTERN_MAP = {
-    'phone': '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$',
-    'color': '^#(?:[0-9a-fA-F]{3}){1,2}$',
-    'percentage': '^-?\\d+(?:\\.\\d+)?%$',
-    'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
-    'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
-    'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$'
-};
-
-/**
- * Resolves the most specific type from an array of detected types
- * @param {string[]} types - Array of detected types
- * @returns {string} The most specific type based on TYPE_PRIORITY
- */
-function resolveType(types) {
-    const typeCounts = {};
-    types.forEach(type => {
-        typeCounts[type] = (typeCounts[type] || 0) + 1;
-    });
-
-    for (const priorityType of TYPE_PRIORITY) {
-        if (typeCounts[priorityType] === types.length) {
-            return priorityType;
-        }
-    }
-
-    return 'string';
-}
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
 const DATE_FORMATS = [
@@ -413,6 +331,8 @@ function isEmail(value) {
     return PATTERNS.EMAIL.test(value);
 }
 
+
+
 /**
  * Checks if a given value is a social media mention (e.g., @username)
  * Allows letters, numbers, underscores, and hyphens after the @,
@@ -458,6 +378,16 @@ function isHexColor(value) {
  */
 function isPercentage(value) {
     return PATTERNS.PERCENTAGE.test(value);
+}
+
+/**
+ * Checks if a given value is a valid ISBN (International Standard Book Number)
+ * Supports both ISBN-10 and ISBN-13 formats with or without hyphens
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid ISBN, false otherwise
+ */
+function isISBN(value) {
+    return PATTERNS.ISBN.test(value);
 }
 
 /**
@@ -712,19 +642,27 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
+    
+    } else if (isISBN(trimmedValue)) {
+        return 'isbn';
+
     } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-        // Numbers, but not those with leading zeros like '01'
-        return 'number';
+    const digitCount = trimmedValue.replace(/\D/g, '').length;
+    if (digitCount >= 10 && digitCount <= 13) {
+        return 'string';
+    }
+    return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
     } else if (isURL(trimmedValue)) {
         return 'url';
     } else if (isUUID(trimmedValue)) {
         return 'uuid';
+    
+        
+
     } else if (isIPAddress(trimmedValue)) {
         return 'ip';
-    } else if(isSemver(trimmedValue)){
-        return 'semver';
     } else if (isMACAddress(trimmedValue)) {
         return 'macaddress';
     } else if (isPhoneNumber(trimmedValue)) {
@@ -834,23 +772,64 @@ function predictDataTypes(str, firstRowIsHeader = false) {
  * @private
  */
 function toJSONSchema(schema) {
+    // Map our data types to JSON Schema types
+    const typeMap = {
+        'string': 'string',
+        'number': 'number',
+        'boolean': 'boolean',
+        'email': 'string',
+        'phone': 'string',
+        'url': 'string',
+        'uuid': 'string',
+        'isbn': 'string',
+        'date': 'string',
+        'ip': 'string',
+        'color': 'string',
+        'percentage': 'string',
+        'currency': 'string',
+        'hashtag': 'string',
+        'array': 'array',
+        'object': 'object'
+    };
+
+    // Map our data types to JSON Schema formats
+    const formatMap = {
+        'email': 'email',
+        'url': 'uri',
+        'uuid': 'uuid',
+        'date': 'date-time',
+        'ip': 'ipv4'
+    };
+
     const properties = {};
     const required = [];
 
     Object.keys(schema).forEach(fieldName => {
         const dataType = schema[fieldName];
-        const jsonSchemaType = JSON_SCHEMA_TYPE_MAP[dataType] || 'string';
+        const jsonSchemaType = typeMap[dataType] || 'string';
 
         properties[fieldName] = { type: jsonSchemaType };
 
         // Add format if applicable
-        if (JSON_SCHEMA_FORMAT_MAP[dataType]) {
-            properties[fieldName].format = JSON_SCHEMA_FORMAT_MAP[dataType];
+        if (formatMap[dataType]) {
+            properties[fieldName].format = formatMap[dataType];
         }
 
         // Add pattern for special types without standard format
-        if (JSON_SCHEMA_PATTERN_MAP[dataType]) {
-            properties[fieldName].pattern = JSON_SCHEMA_PATTERN_MAP[dataType];
+        if (dataType === 'phone') {
+            properties[fieldName].pattern = '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$';
+        } else if (dataType === 'color') {
+            properties[fieldName].pattern = '^#(?:[0-9a-fA-F]{3}){1,2}$';
+        } else if (dataType === 'percentage') {
+            properties[fieldName].pattern = '^-?\\d+(?:\\.\\d+)?%$';
+        } else if (dataType === 'currency') {
+            properties[fieldName].pattern = '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
+        } else if (dataType === 'mention') {
+            properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
+        } else if (dataType === 'hashtag') {
+            properties[fieldName].pattern = '^#[A-Za-z][A-Za-z0-9_]*$';
+        } else if(dataType === 'isbn') {
+            properties[fieldName].pattern = '^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$';
         }
 
         required.push(fieldName);
@@ -911,7 +890,24 @@ function infer(input, format = Formats.NONE, options = {}) {
 
         // Array of primitive values - find common type
         const types = input.map(val => detectFieldType(String(val), options));
-        return resolveType(types);
+        const typeCounts = {};
+        types.forEach(type => {
+            typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+
+        const typePriority = [
+            'uuid', 'isbn', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+            'currency', 'percentage', 'date', 'cron', 'boolean',
+            'number', 'array', 'object', 'string'
+        ];
+
+        for (const priorityType of typePriority) {
+            if (typeCounts[priorityType] === types.length) {
+                return priorityType;
+            }
+        }
+
+        return 'string';
     }
 
     // Handle single object
@@ -964,19 +960,31 @@ function inferSchemaFromObjects(rows, options = {}) {
 
         const stringValues = values.map(val => String(val));
         const types = stringValues.map(val => detectFieldType(val, options));
-        schema[fieldName] = resolveType(types);
+        const typeCounts = {};
+        types.forEach(type => {
+            typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+
+        const typePriority = [
+            'uuid', 'isbn', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+            'currency', 'percentage', 'date', 'cron', 'boolean',
+            'number', 'array', 'object', 'string'
+        ];
+
+        let finalType = 'string';
+
+        for (const priorityType of typePriority) {
+            if (typeCounts[priorityType] === types.length) {
+                finalType = priorityType;
+                break;
+            }
+        }
+
+
+        schema[fieldName] = finalType;
     });
 
     return schema;
-}
-
-/**
- * Helper function to check if the input is a valid semantic versioning string
- * @param {String} input - The value to check
- * @returns {Boolean} True if the input is a valid semantic versioning string
- */
-function isSemver(value) {
-    return PATTERNS.SEMANTIC_VERSION.test(value);
 }
 
 module.exports = predictDataTypes;
