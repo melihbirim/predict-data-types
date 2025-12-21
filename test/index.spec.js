@@ -23,6 +23,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
+        expect(DataTypes.FILEPATH).to.equal('filepath');
 
     });
 });
@@ -513,6 +514,27 @@ describe('predictDataTypes', () => {
             });
         });
     });
+
+    describe('File path detection', () => {
+        it('should detect unix, windows, and relative paths', () => {
+            const text = '/usr/local/bin, C:\\Program Files\\node.exe, ./src/index.js';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '/usr/local/bin': 'filepath',
+                'C:\\Program Files\\node.exe': 'filepath',
+                './src/index.js': 'filepath'
+            });
+        });
+
+        it('should not treat URLs or protocol strings as file paths', () => {
+            const text = 'http://example.com/file.txt, ftp://example.com/resource';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'http://example.com/file.txt': 'url',
+                'ftp://example.com/resource': 'string'
+            });
+        });
+    });
     describe('Hashtag detection', () => {
         it('should detect valid hashtags', () => {
             const text = '#hello, #HelloWorld, #test123, #HELLO';
@@ -701,6 +723,22 @@ describe('predictDataTypes', () => {
             // Long hashtag stays hashtag
             expect(infer('#developer', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
         });
+
+        it('should infer filepath from single value and arrays', () => {
+            expect(infer('/usr/local/bin')).to.equal('filepath');
+            expect(infer(['./src/index.js', '../package.json'])).to.equal('filepath');
+        });
+
+        it('should infer filepath schema from objects', () => {
+            const schema = infer([
+                { path: '/usr/local/bin' },
+                { path: 'C:\\Program Files\\' }
+            ]);
+
+            expect(schema).to.deep.equal({
+                path: 'filepath'
+            });
+        });
     });
 
     describe('JSON Schema format', () => {
@@ -796,6 +834,13 @@ describe('predictDataTypes', () => {
 
             expect(schema.properties.tag.type).to.equal('string');
             expect(schema.properties.tag).to.have.property('pattern');
+        });
+
+        it('should include pattern for filepath in JSON Schema', () => {
+            const schema = infer({ path: '/usr/local/bin' }, Formats.JSONSCHEMA);
+
+            expect(schema.properties.path.type).to.equal('string');
+            expect(schema.properties.path).to.have.property('pattern');
         });
 
 

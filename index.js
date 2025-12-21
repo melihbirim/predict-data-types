@@ -21,7 +21,8 @@ const DataTypes = {
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASHTAG: 'hashtag'
+    HASHTAG: 'hashtag',
+    FILEPATH: 'filepath'
 };
 
 /**
@@ -656,6 +657,8 @@ function detectFieldType(value, options = {}) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
+    } else if (isFilePath(trimmedValue)) {
+        return 'filepath';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
@@ -763,6 +766,7 @@ function toJSONSchema(schema) {
         'percentage': 'string',
         'currency': 'string',
         'hashtag': 'string',
+        'filepath': 'string',
         'array': 'array',
         'object': 'object'
     };
@@ -803,6 +807,8 @@ function toJSONSchema(schema) {
             properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
         } else if (dataType === 'hashtag') {
             properties[fieldName].pattern = '^#[A-Za-z][A-Za-z0-9_]*$';
+        } else if (dataType === 'filepath') {
+            properties[fieldName].pattern = '^(?:/[^?\\n\\r]+|(?:\\.\\.?|~)/[^?\\n\\r]+|[A-Za-z]:\\\\[^?\\n\\r]+)$';
         }
 
         required.push(fieldName);
@@ -869,7 +875,7 @@ function infer(input, format = Formats.NONE, options = {}) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+            'uuid', 'email', 'phone', 'url', 'filepath', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
@@ -939,7 +945,7 @@ function inferSchemaFromObjects(rows, options = {}) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+            'uuid', 'email', 'phone', 'url', 'filepath', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
@@ -958,6 +964,21 @@ function inferSchemaFromObjects(rows, options = {}) {
     });
 
     return schema;
+}
+
+/**
+ * Checks if a string matches common file path patterns (Unix abs, ./ ../ ~/ relative, Windows drive) and rejects protocol URLs.
+ * @param {string} value - Path candidate to validate
+ * @returns {boolean} True when the string looks like a supported file path
+ */
+function isFilePath(value = '') {
+    if (typeof value !== 'string') return false;
+    if (value.includes('://')) return false;
+
+    const unixAbs = /^\/[^?\n\r]+/;
+    const unixRel = /^(?:\.\.?|~)\/[^?\n\r]+/;
+    const winAbs  = /^[A-Za-z]:\\[^?\n\r]+/;
+    return unixAbs.test(value) || unixRel.test(value) || winAbs.test(value);
 }
 
 module.exports = predictDataTypes;
