@@ -21,7 +21,8 @@ const DataTypes = {
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASHTAG: 'hashtag'
+    HASHTAG: 'hashtag',
+    ISBN: 'isbn'
 };
 
 /**
@@ -47,7 +48,8 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
-    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -329,6 +331,8 @@ function isEmail(value) {
     return PATTERNS.EMAIL.test(value);
 }
 
+
+
 /**
  * Checks if a given value is a social media mention (e.g., @username)
  * Allows letters, numbers, underscores, and hyphens after the @,
@@ -374,6 +378,16 @@ function isHexColor(value) {
  */
 function isPercentage(value) {
     return PATTERNS.PERCENTAGE.test(value);
+}
+
+/**
+ * Checks if a given value is a valid ISBN (International Standard Book Number)
+ * Supports both ISBN-10 and ISBN-13 formats with or without hyphens
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid ISBN, false otherwise
+ */
+function isISBN(value) {
+    return PATTERNS.ISBN.test(value);
 }
 
 /**
@@ -628,15 +642,25 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
+    
+    } else if (isISBN(trimmedValue)) {
+        return 'isbn';
+
     } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-        // Numbers, but not those with leading zeros like '01'
-        return 'number';
+    const digitCount = trimmedValue.replace(/\D/g, '').length;
+    if (digitCount >= 10 && digitCount <= 13) {
+        return 'string';
+    }
+    return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
     } else if (isURL(trimmedValue)) {
         return 'url';
     } else if (isUUID(trimmedValue)) {
         return 'uuid';
+    
+        
+
     } else if (isIPAddress(trimmedValue)) {
         return 'ip';
     } else if (isMACAddress(trimmedValue)) {
@@ -757,6 +781,7 @@ function toJSONSchema(schema) {
         'phone': 'string',
         'url': 'string',
         'uuid': 'string',
+        'isbn': 'string',
         'date': 'string',
         'ip': 'string',
         'color': 'string',
@@ -803,6 +828,8 @@ function toJSONSchema(schema) {
             properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
         } else if (dataType === 'hashtag') {
             properties[fieldName].pattern = '^#[A-Za-z][A-Za-z0-9_]*$';
+        } else if(dataType === 'isbn') {
+            properties[fieldName].pattern = '^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$';
         }
 
         required.push(fieldName);
@@ -869,7 +896,7 @@ function infer(input, format = Formats.NONE, options = {}) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+            'uuid', 'isbn', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
@@ -939,7 +966,7 @@ function inferSchemaFromObjects(rows, options = {}) {
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+            'uuid', 'isbn', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
