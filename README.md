@@ -123,6 +123,7 @@ const actual = infer(importedData);
 | `currency`   | `$100`, `€50.99`                       |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
+| `semver `    | `0.0.0`                     |
 
 ## Usage
 
@@ -158,6 +159,7 @@ DataTypes.IP          // 'ip'
 DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
+DataTypes.SEMVER      // 'semantic version'
 ```
 
 ### Basic Example
@@ -165,7 +167,7 @@ DataTypes.CURRENCY    // 'currency'
 ```javascript
 const predictDataTypes = require("predict-data-types");
 
-const text = "John, 30, true, john@example.com, 2023-01-01";
+const text = "John, 30, true, john@example.com, 2023-01-01, 0.0.0";
 const types = predictDataTypes(text);
 
 console.log(types);
@@ -174,7 +176,8 @@ console.log(types);
 //   '30': 'number',
 //   'true': 'boolean',
 //   'john@example.com': 'email',
-//   '2023-01-01': 'date'
+//   '2023-01-01': 'date',
+//   '0.0.0':'semver'
 // }
 ```
 
