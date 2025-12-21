@@ -19,7 +19,8 @@ declare type DataType =
     | 'ip'
     | 'color'
     | 'percentage'
-    | 'currency';
+    | 'currency'
+    | 'semver';
 
 /**
  * Data type constants for type-safe comparisons
@@ -40,6 +41,7 @@ declare const DataTypes: {
     readonly COLOR: 'color';
     readonly PERCENTAGE: 'percentage';
     readonly CURRENCY: 'currency';
+    readonly SEMVER: 'semver'; // semver : semantic versioning
 };
 
 /**

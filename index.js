@@ -40,7 +40,8 @@ const PATTERNS = {
     IPV6: /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:$|^(?:[0-9a-fA-F]{1,4}:)(?::[0-9a-fA-F]{1,4}){1,6}$/,
     HEX_COLOR: /^#(?:[0-9a-fA-F]{3}){1,2}$/,
     PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
-    CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/
+    CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
+    SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -486,6 +487,8 @@ function detectFieldType(value) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
         return 'object';
+    } else if(isSemver(trimmedValue)){
+        return 'semver';
     } else {
         return 'string';
     }
@@ -688,7 +691,7 @@ function infer(input, format = Formats.NONE) {
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'color',
             'currency', 'percentage', 'date', 'boolean',
-            'number', 'array', 'object', 'string'
+            'number', 'array', 'object', 'semver', 'string'
         ];
 
         for (const priorityType of typePriority) {
@@ -772,6 +775,15 @@ function inferSchemaFromObjects(rows) {
     });
 
     return schema;
+}
+
+/**
+ * Helper function to check if the input is a valid semantic versioning string
+ * @param {String} input - The value to check
+ * @returns {Boolean} True if the input is a valid semantic versioning string
+ */
+function isSemver(value) {
+    return PATTERNS.SEMANTIC_VERSION.test(value);
 }
 
 module.exports = predictDataTypes;
