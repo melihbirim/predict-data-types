@@ -21,7 +21,8 @@ const DataTypes = {
     CURRENCY: 'currency',
     MENTION: 'mention',
     CRON: 'cron',
-    HASHTAG: 'hashtag'
+    HASHTAG: 'hashtag',
+    DURATION: 'duration'
 };
 
 /**
@@ -47,7 +48,8 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
-    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    DURATION: /^(\d+(\.\d+)?(minutes?|min|m|seconds?|sec|s|hours?|h|days?|d)\s*)+$/
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -455,6 +457,16 @@ function isCron(value) {
 }
 
 /**
+ * Checks if a given value is a duration
+ * Examples: 2h 30m, 1d, 45min, 30s, 1h30m, 2.5h
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isDuration(value) {
+    return PATTERNS.DURATION.test(value);
+}
+
+/**
  * Validates a single cron field
  * @param {string} field - The field to validate
  * @param {Object} range - The valid range {min, max}
@@ -656,6 +668,8 @@ function detectFieldType(value, options = {}) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
+    } else if (isDuration(trimmedValue)) {
+        return 'duration';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
@@ -870,7 +884,7 @@ function infer(input, format = Formats.NONE, options = {}) {
 
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
+            'currency', 'percentage', 'date', 'cron', 'duration', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 
@@ -940,7 +954,7 @@ function inferSchemaFromObjects(rows, options = {}) {
 
         const typePriority = [
             'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
+            'currency', 'percentage', 'date', 'cron', 'duration', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 

@@ -44,21 +44,21 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 18+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, and currency.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 19+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, and currency.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, and hashes
+- **19 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, and hashes
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 75+ comprehensive test cases
+- **Battle-Tested**: 85+ comprehensive test cases
 
 ## Installation
 
@@ -123,6 +123,7 @@ const actual = infer(importedData);
 | `percentage` | `50%`, `-25%`                          |
 | `currency`   | `$100`, `€50.99`                       |
 | `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
+| `duration`   | `30s`, `45min`, `2h`, `1d`, `1h 30m`, `1h45m30s`, `2days 5hours`, `1.5h`, `45m 30s` |
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
 | `array`      | `[1, 2, 3]`                            |
@@ -166,6 +167,7 @@ DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
 DataTypes.CRON        // 'cron'
 DataTypes.HASHTAG     // 'hashtag'
+DataTypes.DURATION    // 'duration'
 ```
 
 ### Basic Example
@@ -382,6 +384,15 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 //   tag: { type: 'string', pattern: '^#[A-Za-z0-9_]+$' }
 // }
 
+// Duration detection example
+infer("45m"); // → 'duration'\
+infer("2h 30m"); // → 'duration'
+infer("1d 2h 15m"); // → 'duration'
+infer(["30s", "45sec", "60seconds", "1.5s"]); // → 'duration'
+infer(["1h 30m", "2days 5hours", "45m 30s", "1d 2h 30m 15s"]); // → 'duration'
+infer(["1h", "30m", "2h 15m", "1d 5h"]); // → 'duration'
+
+
 ```
 
 
@@ -391,7 +402,7 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 ```javascript
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
-DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG,
+DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG, DataTypes.DURATION,
 DataTypes.ARRAY, DataTypes.OBJECT
 ```
 

@@ -23,6 +23,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
+        expect(DataTypes.DURATION).to.equal('duration');
 
     });
 });
@@ -534,6 +535,146 @@ describe('predictDataTypes', () => {
                 '#hello-world': 'string',
                 'hello#': 'string',
                 '##double': 'string'
+            });
+        });
+    });
+
+    describe('Duration detection', () => {
+        it('should detect valid durations with seconds', () => {
+            const text = '30s, 45sec, 60seconds, 1.5s';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '30s': 'duration',
+                '45sec': 'duration',
+                '60seconds': 'duration',
+                '1.5s': 'duration'
+            });
+        });
+
+        it('should detect valid durations with minutes', () => {
+            const text = '30m, 45min, 60minutes, 2.5m';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '30m': 'duration',
+                '45min': 'duration',
+                '60minutes': 'duration',
+                '2.5m': 'duration'
+            });
+        });
+
+        it('should detect valid durations with hours', () => {
+            const text = '2h, 5hour, 12hours, 1.5h';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '2h': 'duration',
+                '5hour': 'duration',
+                '12hours': 'duration',
+                '1.5h': 'duration'
+            });
+        });
+
+        it('should detect valid durations with days', () => {
+            const text = '7d, 14day, 30days, 1.5d';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '7d': 'duration',
+                '14day': 'duration',
+                '30days': 'duration',
+                '1.5d': 'duration'
+            });
+        });
+
+        it('should detect valid durations with multiple units', () => {
+            const text = '1h 30m, 2days 5hours, 45m 30s, 1d 2h 30m 15s';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '1h 30m': 'duration',
+                '2days 5hours': 'duration',
+                '45m 30s': 'duration',
+                '1d 2h 30m 15s': 'duration'
+            });
+        });
+
+        it('should detect valid durations with decimal numbers', () => {
+            const text = '1.5h, 2.25m, 0.5s, 3.75d';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '1.5h': 'duration',
+                '2.25m': 'duration',
+                '0.5s': 'duration',
+                '3.75d': 'duration'
+            });
+        });
+
+        it('should detect valid durations with singular and plural forms', () => {
+            const text = '1second, 2seconds, 1minute, 2minutes, 1hour, 2hours, 1day, 2days';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '1second': 'duration',
+                '2seconds': 'duration',
+                '1minute': 'duration',
+                '2minutes': 'duration',
+                '1hour': 'duration',
+                '2hours': 'duration',
+                '1day': 'duration',
+                '2days': 'duration'
+            });
+        });
+
+        it('should not detect invalid durations', () => {
+            const text = '30, 30secs, 30secs 20mins, 30x, 30 seconds, 30minutes ago';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '30': 'number',
+                '30secs': 'string',
+                '30secs 20mins': 'string',
+                '30x': 'string',
+                '30 seconds': 'string',
+                '30minutes ago': 'string'
+            });
+        });
+
+        it('should not detect durations without units', () => {
+            const text = '30, 45.5, 100';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '30': 'number',
+                '45.5': 'number',
+                '100': 'number'
+            });
+        });
+
+        it('should not detect durations with invalid unit names', () => {
+            const text = '30secs, 45mins, 2hrs, 5dayss';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '30secs': 'string',
+                '45mins': 'string',
+                '2hrs': 'string',
+                '5dayss': 'string'
+            });
+        });
+
+        it('should detect duration through infer function', () => {
+            const { infer } = predictDataTypes;
+            expect(infer('30s')).to.equal('duration');
+            expect(infer('1h 30m')).to.equal('duration');
+            expect(infer('2.5days')).to.equal('duration');
+        });
+
+        it('should detect duration in array of values', () => {
+            const { infer } = predictDataTypes;
+            expect(infer(['30s', '45m', '2h'])).to.equal('duration');
+        });
+
+        it('should detect duration in object schema', () => {
+            const { infer } = predictDataTypes;
+            const data = { timeout: '30s', duration: '1h 30m', interval: '5m' };
+            const schema = infer(data);
+            expect(schema).to.deep.equal({
+                timeout: 'duration',
+                duration: 'duration',
+                interval: 'duration'
             });
         });
     });
