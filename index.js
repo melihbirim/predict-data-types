@@ -52,6 +52,17 @@ const PATTERNS = {
     ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i
 };
 
+/**
+ * Type priority order for resolving conflicts when multiple types are detected
+ * More specific types should come before more general ones
+ * @constant
+ */
+const TYPE_PRIORITY = [
+    'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+    'currency', 'percentage', 'date', 'cron', 'boolean',
+    'number', 'array', 'object', 'string'
+];
+
 // Date format patterns supported for parsing (from re-date-parser + extensions)
 const DATE_FORMATS = [
     // ISO 8601 and variants with timezone
@@ -895,6 +906,7 @@ function infer(input, format = Formats.NONE, options = {}) {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
+<<<<<<< HEAD
         const typePriority = [
             'uuid', 'isbn', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
@@ -902,6 +914,9 @@ function infer(input, format = Formats.NONE, options = {}) {
         ];
 
         for (const priorityType of typePriority) {
+=======
+        for (const priorityType of TYPE_PRIORITY) {
+>>>>>>> 6ab2e28 (refactor: extract TYPE_PRIORITY constant to eliminate code duplication)
             if (typeCounts[priorityType] === types.length) {
                 return priorityType;
             }
@@ -965,15 +980,18 @@ function inferSchemaFromObjects(rows, options = {}) {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
+<<<<<<< HEAD
         const typePriority = [
             'uuid', 'isbn', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
             'currency', 'percentage', 'date', 'cron', 'boolean',
             'number', 'array', 'object', 'string'
         ];
 
+=======
+>>>>>>> 6ab2e28 (refactor: extract TYPE_PRIORITY constant to eliminate code duplication)
         let finalType = 'string';
 
-        for (const priorityType of typePriority) {
+        for (const priorityType of TYPE_PRIORITY) {
             if (typeCounts[priorityType] === types.length) {
                 finalType = priorityType;
                 break;
