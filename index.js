@@ -724,24 +724,24 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
-    
+
     } else if (isISBN(trimmedValue)) {
         return 'isbn';
 
     } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-    const digitCount = trimmedValue.replace(/\D/g, '').length;
-    if (digitCount >= 10 && digitCount <= 13) {
-        return 'string';
-    }
-    return 'number';
+        const digitCount = trimmedValue.replace(/\D/g, '').length;
+        if (digitCount >= 10 && digitCount <= 13) {
+            return 'string';
+        }
+        return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
     } else if (isURL(trimmedValue)) {
         return 'url';
     } else if (isUUID(trimmedValue)) {
         return 'uuid';
-    
-        
+
+
 
     } else if (isIPAddress(trimmedValue)) {
         return 'ip';

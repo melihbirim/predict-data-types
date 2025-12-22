@@ -170,50 +170,50 @@ describe('predictDataTypes', () => {
 
 
     describe('ISBN detection', () => {
-    it('should detect valid ISBN-13 with hyphens', () => {
-        const text = '978-0-596-52068-7';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            '978-0-596-52068-7': 'isbn'
+        it('should detect valid ISBN-13 with hyphens', () => {
+            const text = '978-0-596-52068-7';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '978-0-596-52068-7': 'isbn'
+            });
         });
-    });
 
-    it('should detect valid ISBN-10 with hyphens', () => {
-        const text = '0-596-52068-9';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            '0-596-52068-9': 'isbn'
+        it('should detect valid ISBN-10 with hyphens', () => {
+            const text = '0-596-52068-9';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '0-596-52068-9': 'isbn'
+            });
         });
-    });
 
-    it('should detect ISBN without hyphens', () => {
-        const text = '9780596520687, 0596520689';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            '9780596520687': 'isbn',
-            '0596520689': 'isbn'
+        it('should detect ISBN without hyphens', () => {
+            const text = '9780596520687, 0596520689';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '9780596520687': 'isbn',
+                '0596520689': 'isbn'
+            });
         });
-    });
 
-    it('should detect ISBN-10 with X checksum', () => {
-        const text = '043942089X, 155860832x';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            '043942089X': 'isbn',
-            '155860832x': 'isbn'
+        it('should detect ISBN-10 with X checksum', () => {
+            const text = '043942089X, 155860832x';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '043942089X': 'isbn',
+                '155860832x': 'isbn'
+            });
         });
-    });
 
-    it('should not detect invalid ISBN formats', () => {
-        const text = '123-4-567-89012-3, 12345678901, not-an-isbn';
-        const types = predictDataTypes(text);
-        expect(types).to.deep.equal({
-            '123-4-567-89012-3': 'string',
-            '12345678901': 'string',
-            'not-an-isbn': 'string'
+        it('should not detect invalid ISBN formats', () => {
+            const text = '123-4-567-89012-3, 12345678901, not-an-isbn';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '123-4-567-89012-3': 'string',
+                '12345678901': 'string',
+                'not-an-isbn': 'string'
+            });
         });
     });
-});
 
     // Enhanced boolean detection tests
     describe('Boolean detection', () => {
