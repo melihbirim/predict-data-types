@@ -50,6 +50,17 @@ const PATTERNS = {
     HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
 };
 
+/**
+ * Type priority order for resolving conflicts when multiple types are detected
+ * More specific types should come before more general ones
+ * @constant
+ */
+const TYPE_PRIORITY = [
+    'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+    'currency', 'percentage', 'date', 'cron', 'boolean',
+    'number', 'array', 'object', 'string'
+];
+
 // Date format patterns supported for parsing (from re-date-parser + extensions)
 const DATE_FORMATS = [
     // ISO 8601 and variants with timezone
@@ -868,13 +879,7 @@ function infer(input, format = Formats.NONE, options = {}) {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
-        const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
-        ];
-
-        for (const priorityType of typePriority) {
+        for (const priorityType of TYPE_PRIORITY) {
             if (typeCounts[priorityType] === types.length) {
                 return priorityType;
             }
@@ -938,15 +943,9 @@ function inferSchemaFromObjects(rows, options = {}) {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
-        const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-            'currency', 'percentage', 'date', 'cron', 'boolean',
-            'number', 'array', 'object', 'string'
-        ];
-
         let finalType = 'string';
 
-        for (const priorityType of typePriority) {
+        for (const priorityType of TYPE_PRIORITY) {
             if (typeCounts[priorityType] === types.length) {
                 finalType = priorityType;
                 break;
