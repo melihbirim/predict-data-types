@@ -51,7 +51,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, emoji and hashes
+- **18 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, EMOJI and hashes
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
@@ -71,7 +71,6 @@ npm install predict-data-types
 Real-world use cases showing what you can build:
 
 **📊 CSV Import Tool**
-
 ```javascript
 // Auto-detect column types and transform data
 const employees = parseCSV(file); // All values are strings
@@ -80,30 +79,23 @@ const schema = infer(employees);
 ```
 
 **🎨 Form Builder**
-
 ```javascript
 // Auto-generate form fields with correct input types
-const userData = {
-  email: "alice@example.com",
-  age: "25",
-  website: "https://alice.dev",
-};
+const userData = { email: 'alice@example.com', age: '25', website: 'https://alice.dev' };
 const types = infer(userData);
 // → { email: 'email', age: 'number', website: 'url' }
 // Generate: <input type="email">, <input type="number">, <input type="url">
 ```
 
 **🌐 API Analyzer**
-
 ```javascript
 // Generate JSON Schema and TypeScript interfaces from API responses
-const response = await fetch("/api/users").then((r) => r.json());
+const response = await fetch('/api/users').then(r => r.json());
 const jsonSchema = infer(response, Formats.JSONSCHEMA);
 // Use with Ajv, joi, or generate TypeScript types
 ```
 
 **✅ Data Validator**
-
 ```javascript
 // Validate imported data quality
 const expected = { email: DataTypes.EMAIL, age: DataTypes.NUMBER };
@@ -115,27 +107,27 @@ const actual = infer(importedData);
 
 ## Supported Data Types
 
-| Type         | Examples                                     |
-| ------------ | -------------------------------------------- |
-| `string`     | `'John'`, `'Hello World'`                    |
-| `number`     | `42`, `3.14`, `-17`, `1e10`                  |
-| `boolean`    | `true`, `false`, `yes`, `no`                 |
-| `email`      | `user@example.com`                           |
-| `phone`      | `555-555-5555`, `(555) 555-5555`             |
-| `url`        | `https://example.com`                        |
-| `uuid`       | `550e8400-e29b-41d4-a716-446655440000`       |
-| `date`       | `2023-12-31`, `31/12/2023`                   |
-| `ip`         | `192.168.1.1`, `2001:0db8::1`                |
-| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6`     |
-| `color`      | `#FF0000`, `#fff`                            |
-| `percentage` | `50%`, `-25%`                                |
-| `currency`   | `$100`, `€50.99`                             |
-| `hashtag`    | `#hello`, `#OpenSource`, `#dev_community`    |
-| `mention`    | `@username`, `@user_name123`, `@john-doe`    |
+| Type         | Examples                               |
+| ------------ | -------------------------------------- |
+| `string`     | `'John'`, `'Hello World'`              |
+| `number`     | `42`, `3.14`, `-17`, `1e10`            |
+| `boolean`    | `true`, `false`, `yes`, `no`           |
+| `email`      | `user@example.com`                     |
+| `phone`      | `555-555-5555`, `(555) 555-5555`       |
+| `url`        | `https://example.com`                  |
+| `uuid`       | `550e8400-e29b-41d4-a716-446655440000` |
+| `date`       | `2023-12-31`, `31/12/2023`             |
+| `ip`         | `192.168.1.1`, `2001:0db8::1`          |
+| `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6` |
+| `color`      | `#FF0000`, `#fff`                      |
+| `percentage` | `50%`, `-25%`                          |
+| `currency`   | `$100`, `€50.99`                       |
+| `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
+| `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
-| `array`      | `[1, 2, 3]`                                  |
-| `object`     | `{"name": "John"}`                           |
-| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`                 |
+| `emoji` | `😀`, `🎉`, `❤️`, `👍`, `❌`              |
+| `array`      | `[1, 2, 3]`                            |
+| `object`     | `{"name": "John"}`                     |
 
 ## Usage
 
@@ -175,7 +167,7 @@ DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
 DataTypes.CRON        // 'cron'
 DataTypes.HASHTAG     // 'hashtag'
-DataTypes.EMOJI       // 'emoji
+DataTypes.EMOJI       // 'emoji'
 ```
 
 ### Basic Example
@@ -215,9 +207,6 @@ infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
 infer("#bad"); // → 'color' (default: hex takes priority)
 infer("#bad", "none", { preferHashtagOver3CharHex: true }); // → 'hashtag'
 
-infer("😀");               // → 'emoji'
-infer("Hello 🎉");         // → 'string'
-infer(["😀", "🎉"]);       // → 'string'  (multiple emoji treated as string)
 // Array of values → Common DataType
 infer(["1", "2", "3"]); // → 'number'
 infer(["true", "false", "yes"]); // → 'boolean'
@@ -238,6 +227,7 @@ infer([
 
 // → { name: 'string', age: 'number', email: 'email' }
 ```
+
 
 ### JSON Schema Format
 
@@ -317,7 +307,6 @@ Each example includes:
 - ✅ Sample data files where applicable
 
 **Run any example:**
-
 ```bash
 cd examples/csv-import
 node example.js
@@ -328,15 +317,15 @@ node example.js
 ### Complex Data
 
 ```javascript
-const { infer } = require("predict-data-types");
+const { infer } = require('predict-data-types');
 
 const complexString = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31";
-const types = infer(complexString.split(", ").map((v) => ({ value: v })));
+const types = infer(complexString.split(', ').map(v => ({ value: v })));
 // { value: 'ip' } // Takes the most specific type found
 
 // Or analyze each value separately:
-const values = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31".split(", ");
-values.forEach((val) => {
+const values = "192.168.1.1, #FF0000, 50%, $100, 2023-12-31".split(', ');
+values.forEach(val => {
   console.log(`${val}: ${infer(val)}`);
 });
 // 192.168.1.1: ip
@@ -362,13 +351,13 @@ values.forEach((val) => {
 **Returns:**
 
 - `DataType` (string) - for single values and arrays of values
-- `Schema` (Object) - for objects and arrays of objects
+- `Schema` (Object) - for objects and arrays of objects  
 - `JSONSchema` (Object) - when `format` is `Formats.JSONSCHEMA`
 
 **Examples:**
 
 ```javascript
-const { infer, Formats, DataTypes } = require("predict-data-types");
+const { infer, Formats, DataTypes } = require('predict-data-types');
 
 // Single values
 infer("42"); // → 'number'
@@ -397,10 +386,10 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 
 ```
 
+
 ### Constants
 
 **`DataTypes`** - Type-safe constants for comparisons:
-
 ```javascript
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
@@ -409,10 +398,9 @@ DataTypes.ARRAY, DataTypes.OBJECT
 ```
 
 **`Formats`** - Output format constants:
-
 ```javascript
-Formats.NONE; // Default simple schema
-Formats.JSONSCHEMA; // JSON Schema format
+Formats.NONE        // Default simple schema
+Formats.JSONSCHEMA  // JSON Schema format
 ```
 
 ### Legacy API
@@ -423,16 +411,14 @@ Formats.JSONSCHEMA; // JSON Schema format
 <summary>Show legacy API details</summary>
 
 **Parameters:**
-
 - `input` (string): Comma-separated string to analyze
 - `firstRowIsHeader` (boolean): Treat first row as headers (default: `false`)
 
 **Returns:** Object mapping field names/values to their data types
 
 **Example:**
-
 ```javascript
-const types = predictDataTypes("name,age\nAlice,25", true);
+const types = predictDataTypes('name,age\nAlice,25', true);
 // { name: 'string', age: 'number' }
 ```
 
@@ -440,18 +426,19 @@ const types = predictDataTypes("name,age\nAlice,25", true);
 
 </details>
 
+
 ## TypeScript vs. This Library
 
 **Common Misconception:** "Doesn't TypeScript already do this?"
 
 **No!** TypeScript and this library serve completely different purposes:
 
-| Feature            | TypeScript              | This Library               |
-| ------------------ | ----------------------- | -------------------------- |
-| **When it works**  | Compile-time            | Runtime                    |
-| **What it checks** | Your code structure     | Actual data content        |
-| **Scope**          | Static type annotations | Dynamic string analysis    |
-| **Use case**       | Prevent coding errors   | Analyze user-provided data |
+| Feature | TypeScript | This Library |
+|---------|-----------|--------------|
+| **When it works** | Compile-time | Runtime |
+| **What it checks** | Your code structure | Actual data content |
+| **Scope** | Static type annotations | Dynamic string analysis |
+| **Use case** | Prevent coding errors | Analyze user-provided data |
 
 **Example:**
 
@@ -468,9 +455,8 @@ const type = infer("test@example.com");
 ```
 
 **When to use this library:**
-
 - 📊 Users upload CSV/Excel files
-- 🌐 API responses with unknown structure
+- 🌐 API responses with unknown structure  
 - 📝 Form data that needs validation
 - 🔄 ETL pipelines processing raw data
 - 🎨 Dynamic form/UI generation

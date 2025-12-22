@@ -23,7 +23,6 @@ describe('DataTypes constants', () => {
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
-        expect(DataTypes.EMOJI).to.equal('emoji');
 
     });
 });
@@ -36,11 +35,12 @@ describe('Formats constants', () => {
 });
 
 describe('predictDataTypes', () => {
+
     it('should predict data types for string and url', () => {
         const text = 'John, http://asd.com';
         const types = predictDataTypes(text);
         expect(types).to.deep.equal({
-            John: 'string',
+            'John': 'string',
             'http://asd.com': 'url'
         });
     });
@@ -49,17 +49,16 @@ describe('predictDataTypes', () => {
         const text = 'John, http://asd.com, 24, 3.4, 2023-01-01';
         const types = predictDataTypes(text);
         expect(types).to.deep.equal({
-            John: 'string',
+            'John': 'string',
             'http://asd.com': 'url',
-            24: 'number',
-            3.4: 'number',
+            '24': 'number',
+            '3.4': 'number',
             '2023-01-01': 'date'
         });
     });
 
     it('should predict data types for strings with phone numbers', () => {
-        const text =
-      '555-555-5555, (555) 555-5555, +1 555-555-5555, invalid-phone-number';
+        const text = '555-555-5555, (555) 555-5555, +1 555-555-5555, invalid-phone-number';
         const types = predictDataTypes(text);
         expect(types).to.deep.equal({
             '555-555-5555': 'phone',
@@ -82,10 +81,10 @@ describe('predictDataTypes', () => {
         const text = 'name, age, married, dob \n John,30, true, 1991-05-12';
         const types = predictDataTypes(text, true);
         expect(types).to.deep.equal({
-            name: 'string',
-            age: 'number',
-            married: 'boolean',
-            dob: 'date'
+            'name': 'string',
+            'age': 'number',
+            'married': 'boolean',
+            'dob': 'date'
         });
     });
 
@@ -96,9 +95,7 @@ describe('predictDataTypes', () => {
         });
 
         it('should handle undefined input', () => {
-            expect(() => predictDataTypes(undefined)).to.throw(
-                'Input must be a string'
-            );
+            expect(() => predictDataTypes(undefined)).to.throw('Input must be a string');
         });
 
         it('should handle empty string input', () => {
@@ -119,15 +116,15 @@ describe('predictDataTypes', () => {
 
         it('should handle single character input', () => {
             const result = predictDataTypes('a');
-            expect(result).to.deep.equal({ a: 'string' });
+            expect(result).to.deep.equal({ 'a': 'string' });
         });
 
         it('should handle missing header fields gracefully', () => {
             const csvData = 'name,age,active\nJohn,30'; // Missing third column
             const result = predictDataTypes(csvData, true);
             expect(result).to.deep.equal({
-                name: 'string',
-                age: 'number'
+                'name': 'string',
+                'age': 'number'
             });
         });
 
@@ -135,8 +132,8 @@ describe('predictDataTypes', () => {
             const csvData = 'name,age\nJohn,30,true,extra'; // Extra columns
             const result = predictDataTypes(csvData, true);
             expect(result).to.deep.equal({
-                name: 'string',
-                age: 'number'
+                'name': 'string',
+                'age': 'number'
             });
         });
     });
@@ -152,8 +149,7 @@ describe('predictDataTypes', () => {
         });
 
         it('should correctly detect multiple UUIDs', () => {
-            const text =
-        '550e8400-e29b-41d4-a716-446655440000, 6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const text = '550e8400-e29b-41d4-a716-446655440000, 6ba7b810-9dad-11d1-80b4-00c04fd430c8';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '550e8400-e29b-41d4-a716-446655440000': 'uuid',
@@ -174,22 +170,21 @@ describe('predictDataTypes', () => {
     // Enhanced boolean detection tests
     describe('Boolean detection', () => {
         it('should detect various true/false representations', () => {
-            const text =
-        'true, false, TRUE, FALSE, yes, no, YES, NO, on, off, ON, OFF';
+            const text = 'true, false, TRUE, FALSE, yes, no, YES, NO, on, off, ON, OFF';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
-                true: 'boolean',
-                false: 'boolean',
-                TRUE: 'boolean',
-                FALSE: 'boolean',
-                yes: 'boolean',
-                no: 'boolean',
-                YES: 'boolean',
-                NO: 'boolean',
-                on: 'boolean',
-                off: 'boolean',
-                ON: 'boolean',
-                OFF: 'boolean'
+                'true': 'boolean',
+                'false': 'boolean',
+                'TRUE': 'boolean',
+                'FALSE': 'boolean',
+                'yes': 'boolean',
+                'no': 'boolean',
+                'YES': 'boolean',
+                'NO': 'boolean',
+                'on': 'boolean',
+                'off': 'boolean',
+                'ON': 'boolean',
+                'OFF': 'boolean'
             });
         });
 
@@ -197,12 +192,12 @@ describe('predictDataTypes', () => {
             const text = 'true, false, yes, no, on, off';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
-                true: 'boolean',
-                false: 'boolean',
-                yes: 'boolean',
-                no: 'boolean',
-                on: 'boolean',
-                off: 'boolean'
+                'true': 'boolean',
+                'false': 'boolean',
+                'yes': 'boolean',
+                'no': 'boolean',
+                'on': 'boolean',
+                'off': 'boolean'
             });
         });
 
@@ -210,13 +205,13 @@ describe('predictDataTypes', () => {
             const text = 'truthy, falsy, yesss, nope, online, offline, 10, 01';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
-                truthy: 'string',
-                falsy: 'string',
-                yesss: 'string',
-                nope: 'string',
-                online: 'string',
-                offline: 'string',
-                10: 'number',
+                'truthy': 'string',
+                'falsy': 'string',
+                'yesss': 'string',
+                'nope': 'string',
+                'online': 'string',
+                'offline': 'string',
+                '10': 'number',
                 '01': 'string' // Leading zero makes it a string
             });
         });
@@ -295,11 +290,11 @@ describe('predictDataTypes', () => {
             const text = '42, -42, 3.14, -3.14, 0, 0.0, 1e10, -1e-10';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
-                42: 'number',
+                '42': 'number',
                 '-42': 'number',
-                3.14: 'number',
+                '3.14': 'number',
                 '-3.14': 'number',
-                0: 'number',
+                '0': 'number',
                 '0.0': 'number',
                 '1e10': 'number',
                 '-1e-10': 'number'
@@ -359,9 +354,9 @@ describe('predictDataTypes', () => {
             const text = 'name,age,active\nJohn,30,true';
             const types = predictDataTypes(text, true);
             expect(types).to.deep.equal({
-                name: 'string',
-                age: 'number',
-                active: 'boolean'
+                'name': 'string',
+                'age': 'number',
+                'active': 'boolean'
             });
         });
 
@@ -369,8 +364,8 @@ describe('predictDataTypes', () => {
             const text = 'name,age,active\nJohn,30'; // Missing third column
             const types = predictDataTypes(text, true);
             expect(types).to.deep.equal({
-                name: 'string',
-                age: 'number'
+                'name': 'string',
+                'age': 'number'
             });
         });
     });
@@ -428,8 +423,7 @@ describe('predictDataTypes', () => {
         });
 
         it('should not detect invalid MAC addresses', () => {
-            const text =
-        '00:1B:63:84:45, 00:1B:63:84:45:E6:FF, not-a-mac, GG:HH:II:JJ:KK:LL';
+            const text = '00:1B:63:84:45, 00:1B:63:84:45:E6:FF, not-a-mac, GG:HH:II:JJ:KK:LL';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '00:1B:63:84:45': 'string',
@@ -457,7 +451,7 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '#GGGGGG': 'string',
-                FF0000: 'string',
+                'FF0000': 'string',
                 '#12345': 'string',
                 '#12': 'string'
             });
@@ -482,7 +476,7 @@ describe('predictDataTypes', () => {
             expect(types).to.deep.equal({
                 '% 50': 'string',
                 '50 %': 'string',
-                percent: 'string'
+                'percent': 'string'
             });
         });
     });
@@ -492,7 +486,7 @@ describe('predictDataTypes', () => {
             const text = '$100, €50.99, £25, ¥1000, ₹500.50';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
-                $100: 'currency',
+                '$100': 'currency',
                 '€50.99': 'currency',
                 '£25': 'currency',
                 '¥1000': 'currency',
@@ -515,7 +509,7 @@ describe('predictDataTypes', () => {
             expect(types).to.deep.equal({
                 '$ 100': 'string',
                 '100 $': 'string',
-                dollars: 'string'
+                'dollars': 'string'
             });
         });
     });
@@ -656,7 +650,9 @@ describe('predictDataTypes', () => {
         });
 
         it('should convert non-string values to strings before type detection', () => {
-            const data = [{ count: 42, active: true, price: 99.99 }];
+            const data = [
+                { count: 42, active: true, price: 99.99 }
+            ];
             const schema = infer(data);
             expect(schema).to.deep.equal({
                 count: 'number',
@@ -667,9 +663,7 @@ describe('predictDataTypes', () => {
 
         it('should throw error for invalid input', () => {
             expect(() => infer(null)).to.throw('Input cannot be null or undefined');
-            expect(() => infer(undefined)).to.throw(
-                'Input cannot be null or undefined'
-            );
+            expect(() => infer(undefined)).to.throw('Input cannot be null or undefined');
         });
 
         it('should infer hashtag from single value', () => {

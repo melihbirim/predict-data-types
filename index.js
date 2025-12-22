@@ -50,7 +50,6 @@ const PATTERNS = {
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
     HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
     EMOJI: /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)$/u
-
 };
 
 /**
@@ -60,7 +59,7 @@ const PATTERNS = {
  */
 const TYPE_PRIORITY = [
     'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-    'currency', 'percentage', 'date', 'cron', 'emoji', 'boolean',
+    'currency', 'percentage', 'date', 'cron', 'boolean', 'emoji',
     'number', 'array', 'object', 'string'
 ];
 
@@ -83,8 +82,8 @@ const JSON_SCHEMA_TYPE_MAP = {
     'currency': 'string',
     'mention': 'string',
     'cron': 'string',
-    'emoji': 'string',
     'hashtag': 'string',
+    'emoji': 'string',
     'macaddress': 'string',
     'array': 'array',
     'object': 'object'
@@ -113,7 +112,7 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
     'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
-    'emoji': '^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)$'
+    'emoji': '^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)$/u'
 };
 
 /**
@@ -217,7 +216,7 @@ function parseTimezone(tzString) {
     const sign = match[1] === '+' ? 1 : -1;
     const hours = parseInt(match[2], 10);
     const minutes = parseInt(match[3] || '00', 10);
-    return sign * (hours * 60 + minutes);
+    return sign * ((hours * 60) + minutes);
 }
 
 /**
@@ -227,14 +226,8 @@ function parseTimezone(tzString) {
  * @returns {Date|null} Parsed Date object or null if invalid
  */
 function parseWithFormat(input, format) {
-    const parts = input
-        .trim()
-        .split(/[\s\/\-\:\.TZ]+/)
-        .filter((p) => p);
-    const formatParts = format
-        .trim()
-        .split(/[\s\/\-\:\.TZ]+/)
-        .filter((p) => p);
+    const parts = input.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
+    const formatParts = format.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
 
     if (parts.length < 3) return null; // At minimum need year, month, day
 
@@ -294,28 +287,21 @@ function parseWithFormat(input, format) {
         }
     }
 
-    if (
-        dateValues.year === undefined ||
-    dateValues.month === undefined ||
-    dateValues.day === undefined
-    ) {
+    if (dateValues.year === undefined || dateValues.month === undefined || dateValues.day === undefined) {
         return null;
     }
 
     // Create date object (UTC if timezone specified, local otherwise)
-    const date =
-    timezoneOffset !== null
-        ? new Date(
-            Date.UTC(
-                dateValues.year,
-                dateValues.month,
-                dateValues.day,
-                dateValues.hour || 0,
-                dateValues.minute || 0,
-                dateValues.second || 0,
-                dateValues.millisecond || 0
-            )
-        )
+    const date = timezoneOffset !== null
+        ? new Date(Date.UTC(
+            dateValues.year,
+            dateValues.month,
+            dateValues.day,
+            dateValues.hour || 0,
+            dateValues.minute || 0,
+            dateValues.second || 0,
+            dateValues.millisecond || 0
+        ))
         : new Date(
             dateValues.year,
             dateValues.month,
@@ -336,11 +322,9 @@ function parseWithFormat(input, format) {
     }
 
     // Check if date rolled over (invalid date like Feb 30 becomes Mar 2)
-    if (
-        date.getFullYear() !== dateValues.year ||
-    date.getMonth() !== dateValues.month ||
-    date.getDate() !== dateValues.day
-    ) {
+    if (date.getFullYear() !== dateValues.year ||
+        date.getMonth() !== dateValues.month ||
+        date.getDate() !== dateValues.day) {
         return null;
     }
 
@@ -410,6 +394,7 @@ function isURL(value) {
 function isUUID(value) {
     return PATTERNS.UUID.test(value);
 }
+
 
 /**
  * Checks if a given value is a valid phone number
@@ -489,7 +474,7 @@ function isHashtag(value, options = {}) {
 
     // If preferring hashtags over 3-char hex, check hashtag pattern first
     if (options.preferHashtagOver3CharHex && value.length === 4) {
-    // Check if it matches hashtag pattern before checking hex
+        // Check if it matches hashtag pattern before checking hex
         if (PATTERNS.HASHTAG.test(value)) {
             return true;
         }
@@ -501,8 +486,8 @@ function isHashtag(value, options = {}) {
     // Reject hex-like patterns (invalid hex but looks like hex format)
     // E.g., #GGGGGG (6 chars, all letters) or #GGG (3 chars, all letters)
     // These should be treated as invalid strings, not hashtags
-    if (value.length === 4 || value.length === 7) {
-    // Check if it's all hex-like characters (letters and numbers only)
+    if ((value.length === 4 || value.length === 7)) {
+        // Check if it's all hex-like characters (letters and numbers only)
         const withoutHash = value.slice(1);
         const isHexLike = /^[A-Fa-f0-9]+$/.test(withoutHash);
         if (isHexLike) {
@@ -520,19 +505,6 @@ function isHashtag(value, options = {}) {
     // Test against hashtag pattern
     return PATTERNS.HASHTAG.test(value);
 }
-
-/**
- * Checks if a given value is a pure emoji string
- * @param {string} value
- * @returns {boolean}
- */
-function isEmoji(value) {
-    if (typeof value !== 'string') return false;
-    const trimmed = value.trim();
-    if (!trimmed) return false;
-    return PATTERNS.EMOJI.test(trimmed);
-}
-
 
 /**
  * Checks if a given value is a valid cron expression
@@ -554,7 +526,7 @@ function isCron(value) {
         { min: 0, max: 23 }, // hour
         { min: 1, max: 31 }, // day
         { min: 1, max: 12 }, // month
-        { min: 0, max: 7 } // weekday (0 and 7 are Sunday)
+        { min: 0, max: 7 }  // weekday (0 and 7 are Sunday)
     ];
 
     for (let i = 0; i < fields.length; i++) {
@@ -620,24 +592,28 @@ function isValidCronPart(part, range) {
     // Handle ranges like 1-5
     const rangeParts = part.split('-');
     if (rangeParts.length === 1) {
-    // Single number
+        // Single number
         const num = parseInt(part, 10);
         return !isNaN(num) && num >= range.min && num <= range.max;
     } else if (rangeParts.length === 2) {
         const start = parseInt(rangeParts[0], 10);
         const end = parseInt(rangeParts[1], 10);
-        return (
-            !isNaN(start) &&
-      !isNaN(end) &&
-      start >= range.min &&
-      end <= range.max &&
-      start <= end
-        );
+        return !isNaN(start) && !isNaN(end) && start >= range.min && end <= range.max && start <= end;
     }
 
     return false;
 }
-
+/**
+ * Checks if a given value is a pure emoji string
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isEmoji(value) {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    return PATTERNS.EMOJI.test(trimmed);
+}
 
 /**
  * Tokenizes a string by splitting on commas while respecting quoted strings and nested objects/arrays
@@ -651,7 +627,7 @@ function tokenize(text) {
     let i = 0;
 
     while (i < textLength) {
-    // Skip whitespace at the beginning
+        // Skip whitespace at the beginning
         while (i < textLength && text[i] === ' ') {
             i++;
         }
@@ -690,12 +666,7 @@ function tokenize(text) {
             tokens.push(text.substring(tokenStart, i));
         } else {
             // Handle regular tokens
-            while (
-                i < textLength &&
-        text[i] !== ',' &&
-        text[i] !== '{' &&
-        text[i] !== '['
-            ) {
+            while (i < textLength && text[i] !== ',' && text[i] !== '{' && text[i] !== '[') {
                 i++;
             }
             tokens.push(text.substring(tokenStart, i));
@@ -721,7 +692,7 @@ function parseHeaderAndData(str, firstRowIsHeader) {
     let data = str;
 
     if (firstRowIsHeader) {
-    // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
+        // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
         const lines = str.split(/\r?\n|\r/);
         if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
             header = lines[0].split(',');
@@ -753,12 +724,8 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
-    } else if (
-        !isNaN(parseFloat(trimmedValue)) &&
-    isFinite(trimmedValue) &&
-    !PATTERNS.LEADING_ZERO.test(trimmedValue)
-    ) {
-    // Numbers, but not those with leading zeros like '01'
+    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
+        // Numbers, but not those with leading zeros like '01'
         return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
@@ -776,12 +743,8 @@ function detectFieldType(value, options = {}) {
         return 'email';
     } else if (isMention(trimmedValue)) {
         return 'mention';
-    } else if (
-        options.preferHashtagOver3CharHex &&
-    trimmedValue.length === 4 &&
-    isHashtag(trimmedValue, options)
-    ) {
-    // When preferring hashtags, check 3-char values as hashtags first
+    } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
+        // When preferring hashtags, check 3-char values as hashtags first
         return 'hashtag';
     } else if (isHexColor(trimmedValue)) {
         return 'color';
@@ -811,13 +774,13 @@ function processFields(data, header, firstRowIsHeader) {
     const types = {};
 
     for (let i = 0; i < data.length; i++) {
-    // When using headers, only process fields that have corresponding headers
+        // When using headers, only process fields that have corresponding headers
         if (firstRowIsHeader && i >= header.length) {
             continue; // Skip extra data fields beyond header length
         }
 
         // Handle missing header fields gracefully
-        const field = header[i] && header[i].trim ? header[i].trim() : `field_${i}`;
+        const field = (header[i] && header[i].trim) ? header[i].trim() : `field_${i}`;
         const fieldType = detectFieldType(data[i]);
         types[field] = fieldType;
     }
@@ -886,7 +849,7 @@ function toJSONSchema(schema) {
     const properties = {};
     const required = [];
 
-    Object.keys(schema).forEach((fieldName) => {
+    Object.keys(schema).forEach(fieldName => {
         const dataType = schema[fieldName];
         const jsonSchemaType = JSON_SCHEMA_TYPE_MAP[dataType] || 'string';
 
@@ -946,11 +909,7 @@ function infer(input, format = Formats.NONE, options = {}) {
 
         // Check if array contains objects (schema inference)
         const firstItem = input[0];
-        if (
-            firstItem !== null &&
-      typeof firstItem === 'object' &&
-      !Array.isArray(firstItem)
-        ) {
+        if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
             // Array of objects - infer schema
             const schema = inferSchemaFromObjects(input, options);
 
@@ -989,11 +948,7 @@ function infer(input, format = Formats.NONE, options = {}) {
  * @returns {Object} Schema with field names as keys and types as values
  */
 function inferSchemaFromObjects(rows, options = {}) {
-    if (
-        !rows.every(
-            (row) => row !== null && typeof row === 'object' && !Array.isArray(row)
-        )
-    ) {
+    if (!rows.every(row => row !== null && typeof row === 'object' && !Array.isArray(row))) {
         throw new Error('All items must be objects');
     }
 
@@ -1003,16 +958,16 @@ function inferSchemaFromObjects(rows, options = {}) {
 
     // Collect all unique field names
     const fieldNames = new Set();
-    rows.forEach((row) => {
-        Object.keys(row).forEach((key) => fieldNames.add(key));
+    rows.forEach(row => {
+        Object.keys(row).forEach(key => fieldNames.add(key));
     });
 
     // Analyze each field across all rows
     const schema = {};
-    fieldNames.forEach((fieldName) => {
+    fieldNames.forEach(fieldName => {
         const values = rows
-            .map((row) => row[fieldName])
-            .filter((val) => val !== undefined && val !== null && val !== '');
+            .map(row => row[fieldName])
+            .filter(val => val !== undefined && val !== null && val !== '');
 
         if (values.length === 0) {
             schema[fieldName] = 'string';
