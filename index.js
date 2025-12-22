@@ -530,7 +530,6 @@ function isEmoji(value) {
     if (typeof value !== 'string') return false;
     const trimmed = value.trim();
     if (!trimmed) return false;
-    console.log('DEBUG isEmoji:', trimmed);
     return PATTERNS.EMOJI.test(trimmed);
 }
 
