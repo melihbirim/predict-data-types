@@ -287,8 +287,8 @@ function isBoolean(val) {
     if (typeof val === 'string') {
         const lower = val.toLowerCase();
         return lower === 'true' || lower === 'false' ||
-               lower === 'yes' || lower === 'no' ||
-               lower === 'on' || lower === 'off';
+            lower === 'yes' || lower === 'no' ||
+            lower === 'on' || lower === 'off';
     }
     return val === 1 || val === 0;
 }
@@ -653,7 +653,7 @@ function detectFieldType(value, options = {}) {
     } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
         // When preferring hashtags, check 3-char values as hashtags first
         return 'hashtag';
-    }else if (isHexColor(trimmedValue) || isRgbColor(trimmedValue)) {
+    } else if (isHexColor(trimmedValue) || isRgbColor(trimmedValue)) {
         return 'color';
     } else if (isHashtag(trimmedValue, options)) {
         return 'hashtag';

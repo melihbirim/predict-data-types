@@ -446,6 +446,16 @@ describe('predictDataTypes', () => {
                 '#ffffff': 'color'
             });
         });
+        it('should not detect invalid hex colors', () => {
+            const text = '#GGGGGG, #ZZZ, #12345, #';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#GGGGGG': 'string',
+                '#ZZZ': 'string',
+                '#12345': 'string',
+                '#': 'string'
+            });
+        });
     });
     describe('RGB color detection', () => {
         const { infer } = predictDataTypes;

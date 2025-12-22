@@ -5,9 +5,9 @@
 /**
  * Supported data types that can be predicted
  */
-declare type DataType = 
+declare type DataType =
     | 'string'
-    | 'number' 
+    | 'number'
     | 'boolean'
     | 'email'
     | 'phone'
@@ -71,7 +71,7 @@ declare type JSONSchema = {
     type: 'object';
     properties: Record<string, {
         type: 'string' | 'number' | 'boolean' | 'array' | 'object';
-        format?: 'email' | 'uri' | 'uuid' | 'date-time' | 'ipv4'| 'color';
+        format?: 'email' | 'uri' | 'uuid' | 'date-time' | 'ipv4' | 'color';
         pattern?: string;
     }>;
     required: string[];
