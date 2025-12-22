@@ -48,7 +48,9 @@ const PATTERNS = {
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
-    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/
+    HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    EMOJI: /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)$/u
+
 };
 
 /**
@@ -58,7 +60,7 @@ const PATTERNS = {
  */
 const TYPE_PRIORITY = [
     'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
-    'currency', 'percentage', 'date', 'cron', 'boolean',
+    'currency', 'percentage', 'date', 'cron', 'emoji', 'boolean',
     'number', 'array', 'object', 'string'
 ];
 
@@ -81,6 +83,7 @@ const JSON_SCHEMA_TYPE_MAP = {
     'currency': 'string',
     'mention': 'string',
     'cron': 'string',
+    'emoji': 'string',
     'hashtag': 'string',
     'macaddress': 'string',
     'array': 'array',
@@ -109,7 +112,8 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'percentage': '^-?\\d+(?:\\.\\d+)?%$',
     'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
-    'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$'
+    'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
+    'emoji': '^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)$'
 };
 
 /**
@@ -193,18 +197,8 @@ const DATE_FORMATS = [
  */
 function parseMonth(monthString) {
     const monthNames = [
-        'jan',
-        'feb',
-        'mar',
-        'apr',
-        'may',
-        'jun',
-        'jul',
-        'aug',
-        'sep',
-        'oct',
-        'nov',
-        'dec'
+        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
     ];
     const normalized = monthString.toLowerCase().substring(0, 3);
     const monthIndex = monthNames.indexOf(normalized);
@@ -392,14 +386,9 @@ function isDate(value) {
 function isBoolean(val) {
     if (typeof val === 'string') {
         const lower = val.toLowerCase();
-        return (
-            lower === 'true' ||
-      lower === 'false' ||
-      lower === 'yes' ||
-      lower === 'no' ||
-      lower === 'on' ||
-      lower === 'off'
-        );
+        return lower === 'true' || lower === 'false' ||
+               lower === 'yes' || lower === 'no' ||
+               lower === 'on' || lower === 'off';
     }
     return val === 1 || val === 0;
 }
@@ -533,6 +522,20 @@ function isHashtag(value, options = {}) {
 }
 
 /**
+ * Checks if a given value is a pure emoji string
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isEmoji(value) {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    console.log('DEBUG isEmoji:', trimmed);
+    return PATTERNS.EMOJI.test(trimmed);
+}
+
+
+/**
  * Checks if a given value is a valid cron expression
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a valid cron expression, false otherwise
@@ -636,22 +639,6 @@ function isValidCronPart(part, range) {
     return false;
 }
 
-/**
- * Checks whether the given value is a string containing exactly one emoji.
- *
- * @param {string} value - The value to check
- * @returns {boolean} Returns true if the value is a single emoji
- */
-function isEmoji(value) {
-    if (typeof value !== 'string' || value.trim() === '') return false;
-
-    // Use a robust emoji regex
-    const emojiRegex = require('emoji-regex')();
-    const matches = value.match(emojiRegex);
-
-    // Only true if the entire string is exactly one emoji sequence
-    return matches && matches.length === 1 && matches[0] === value;
-}
 
 /**
  * Tokenizes a string by splitting on commas while respecting quoted strings and nested objects/arrays
