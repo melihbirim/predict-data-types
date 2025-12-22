@@ -57,24 +57,9 @@ const PATTERNS = {
  * @constant
  */
 const TYPE_PRIORITY = [
-    'uuid',
-    'email',
-    'phone',
-    'url',
-    'ip',
-    'macaddress',
-    'mention',
-    'color',
-    'hashtag',
-    'currency',
-    'percentage',
-    'date',
-    'cron',
-    'boolean',
-    'number',
-    'array',
-    'object',
-    'string'
+    'uuid', 'email', 'phone', 'url', 'ip', 'macaddress', 'mention', 'color', 'hashtag',
+    'currency', 'percentage', 'date', 'cron', 'boolean',
+    'number', 'array', 'object', 'string'
 ];
 
 /**
@@ -82,24 +67,24 @@ const TYPE_PRIORITY = [
  * @constant
  */
 const JSON_SCHEMA_TYPE_MAP = {
-    string: 'string',
-    number: 'number',
-    boolean: 'boolean',
-    email: 'string',
-    phone: 'string',
-    url: 'string',
-    uuid: 'string',
-    date: 'string',
-    ip: 'string',
-    color: 'string',
-    percentage: 'string',
-    currency: 'string',
-    mention: 'string',
-    cron: 'string',
-    hashtag: 'string',
-    macaddress: 'string',
-    array: 'array',
-    object: 'object'
+    'string': 'string',
+    'number': 'number',
+    'boolean': 'boolean',
+    'email': 'string',
+    'phone': 'string',
+    'url': 'string',
+    'uuid': 'string',
+    'date': 'string',
+    'ip': 'string',
+    'color': 'string',
+    'percentage': 'string',
+    'currency': 'string',
+    'mention': 'string',
+    'cron': 'string',
+    'hashtag': 'string',
+    'macaddress': 'string',
+    'array': 'array',
+    'object': 'object'
 };
 
 /**
@@ -107,11 +92,11 @@ const JSON_SCHEMA_TYPE_MAP = {
  * @constant
  */
 const JSON_SCHEMA_FORMAT_MAP = {
-    email: 'email',
-    url: 'uri',
-    uuid: 'uuid',
-    date: 'date-time',
-    ip: 'ipv4'
+    'email': 'email',
+    'url': 'uri',
+    'uuid': 'uuid',
+    'date': 'date-time',
+    'ip': 'ipv4'
 };
 
 /**
@@ -119,12 +104,12 @@ const JSON_SCHEMA_FORMAT_MAP = {
  * @constant
  */
 const JSON_SCHEMA_PATTERN_MAP = {
-    phone: '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$',
-    color: '^#(?:[0-9a-fA-F]{3}){1,2}$',
-    percentage: '^-?\\d+(?:\\.\\d+)?%$',
-    currency: '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
-    mention: '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
-    hashtag: '^#[A-Za-z][A-Za-z0-9_]*$'
+    'phone': '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$',
+    'color': '^#(?:[0-9a-fA-F]{3}){1,2}$',
+    'percentage': '^-?\\d+(?:\\.\\d+)?%$',
+    'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
+    'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
+    'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$'
 };
 
 /**
@@ -134,7 +119,7 @@ const JSON_SCHEMA_PATTERN_MAP = {
  */
 function resolveType(types) {
     const typeCounts = {};
-    types.forEach((type) => {
+    types.forEach(type => {
         typeCounts[type] = (typeCounts[type] || 0) + 1;
     });
 
@@ -992,7 +977,7 @@ function infer(input, format = Formats.NONE, options = {}) {
         }
 
         // Array of primitive values - find common type
-        const types = input.map((val) => detectFieldType(String(val), options));
+        const types = input.map(val => detectFieldType(String(val), options));
         return resolveType(types);
     }
 
@@ -1048,8 +1033,8 @@ function inferSchemaFromObjects(rows, options = {}) {
             return;
         }
 
-        const stringValues = values.map((val) => String(val));
-        const types = stringValues.map((val) => detectFieldType(val, options));
+        const stringValues = values.map(val => String(val));
+        const types = stringValues.map(val => detectFieldType(val, options));
         schema[fieldName] = resolveType(types);
     });
 
