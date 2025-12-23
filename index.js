@@ -797,7 +797,7 @@ function toJSONSchema(schema) {
         if (dataType === 'phone') {
             properties[fieldName].pattern = '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$';
         } else if (dataType === 'color') {
-            properties[fieldName].pattern = '^#(?:[0-9a-fA-F]{3}){1,2}$';
+            properties[fieldName].pattern = '^(?:#(?:[0-9a-fA-F]{3}){1,2}|rgba?\\(\\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\s*,\\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\s*,\\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\s*(?:,\\s*(?:0|1|0?\\.\\d+)\\s*)?\\))$';
         } else if (dataType === 'percentage') {
             properties[fieldName].pattern = '^-?\\d+(?:\\.\\d+)?%$';
         } else if (dataType === 'currency') {
