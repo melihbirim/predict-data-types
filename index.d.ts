@@ -24,7 +24,8 @@ declare type DataType =
     | 'mention'
     | 'cron'
     | 'hashtag'
-    | 'filepath';
+    | 'filepath'
+    | 'semver';
 
 /**
  * Data type constants for type-safe comparisons
@@ -50,6 +51,7 @@ declare const DataTypes: {
     readonly CRON: 'cron';
     readonly HASHTAG: 'hashtag';
     readonly FILEPATH: 'filepath';
+    readonly SEMVER: 'semver'; // semver : semantic versioning
 };
 
 /**

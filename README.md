@@ -128,6 +128,7 @@ const actual = infer(importedData);
 | `filepath`   | `/usr/local/bin`, `C:\\Program Files\\node.exe`, `./src/index.js` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
+| `semver`     | `0.0.0`                                |
 
 ## Usage
 
@@ -168,6 +169,7 @@ DataTypes.MENTION     // 'mention'
 DataTypes.CRON        // 'cron'
 DataTypes.HASHTAG     // 'hashtag'
 DataTypes.FILEPATH    // 'filepath'
+DataTypes.SEMVER      // 'semver'
 ```
 
 ### Basic Example
@@ -175,7 +177,7 @@ DataTypes.FILEPATH    // 'filepath'
 ```javascript
 const predictDataTypes = require("predict-data-types");
 
-const text = "John, 30, true, john@example.com, 2023-01-01";
+const text = "John, 30, true, john@example.com, 2023-01-01, 0.0.0";
 const types = predictDataTypes(text);
 
 console.log(types);
@@ -184,7 +186,8 @@ console.log(types);
 //   '30': 'number',
 //   'true': 'boolean',
 //   'john@example.com': 'email',
-//   '2023-01-01': 'date'
+//   '2023-01-01': 'date',
+//   '0.0.0':'semver'
 // }
 ```
 
@@ -395,7 +398,7 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
 DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG, DataTypes.FILEPATH,
-DataTypes.ARRAY, DataTypes.OBJECT
+DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER
 ```
 
 **`Formats`** - Output format constants:
