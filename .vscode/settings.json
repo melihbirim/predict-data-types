@@ -1,0 +1,25 @@
+{
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // Use ESLint fixes on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Turn OFF formatters on save
+  "editor.formatOnSave": false,
+
+  // Do NOT set a default formatter for JS / JS React
+  "editor.defaultFormatter": null,
+  "[javascriptreact]": {
+    "editor.defaultFormatter": null
+  },
+
+  "git.suggestSmartCommit": false,
+  "files.autoSave": "afterDelay",
+  "editor.colorDecoratorsActivatedOn": "hover",
+
+  "[php]": {
+    "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+  }
+}

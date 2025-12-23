@@ -26,7 +26,7 @@ const { infer } = require("predict-data-types");
 infer("test@example.com"); // → 'email' ✅
 infer("2024-01-01"); // → 'date' ✅
 infer("42"); // → 'number' ✅
-
+infer('11:59 PM'); // → 'time' ✅
 infer(["true", "false", "true"]);
 // → 'boolean' ✅
 
@@ -58,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 62 comprehensive test cases
+- **Battle-Tested**: 68 comprehensive test cases
 
 ## Installation
 
@@ -124,6 +124,8 @@ const actual = infer(importedData);
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `array`      | `[1, 2, 3]`                               |
 | `object`     | `{"name": "John"}`                        |
+| `time`       | `{"23:59:59": "2:30 p.m."}`                        |
+
 
 ## Usage
 
@@ -160,6 +162,8 @@ DataTypes.COLOR       // 'color'
 DataTypes.PERCENTAGE  // 'percentage'
 DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
+DataTypes.TIME        // 'time'
+
 ```
 
 ### Basic Example
@@ -189,6 +193,7 @@ const { infer, DataTypes } = require("predict-data-types");
 
 // Single value → DataType
 infer("2024-01-01"); // → 'date'
+infer("12:05 AM"); // → 'time'
 infer("test@example.com"); // → 'email'
 infer("@username"); // → 'mention'
 infer("42"); // → 'number'

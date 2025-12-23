@@ -18,7 +18,8 @@ const DataTypes = {
     COLOR: 'color',
     PERCENTAGE: 'percentage',
     CURRENCY: 'currency',
-    MENTION: 'mention'
+    MENTION: 'mention',
+    TIME: 'time'
 };
 
 /**
@@ -43,6 +44,7 @@ const PATTERNS = {
     PERCENTAGE: /^-?\d+(?:\.\d+)?%$/,
     CURRENCY: /^[$€£¥₹][\d,]+(?:\.\d{1,2})?$|^[\d,]+(?:\.\d{1,2})?[$€£¥₹]$/,
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/
+
 };
 
 // Date format patterns supported for parsing (from re-date-parser + extensions)
@@ -106,8 +108,18 @@ const DATE_FORMATS = [
  */
 function parseMonth(monthString) {
     const monthNames = [
-        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'jun',
+        'jul',
+        'aug',
+        'sep',
+        'oct',
+        'nov',
+        'dec'
     ];
     const normalized = monthString.toLowerCase().substring(0, 3);
     const monthIndex = monthNames.indexOf(normalized);
@@ -116,9 +128,9 @@ function parseMonth(monthString) {
 
 /**
  * Parse timezone offset string to minutes
- * @param {string} tzString - Timezone string (e.g., '+05:30', '-08:00', 'Z')
- * @returns {number|null} Offset in minutes or null if invalid
- */
+//  * @param {string} tzString - Timezone string (e.g., '+05:30', '-08:00', 'Z')
+//  * @returns {number|null} Offset in minutes or null if invalid
+//  */
 function parseTimezone(tzString) {
     if (tzString === 'Z' || tzString === 'z') return 0;
     const match = tzString.match(/^([+-])(\d{2}):?(\d{2})?$/);
@@ -126,7 +138,7 @@ function parseTimezone(tzString) {
     const sign = match[1] === '+' ? 1 : -1;
     const hours = parseInt(match[2], 10);
     const minutes = parseInt(match[3] || '00', 10);
-    return sign * ((hours * 60) + minutes);
+    return sign * (hours * 60 + minutes);
 }
 
 /**
@@ -136,8 +148,14 @@ function parseTimezone(tzString) {
  * @returns {Date|null} Parsed Date object or null if invalid
  */
 function parseWithFormat(input, format) {
-    const parts = input.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
-    const formatParts = format.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
+    const parts = input
+        .trim()
+        .split(/[\s\/\-\:\.TZ]+/)
+        .filter((p) => p);
+    const formatParts = format
+        .trim()
+        .split(/[\s\/\-\:\.TZ]+/)
+        .filter((p) => p);
 
     if (parts.length < 3) return null; // At minimum need year, month, day
 
@@ -197,21 +215,28 @@ function parseWithFormat(input, format) {
         }
     }
 
-    if (dateValues.year === undefined || dateValues.month === undefined || dateValues.day === undefined) {
+    if (
+        dateValues.year === undefined ||
+        dateValues.month === undefined ||
+        dateValues.day === undefined
+    ) {
         return null;
     }
 
     // Create date object (UTC if timezone specified, local otherwise)
-    const date = timezoneOffset !== null
-        ? new Date(Date.UTC(
-            dateValues.year,
-            dateValues.month,
-            dateValues.day,
-            dateValues.hour || 0,
-            dateValues.minute || 0,
-            dateValues.second || 0,
-            dateValues.millisecond || 0
-        ))
+    const date =
+    timezoneOffset !== null
+        ? new Date(
+            Date.UTC(
+                dateValues.year,
+                dateValues.month,
+                dateValues.day,
+                dateValues.hour || 0,
+                dateValues.minute || 0,
+                dateValues.second || 0,
+                dateValues.millisecond || 0
+            )
+        )
         : new Date(
             dateValues.year,
             dateValues.month,
@@ -232,9 +257,11 @@ function parseWithFormat(input, format) {
     }
 
     // Check if date rolled over (invalid date like Feb 30 becomes Mar 2)
-    if (date.getFullYear() !== dateValues.year ||
-        date.getMonth() !== dateValues.month ||
-        date.getDate() !== dateValues.day) {
+    if (
+        date.getFullYear() !== dateValues.year ||
+    date.getMonth() !== dateValues.month ||
+    date.getDate() !== dateValues.day
+    ) {
         return null;
     }
 
@@ -272,6 +299,232 @@ function isDate(value) {
     return parsedDate !== null;
 }
 
+
+// Time format patterns supported for parsing
+const TIME_FORMATS = [
+    // ISO – most specific
+    'HH:mm:ss.SSSZ',
+    'HH:mm:ssZ',
+
+    // 24-hour with milliseconds + timezone
+    'HH:mm:ss.SSS z',
+    'HH:mm:ss z',
+
+    // 12-hour with milliseconds
+    'hh:mm:ss.SSS a',
+    'hh:mm:ss.SSS A',
+
+    // 24-hour with milliseconds
+    'HH:mm:ss.SSS',
+
+    // 12-hour with seconds
+    'hh:mm:ss a',
+    'hh:mm:ss A',
+
+    // 24-hour with seconds
+    'HH:mm:ss',
+
+    // 12-hour without seconds
+    'hh:mm a',
+    'hh:mm A',
+
+    // 24-hour without seconds (smallest)
+    'HH:mm'
+];
+
+/**
+ * Parse AM/PM indicator
+ * @param {string} ampmString - 'AM', 'PM', 'am', 'pm', 'a', 'p'
+ * @returns {string|null} 'AM' or 'PM' or null if invalid
+ */
+function parseAMPM(ampmString) {
+    const normalized = ampmString.toUpperCase();
+    if (normalized === 'AM' || normalized === 'A'|| normalized === 'A.M.') {
+        return 'AM';
+    }else if (normalized === 'PM' || normalized === 'P'|| normalized === 'P.M.') {
+        return 'PM';
+    }
+    return null;
+}
+
+/**
+ * Parse a time string with a specific format
+ * @param {string} input - Time string to parse
+ * @param {string} format - Format pattern
+ * @returns {Object|null} {hours, minutes, seconds, milliseconds, timezoneOffset} or null
+ */
+function parseWithTimeFormat(input, format) {
+    const parts = [];
+    const inputTrimmed = input.trim();
+    const segments = inputTrimmed.split(' ');  // Split by space
+
+    if (segments.length === 1) {
+        // No space → time only (e.g., "14:30:45" or "14:30:45.123")
+        const timeComponents = segments[0].split(':');
+
+        if (Array.isArray(timeComponents)) {
+            timeComponents.forEach((component) => parts.push(component));
+        } else {
+            parts.push(timeComponents);
+        }
+
+    } else if (segments.length === 2) {
+        // Has space → time + timezone/ampm (e.g., "14:30:45 +05:30" or "02:30 PM")
+        const timeComponents = segments[0].trim().split(/[\s\:TZ]+/).filter(p => p);
+
+        if (Array.isArray(timeComponents)) {
+            timeComponents.forEach((component) => parts.push(component));
+        } else {
+            parts.push(timeComponents);
+        }
+
+        // Add the second segment (timezone or AM/PM)
+        parts.push(segments[1]);
+    }
+
+    if(parts.length < 2 || parts.length > 5){
+        return null;
+    }
+
+    const formatParts = format.trim().split(/[\s\:\.TZ]+/).filter(p => p);
+
+    const timeValues = {};
+    let timezoneOffset = null;
+    let partIndex = 0;
+
+    for (let i = 0; i < formatParts.length && partIndex < parts.length; i++) {
+        const formatPart = formatParts[i];
+        const part = parts[partIndex];
+
+        if (formatPart === 'HH') {
+            const hour = parseInt(part, 10);
+            if (isNaN(hour) || hour < 0 || hour > 23) return null;
+            timeValues.hour = hour;
+            partIndex++;
+        } else if (formatPart === 'hh') {
+            const hour = parseInt(part, 10);
+            if (isNaN(hour) || hour < 1 || hour > 12) return null;
+            timeValues.hour = hour;
+            partIndex++;
+        } else if (formatPart === 'mm') {
+            if (!/^[0-5][0-9]$/.test(part)) return null;
+            const minute = parseInt(part, 10);
+            if (isNaN(minute) || minute < 0 || minute >  59) return null;
+            timeValues.minute = minute;
+            partIndex++;
+        } else if (formatPart === 'ss') {
+            const second = parseInt(part, 10);
+            if (isNaN(second) || second < 0 || second > 59) return null;
+            timeValues.second = second;
+            partIndex++;
+        } else if (formatPart === 'SSS') {
+            const ms = parseInt(part, 10);
+            if (isNaN(ms) || ms < 0 || ms > 999) return null;
+            timeValues.millisecond = ms;
+            partIndex++;
+        }else if (formatPart === 'a' || formatPart === 'A') {
+            const ampm = parseAMPM(part);
+            if(!ampm){
+                return null;
+            }
+            timeValues.ampm=ampm;
+            partIndex++;
+        } else if (formatPart === 'z') {
+            timezoneOffset = parseTimezone(part);
+            if (timezoneOffset === null || timezoneOffset!=='z') return null;
+            partIndex++;
+        }
+    }
+    if (timeValues.hour === undefined || timeValues.minute === undefined) {
+        return null;
+    }
+    const time = timezoneOffset !== null
+        ? new Date(Date.UTC(
+            1970, 0, 1,  // Fixed date (epoch)
+            timeValues.hour || 0,
+            timeValues.minute || 0,
+            timeValues.second || 0,
+            timeValues.millisecond || 0
+        ))
+        : new Date(
+            1970, 0, 1,  // Fixed date
+            timeValues.hour || 0,
+            timeValues.minute || 0,
+            timeValues.second || 0,
+            timeValues.millisecond || 0
+        );
+
+
+    // Apply timezone offset if present
+    if (timezoneOffset !== null) {
+        const localTime = time.getTime();
+        const localOffset = time.getTimezoneOffset() * 60000;
+        const targetOffset = timezoneOffset * 60000;
+        const targetTime = localTime - localOffset + targetOffset;
+        time.setTime(targetTime);
+    }
+
+    // Convert 12-hour to 24-hour BEFORE creating Date
+    if (timeValues.ampm) {
+        let hour = timeValues.hour || 0;
+        if (timeValues.ampm.toUpperCase() === 'AM') {
+            if (hour === 12) {
+                hour = 0;  // 12:30 AM → 00:30
+            }
+        } else if (timeValues.ampm.toUpperCase() === 'PM') {
+            if (hour !== 12) {
+                hour += 12;  // 02:30 PM → 14:30
+            }
+            // 12:30 PM stays 12
+        }
+    }
+    // Validate time didn't roll over (e.g., 25:00 → next day)
+    if (time.getHours() !== (timeValues.hour || 0) ||
+    time.getMinutes() !== (timeValues.minute || 0) ||
+    time.getSeconds() !== (timeValues.second || 0)) {
+        return null;
+    }
+    return time;
+
+}
+
+
+
+
+/**
+ * Try to parse a time string with all supported formats
+ * @param {string} input - Time string to parse
+ * @returns {Object|null} Parsed time components or null
+ */
+function tryParseTime(input) {
+    for (const format of TIME_FORMATS) {
+        const time = parseWithTimeFormat(input, format);
+
+        if (time !== null) {
+            if(format==='HH:mm'){
+                if(!/^(\d{2}):(\d{2})$/.test(time)) return null;
+
+            }
+
+            return time;
+        }
+
+    }
+    return null;
+}
+
+/**
+ * Check if a given value represents a valid time format
+ * @param {string} value - Time string to validate
+ * @returns {boolean} True if valid time format
+ */
+function isTime(value) {
+    const trimmedValue = value.trim();
+    if (trimmedValue.length < 3) return null;
+    return tryParseTime(trimmedValue) !== null;
+}
+
+
 /**
  * Checks if a given value represents a boolean (true/false, yes/no, on/off, 1/0)
  * @param {*} val - The value to check
@@ -280,9 +533,14 @@ function isDate(value) {
 function isBoolean(val) {
     if (typeof val === 'string') {
         const lower = val.toLowerCase();
-        return lower === 'true' || lower === 'false' ||
-               lower === 'yes' || lower === 'no' ||
-               lower === 'on' || lower === 'off';
+        return (
+            lower === 'true' ||
+            lower === 'false' ||
+            lower === 'yes' ||
+            lower === 'no' ||
+            lower === 'on' ||
+            lower === 'off'
+        );
     }
     return val === 1 || val === 0;
 }
@@ -304,7 +562,6 @@ function isURL(value) {
 function isUUID(value) {
     return PATTERNS.UUID.test(value);
 }
-
 
 /**
  * Checks if a given value is a valid phone number
@@ -383,7 +640,7 @@ function tokenize(text) {
     let i = 0;
 
     while (i < textLength) {
-        // Skip whitespace at the beginning
+    // Skip whitespace at the beginning
         while (i < textLength && text[i] === ' ') {
             i++;
         }
@@ -422,7 +679,12 @@ function tokenize(text) {
             tokens.push(text.substring(tokenStart, i));
         } else {
             // Handle regular tokens
-            while (i < textLength && text[i] !== ',' && text[i] !== '{' && text[i] !== '[') {
+            while (
+                i < textLength &&
+        text[i] !== ',' &&
+        text[i] !== '{' &&
+        text[i] !== '['
+            ) {
                 i++;
             }
             tokens.push(text.substring(tokenStart, i));
@@ -448,7 +710,7 @@ function parseHeaderAndData(str, firstRowIsHeader) {
     let data = str;
 
     if (firstRowIsHeader) {
-        // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
+    // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
         const lines = str.split(/\r?\n|\r/);
         if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
             header = lines[0].split(',');
@@ -478,11 +740,17 @@ function detectFieldType(value) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
-    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-        // Numbers, but not those with leading zeros like '01'
+    } else if (
+        !isNaN(parseFloat(trimmedValue)) &&
+    isFinite(trimmedValue) &&
+    !PATTERNS.LEADING_ZERO.test(trimmedValue)
+    ) {
+    // Numbers, but not those with leading zeros like '01'
         return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
+    } else if (isTime(trimmedValue)) {
+        return 'time';
     } else if (isURL(trimmedValue)) {
         return 'url';
     } else if (isUUID(trimmedValue)) {
@@ -517,13 +785,13 @@ function processFields(data, header, firstRowIsHeader) {
     const types = {};
 
     for (let i = 0; i < data.length; i++) {
-        // When using headers, only process fields that have corresponding headers
+    // When using headers, only process fields that have corresponding headers
         if (firstRowIsHeader && i >= header.length) {
             continue; // Skip extra data fields beyond header length
         }
 
         // Handle missing header fields gracefully
-        const field = (header[i] && header[i].trim) ? header[i].trim() : `field_${i}`;
+        const field = header[i] && header[i].trim ? header[i].trim() : `field_${i}`;
         const fieldType = detectFieldType(data[i]);
         types[field] = fieldType;
     }
@@ -591,35 +859,35 @@ function predictDataTypes(str, firstRowIsHeader = false) {
 function toJSONSchema(schema) {
     // Map our data types to JSON Schema types
     const typeMap = {
-        'string': 'string',
-        'number': 'number',
-        'boolean': 'boolean',
-        'email': 'string',
-        'phone': 'string',
-        'url': 'string',
-        'uuid': 'string',
-        'date': 'string',
-        'ip': 'string',
-        'color': 'string',
-        'percentage': 'string',
-        'currency': 'string',
-        'array': 'array',
-        'object': 'object'
+        string: 'string',
+        number: 'number',
+        boolean: 'boolean',
+        email: 'string',
+        phone: 'string',
+        url: 'string',
+        uuid: 'string',
+        date: 'string',
+        ip: 'string',
+        color: 'string',
+        percentage: 'string',
+        currency: 'string',
+        array: 'array',
+        object: 'object'
     };
 
     // Map our data types to JSON Schema formats
     const formatMap = {
-        'email': 'email',
-        'url': 'uri',
-        'uuid': 'uuid',
-        'date': 'date-time',
-        'ip': 'ipv4'
+        email: 'email',
+        url: 'uri',
+        uuid: 'uuid',
+        date: 'date-time',
+        ip: 'ipv4'
     };
 
     const properties = {};
     const required = [];
 
-    Object.keys(schema).forEach(fieldName => {
+    Object.keys(schema).forEach((fieldName) => {
         const dataType = schema[fieldName];
         const jsonSchemaType = typeMap[dataType] || 'string';
 
@@ -632,13 +900,15 @@ function toJSONSchema(schema) {
 
         // Add pattern for special types without standard format
         if (dataType === 'phone') {
-            properties[fieldName].pattern = '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$';
+            properties[fieldName].pattern =
+        '^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$';
         } else if (dataType === 'color') {
             properties[fieldName].pattern = '^#(?:[0-9a-fA-F]{3}){1,2}$';
         } else if (dataType === 'percentage') {
             properties[fieldName].pattern = '^-?\\d+(?:\\.\\d+)?%$';
         } else if (dataType === 'currency') {
-            properties[fieldName].pattern = '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
+            properties[fieldName].pattern =
+        '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$';
         } else if (dataType === 'mention') {
             properties[fieldName].pattern = '^@[A-Za-z0-9][A-Za-z0-9_-]*$';
         }
@@ -683,7 +953,11 @@ function infer(input, format = Formats.NONE) {
 
         // Check if array contains objects (schema inference)
         const firstItem = input[0];
-        if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
+        if (
+            firstItem !== null &&
+      typeof firstItem === 'object' &&
+      !Array.isArray(firstItem)
+        ) {
             // Array of objects - infer schema
             const schema = inferSchemaFromObjects(input);
 
@@ -696,16 +970,28 @@ function infer(input, format = Formats.NONE) {
         }
 
         // Array of primitive values - find common type
-        const types = input.map(val => detectFieldType(String(val)));
+        const types = input.map((val) => detectFieldType(String(val)));
         const typeCounts = {};
-        types.forEach(type => {
+        types.forEach((type) => {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
-            'currency', 'percentage', 'date', 'boolean',
-            'number', 'array', 'object', 'string'
+            'uuid',
+            'email',
+            'phone',
+            'url',
+            'ip',
+            'mention',
+            'color',
+            'currency',
+            'percentage',
+            'date',
+            'boolean',
+            'number',
+            'array',
+            'object',
+            'string'
         ];
 
         for (const priorityType of typePriority) {
@@ -738,7 +1024,11 @@ function infer(input, format = Formats.NONE) {
  * @returns {Object} Schema with field names as keys and types as values
  */
 function inferSchemaFromObjects(rows) {
-    if (!rows.every(row => row !== null && typeof row === 'object' && !Array.isArray(row))) {
+    if (
+        !rows.every(
+            (row) => row !== null && typeof row === 'object' && !Array.isArray(row)
+        )
+    ) {
         throw new Error('All items must be objects');
     }
 
@@ -748,33 +1038,45 @@ function inferSchemaFromObjects(rows) {
 
     // Collect all unique field names
     const fieldNames = new Set();
-    rows.forEach(row => {
-        Object.keys(row).forEach(key => fieldNames.add(key));
+    rows.forEach((row) => {
+        Object.keys(row).forEach((key) => fieldNames.add(key));
     });
 
     // Analyze each field across all rows
     const schema = {};
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
         const values = rows
-            .map(row => row[fieldName])
-            .filter(val => val !== undefined && val !== null && val !== '');
+            .map((row) => row[fieldName])
+            .filter((val) => val !== undefined && val !== null && val !== '');
 
         if (values.length === 0) {
             schema[fieldName] = 'string';
             return;
         }
 
-        const stringValues = values.map(val => String(val));
-        const types = stringValues.map(val => detectFieldType(val));
+        const stringValues = values.map((val) => String(val));
+        const types = stringValues.map((val) => detectFieldType(val));
         const typeCounts = {};
-        types.forEach(type => {
+        types.forEach((type) => {
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
 
         const typePriority = [
-            'uuid', 'email', 'phone', 'url', 'ip', 'mention', 'color',
-            'currency', 'percentage', 'date', 'boolean',
-            'number', 'array', 'object', 'string'
+            'uuid',
+            'email',
+            'phone',
+            'url',
+            'ip',
+            'mention',
+            'color',
+            'currency',
+            'percentage',
+            'date',
+            'boolean',
+            'number',
+            'array',
+            'object',
+            'string'
         ];
 
         let finalType = 'string';
@@ -795,4 +1097,3 @@ module.exports = predictDataTypes;
 module.exports.infer = infer;
 module.exports.DataTypes = DataTypes;
 module.exports.Formats = Formats;
-
