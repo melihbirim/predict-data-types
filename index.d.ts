@@ -25,6 +25,7 @@ declare type DataType =
     | 'cron'
     | 'hashtag'
     | 'emoji';
+    | 'semver';
 
 /**
  * Data type constants for type-safe comparisons
@@ -50,6 +51,7 @@ declare const DataTypes: {
     readonly CRON: 'cron';
     readonly HASHTAG: 'hashtag';
     readonly EMOJI: 'emoji';
+    readonly SEMVER: 'semver'; // semver : semantic versioning
 };
 
 /**
