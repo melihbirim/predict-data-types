@@ -23,6 +23,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
+        expect(DataTypes.SEMVER).to.equal('semver');
 
     });
 });
@@ -306,7 +307,7 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '42abc': 'string',
-                '3.14.15': 'string',
+                '3.14.15': 'semver',
                 '--42': 'string',
                 '1e10e5': 'string'
             });
@@ -395,7 +396,7 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '256.256.256.256': 'string',
-                '192.168.1': 'string',
+                '192.168.1': 'semver',
                 'not-an-ip': 'string'
             });
         });
@@ -700,6 +701,61 @@ describe('predictDataTypes', () => {
             expect(infer('#abcdef', 'none', { preferHashtagOver3CharHex: true })).to.equal('color');
             // Long hashtag stays hashtag
             expect(infer('#developer', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+        });
+
+        it('should follow semver.org examples for valid and invalid versions', () => {
+            // Valid semver examples (from semver.org examples)
+            const valids = [
+                '1.0.0',
+                '2.0.0',
+                '1.0.0-alpha',
+                '1.0.0-alpha.1',
+                '1.0.0-0.3.7',
+                '1.0.0-x.7.z.92',
+                '1.0.0+20130313144700',
+                '1.0.0-beta+exp.sha.5114f85',
+                '1.2.3-beta.1+exp.sha.5114f85',
+                '0.0.0',
+                '999999999999999999.1.0'
+            ];
+
+            valids.forEach(v => {
+                expect(infer(v)).to.equal('semver');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('semver');
+            });
+
+            // Invalid semver examples (from semver.org guidance)
+            // Numbers that should be treated as numbers by the detector
+            const numericCases = ['1', '1.0'];
+            numericCases.forEach(v => {
+                expect(infer(v)).to.equal('number');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('number');
+            });
+
+            // Special-case: '1.0.0.0' is a valid IPv4 address and should be detected as 'ip'
+            expect(infer('1.0.0.0')).to.equal('ip');
+            const resIp = predictDataTypes('1.0.0.0');
+            if (Object.keys(resIp).length > 0) expect(resIp['1.0.0.0']).to.equal('ip');
+
+            const invalids = [
+                'v1.0.0',
+                '01.2.3', '1.02.3', '1.2.03', // leading zeros in core
+                '1.0.0-', '1.0.0-alpha..1', '1.0.0-alpha.01', // malformed prerelease
+                '1.0.0+!@#', '1.0.0+build+more'
+            ];
+
+            invalids.forEach(v => {
+                expect(infer(v)).to.equal('string');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('string');
+            });
+
+            // Arrays: all-semver -> semver; mixed -> string
+            expect(infer(['1.0.0', '2.0.0'])).to.equal('semver');
+            expect(infer(['1.0.0', '1.0'])).to.equal('string');
+            expect(infer(['1.0.0', '5.6.7', '1.0'])).to.equal('string');
         });
     });
 
