@@ -115,7 +115,7 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
     'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
-    'emoji': '^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)$'
+    'emoji': '^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})$'
 };
 
 /**
