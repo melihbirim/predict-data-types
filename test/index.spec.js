@@ -16,10 +16,14 @@ describe('DataTypes constants', () => {
         expect(DataTypes.ARRAY).to.equal('array');
         expect(DataTypes.OBJECT).to.equal('object');
         expect(DataTypes.IP).to.equal('ip');
+        expect(DataTypes.MACADDRESS).to.equal('macaddress');
         expect(DataTypes.COLOR).to.equal('color');
         expect(DataTypes.PERCENTAGE).to.equal('percentage');
         expect(DataTypes.CURRENCY).to.equal('currency');
         expect(DataTypes.MENTION).to.equal('mention');
+        expect(DataTypes.CRON).to.equal('cron');
+        expect(DataTypes.HASHTAG).to.equal('hashtag');
+        expect(DataTypes.SEMVER).to.equal('semver');
         expect(DataTypes.TIME).to.equal('time');
     });
 });
@@ -344,7 +348,7 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '42abc': 'string',
-                '3.14.15': 'string',
+                '3.14.15': 'semver',
                 '--42': 'string',
                 '1e10e5': 'string'
             });
@@ -433,8 +437,41 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '256.256.256.256': 'string',
-                '192.168.1': 'string',
+                '192.168.1': 'semver',
                 'not-an-ip': 'string'
+            });
+        });
+    });
+
+    describe('MAC address detection', () => {
+        it('should detect valid MAC addresses with colon separators', () => {
+            const text = '00:1B:63:84:45:E6, FF:FF:FF:FF:FF:FF, 00:00:00:00:00:00';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '00:1B:63:84:45:E6': 'macaddress',
+                'FF:FF:FF:FF:FF:FF': 'macaddress',
+                '00:00:00:00:00:00': 'macaddress'
+            });
+        });
+
+        it('should detect valid MAC addresses with hyphen separators', () => {
+            const text = '00-1B-63-84-45-E6, FF-FF-FF-FF-FF-FF, 00-00-00-00-00-00';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '00-1B-63-84-45-E6': 'macaddress',
+                'FF-FF-FF-FF-FF-FF': 'macaddress',
+                '00-00-00-00-00-00': 'macaddress'
+            });
+        });
+
+        it('should not detect invalid MAC addresses', () => {
+            const text = '00:1B:63:84:45, 00:1B:63:84:45:E6:FF, not-a-mac, GG:HH:II:JJ:KK:LL';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '00:1B:63:84:45': 'string',
+                '00:1B:63:84:45:E6:FF': 'string',
+                'not-a-mac': 'string',
+                'GG:HH:II:JJ:KK:LL': 'string'
             });
         });
     });
@@ -518,6 +555,31 @@ describe('predictDataTypes', () => {
             });
         });
     });
+    describe('Hashtag detection', () => {
+        it('should detect valid hashtags', () => {
+            const text = '#hello, #HelloWorld, #test123, #HELLO';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#hello': 'hashtag',
+                '#HelloWorld': 'hashtag',
+                '#test123': 'hashtag',
+                '#HELLO': 'hashtag'
+            });
+        });
+
+        it('should not detect invalid hashtags', () => {
+            const text = '#, #!, #hello-world, hello#, ##double';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '#': 'string',
+                '#!': 'string',
+                '#hello-world': 'string',
+                'hello#': 'string',
+                '##double': 'string'
+            });
+        });
+    });
+
 
     describe('infer', () => {
         const { infer } = predictDataTypes;
@@ -540,6 +602,17 @@ describe('predictDataTypes', () => {
             expect(infer('@username')).to.equal('mention');
             expect(infer('@user_name123')).to.equal('mention');
             expect(infer('@john-doe')).to.equal('mention');
+        });
+
+        it('should detect cron expressions', () => {
+            expect(infer('0 0 * * *')).to.equal('cron');
+            expect(infer('*/5 * * * *')).to.equal('cron');
+            expect(infer('0 9-17 * * 1-5')).to.equal('cron');
+            expect(infer('30 2 * * 0')).to.equal('cron');
+            expect(infer('* * * *')).to.equal('string'); // Too few fields
+            expect(infer('0 0 * * * *')).to.equal('string'); // Too many fields
+            expect(infer('60 0 * * *')).to.equal('string'); // Invalid minute
+            expect(infer('hello world')).to.equal('string'); // Not a cron
         });
 
         it('should infer type from array of values', () => {
@@ -640,6 +713,97 @@ describe('predictDataTypes', () => {
             expect(() => infer(null)).to.throw('Input cannot be null or undefined');
             expect(() => infer(undefined)).to.throw('Input cannot be null or undefined');
         });
+
+        it('should infer hashtag from single value', () => {
+            expect(infer('#hello')).to.equal('hashtag');
+        });
+
+        it('should infer hashtag from array of values', () => {
+            expect(infer(['#one', '#two', '#three'])).to.equal('hashtag');
+        });
+
+        it('should not infer hashtag when mixed with non-hashtag', () => {
+            expect(infer(['#one', 'two'])).to.equal('string');
+        });
+
+        it('should prefer hex color over hashtag for 3-char ambiguous values by default', () => {
+            expect(infer('#bad')).to.equal('color');
+            expect(infer('#ace')).to.equal('color');
+            expect(infer('#cab')).to.equal('color');
+        });
+
+        it('should prefer hashtag over 3-char hex when option is enabled', () => {
+            expect(infer('#bad', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            expect(infer('#ace', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            expect(infer('#cab', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            expect(infer('#fff', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+        });
+
+        it('should keep non-ambiguous values unchanged with option', () => {
+            // Non-hex letters stay hashtag
+            expect(infer('#zzz', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+            // Numbers start stays color (doesn't match hashtag pattern)
+            expect(infer('#123', 'none', { preferHashtagOver3CharHex: true })).to.equal('color');
+            // 6-char hex stays color
+            expect(infer('#abcdef', 'none', { preferHashtagOver3CharHex: true })).to.equal('color');
+            // Long hashtag stays hashtag
+            expect(infer('#developer', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
+        });
+
+        it('should follow semver.org examples for valid and invalid versions', () => {
+            // Valid semver examples (from semver.org examples)
+            const valids = [
+                '1.0.0',
+                '2.0.0',
+                '1.0.0-alpha',
+                '1.0.0-alpha.1',
+                '1.0.0-0.3.7',
+                '1.0.0-x.7.z.92',
+                '1.0.0+20130313144700',
+                '1.0.0-beta+exp.sha.5114f85',
+                '1.2.3-beta.1+exp.sha.5114f85',
+                '0.0.0',
+                '999999999999999999.1.0'
+            ];
+
+            valids.forEach(v => {
+                expect(infer(v)).to.equal('semver');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('semver');
+            });
+
+            // Invalid semver examples (from semver.org guidance)
+            // Numbers that should be treated as numbers by the detector
+            const numericCases = ['1', '1.0'];
+            numericCases.forEach(v => {
+                expect(infer(v)).to.equal('number');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('number');
+            });
+
+            // Special-case: '1.0.0.0' is a valid IPv4 address and should be detected as 'ip'
+            expect(infer('1.0.0.0')).to.equal('ip');
+            const resIp = predictDataTypes('1.0.0.0');
+            if (Object.keys(resIp).length > 0) expect(resIp['1.0.0.0']).to.equal('ip');
+
+            const invalids = [
+                'v1.0.0',
+                '01.2.3', '1.02.3', '1.2.03', // leading zeros in core
+                '1.0.0-', '1.0.0-alpha..1', '1.0.0-alpha.01', // malformed prerelease
+                '1.0.0+!@#', '1.0.0+build+more'
+            ];
+
+            invalids.forEach(v => {
+                expect(infer(v)).to.equal('string');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('string');
+            });
+
+            // Arrays: all-semver -> semver; mixed -> string
+            expect(infer(['1.0.0', '2.0.0'])).to.equal('semver');
+            expect(infer(['1.0.0', '1.0'])).to.equal('string');
+            expect(infer(['1.0.0', '5.6.7', '1.0'])).to.equal('string');
+        });
     });
 
     describe('JSON Schema format', () => {
@@ -729,6 +893,15 @@ describe('predictDataTypes', () => {
 
             expect(result).to.deep.equal({ name: 'string', age: 'number' });
         });
+        it('should include pattern for hashtag in JSON Schema', () => {
+            const data = { tag: '#helloWorld' };
+            const schema = infer(data, Formats.JSONSCHEMA);
+
+            expect(schema.properties.tag.type).to.equal('string');
+            expect(schema.properties.tag).to.have.property('pattern');
+        });
+
+
     });
 
 });

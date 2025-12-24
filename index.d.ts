@@ -5,45 +5,52 @@
 /**
  * Supported data types that can be predicted
  */
-declare type DataType =
-  | "string"
-  | "number"
-  | "boolean"
-  | "email"
-  | "phone"
-  | "url"
-  | "uuid"
-  | "date"
-  | "array"
-  | "object"
-  | "ip"
-  | "color"
-  | "percentage"
-  | "currency"
-  | "mention"
-  | "time";
-
+declare type DataType = 
+    | 'string'
+    | 'number' 
+    | 'boolean'
+    | 'email'
+    | 'phone'
+    | 'url'
+    | 'uuid'
+    | 'date'
+    | 'array'
+    | 'object'
+    | 'ip'
+    | 'macaddress'
+    | 'color'
+    | 'percentage'
+    | 'currency'
+    | 'mention'
+    | 'cron'
+    | 'hashtag'
+    | 'semver'
+    | 'time';
 /**
  * Data type constants for type-safe comparisons
  * @constant
  */
 declare const DataTypes: {
-  readonly STRING: "string";
-  readonly NUMBER: "number";
-  readonly BOOLEAN: "boolean";
-  readonly EMAIL: "email";
-  readonly PHONE: "phone";
-  readonly URL: "url";
-  readonly UUID: "uuid";
-  readonly DATE: "date";
-  readonly ARRAY: "array";
-  readonly OBJECT: "object";
-  readonly IP: "ip";
-  readonly COLOR: "color";
-  readonly PERCENTAGE: "percentage";
-  readonly CURRENCY: "currency";
-  readonly MENTION: "mention";
-  readonly TIME: "time";
+    readonly STRING: 'string';
+    readonly NUMBER: 'number';
+    readonly BOOLEAN: 'boolean';
+    readonly EMAIL: 'email';
+    readonly PHONE: 'phone';
+    readonly URL: 'url';
+    readonly UUID: 'uuid';
+    readonly DATE: 'date';
+    readonly ARRAY: 'array';
+    readonly OBJECT: 'object';
+    readonly IP: 'ip';
+    readonly MACADDRESS: 'macaddress';
+    readonly COLOR: 'color';
+    readonly PERCENTAGE: 'percentage';
+    readonly CURRENCY: 'currency';
+    readonly MENTION: 'mention';
+    readonly CRON: 'cron';
+    readonly HASHTAG: 'hashtag';
+    readonly SEMVER: 'semver'; // semver : semantic versioning
+    readonly TIME: 'time';
 };
 
 /**

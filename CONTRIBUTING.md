@@ -23,7 +23,14 @@ Thank you for your interest in contributing to predict-data-types! This document
 
    ```bash
    npm install
+   # This creates/updates package-lock.json with exact dependency versions
    ```
+
+   **Note about package-lock.json:**
+   - ✅ **DO commit** `package-lock.json` when it changes
+   - ✅ This ensures everyone has the exact same dependencies
+   - ✅ Keeps CI/CD builds consistent and reproducible
+   - ✅ If you add new dev dependencies, package-lock.json will update
 
 3. **Run tests to ensure everything works:**
    ```bash
@@ -59,14 +66,24 @@ We follow **Test-Driven Development** practices. Before implementing any changes
    git checkout -b feature/your-feature-name
    ```
 
-2. **Write tests first:**
+2. **Sync with latest main branch (IMPORTANT!):**
+
+   ```bash
+   # Before starting work, pull latest changes to avoid conflicts
+   git checkout main
+   git pull origin main
+   git checkout feature/your-feature-name
+   git rebase main
+   ```
+
+3. **Write tests first:**
 
    ```bash
    # Add tests to test/index.spec.js
    npm test # Should fail initially
    ```
 
-3. **Implement your changes:**
+4. **Implement your changes:**
 
    ```bash
    # Make changes to index.js or other files
@@ -74,11 +91,41 @@ We follow **Test-Driven Development** practices. Before implementing any changes
    npm run lint # Should pass
    ```
 
-4. **Commit your changes:**
+5. **Update README.md (REQUIRED!):**
+
+   Every new data type detector must update the README:
+   
+   ```bash
+   # 1. Add your data type to the DataTypes enum list
+   # 2. Update the test count (run `npm test` and count total tests)
+   # 3. Add usage example in the Examples section
+   # 4. Update the "Supported Data Types" section if needed
+   ```
+
+6. **Before submitting PR, sync again:**
+
+   ```bash
+   # Rebase on latest main to avoid merge conflicts
+   git checkout main
+   git pull origin main
+   git checkout feature/your-feature-name
+   git rebase main
+   # If conflicts occur, resolve them now
+   ```
+
+7. **Commit your changes:**
    ```bash
    git add .
    git commit -m "feat: add awesome new feature"
+   # Note: If package-lock.json changed, it will be included (this is correct!)
    ```
+
+   **What to commit:**
+   - ✅ Your code changes (index.js, tests, etc.)
+   - ✅ README.md updates
+   - ✅ package-lock.json (if you added dependencies or it was updated)
+   - ✅ TypeScript definitions (index.d.ts)
+   - ❌ Don't commit node_modules/ (already in .gitignore)
 
 ## 📝 Commit Message Guidelines
 
@@ -87,7 +134,7 @@ We follow conventional commit messages:
 - `feat:` new features
 - `fix:` bug fixes
 - `docs:` documentation changes
-- `style:` formatting, missing semi colons, etc
+- `style:` formatting, missing semi colons, etc (use this for lint fixes)
 - `refactor:` code refactoring
 - `test:` adding missing tests
 - `chore:` maintenance tasks
@@ -99,7 +146,33 @@ feat: add support for IPv4 address detection
 fix: resolve UUID pattern variable name bug
 docs: update README with better examples
 test: add edge cases for date validation
+style: fix linting issues
 ```
+
+### Automatic Linting on Commit
+
+We use **husky** and **lint-staged** to automatically fix linting issues before commits:
+
+- ✨ ESLint will **automatically run and fix** issues when you commit
+- ✅ If auto-fix works, changes are added to your commit automatically
+- ❌ If there are unfixable errors, the commit will be **blocked**
+- 🔧 Fix the errors manually and try committing again
+
+**Our code style standards:**
+- ✅ **Single quotes** (`'`) for strings - **NOT double quotes** (`"`)
+- ✅ **Semicolons** required at end of statements
+- ✅ **4-space indentation** (not 2, not tabs)
+- ✅ **No trailing spaces**
+- ✅ **Prefer const** over let/var
+- ✅ Object curly spacing: `{ foo: 'bar' }` not `{foo: 'bar'}`
+
+You can also manually fix linting:
+```bash
+npm run lint        # Check for issues
+npm run lint:fix    # Auto-fix all issues
+```
+
+💡 **Tip**: The pre-commit hook ensures code quality automatically, so you don't need to worry about formatting!
 
 ## 🔧 Code Style
 
@@ -292,10 +365,72 @@ Before submitting a PR, ensure:
 - [ ] Tests are written and passing (`npm test`)
 - [ ] Code passes linting (`npm run lint`)
 - [ ] JSDoc documentation is added for new public functions
-- [ ] README is updated if needed
+- [ ] **README.md is updated** with:
+  - [ ] Data type added to the supported types list
+  - [ ] Test count updated (see `npm test` output)
+  - [ ] Usage example added to Examples section
+- [ ] **Rebased on latest main branch** to avoid merge conflicts
 - [ ] Commit messages follow conventional format
 - [ ] No console.log statements in production code
 - [ ] Changes follow YAGNI and DRY principles
+
+## 🔄 Avoiding Merge Conflicts
+
+**Multiple contributors often work on similar files (`index.js`, `test/index.spec.js`), which causes merge conflicts.**
+
+### Best Practices to Minimize Conflicts:
+
+1. **Always work on latest code:**
+   ```bash
+   # Before starting ANY work
+   git checkout main
+   git pull origin main
+   git checkout -b feature/your-feature
+   ```
+
+2. **Regularly sync with main:**
+   ```bash
+   # While working, sync frequently (at least daily)
+   git checkout main
+   git pull origin main
+   git checkout feature/your-feature
+   git rebase main
+   ```
+
+3. **Before submitting PR:**
+   ```bash
+   # Final sync before creating PR
+   git checkout main
+   git pull origin main
+   git checkout feature/your-feature
+   git rebase main
+   # Resolve any conflicts NOW
+   git push origin feature/your-feature --force-with-lease
+   ```
+
+4. **Add functions at the END:**
+   - Add new `isXXX()` functions at the end of the file before `module.exports`
+   - Add new test cases at the end of `test/index.spec.js`
+   - This minimizes conflicts with other contributors
+
+5. **Update README.md:**
+   - Always include README updates in your PR
+   - This shows your feature is complete and documented
+   - Helps maintainers merge faster
+
+### If You Get Conflicts:
+
+```bash
+# During rebase, if conflicts occur:
+# 1. Open conflicted files
+# 2. Resolve conflicts manually
+# 3. Stage resolved files
+git add .
+# 4. Continue rebase
+git rebase --continue
+# 5. Force push (only to your feature branch!)
+git push origin feature/your-feature --force-with-lease
+```
 
 ## 📊 Performance Considerations
 
