@@ -24,7 +24,7 @@ declare type DataType =
     | 'mention'
     | 'cron'
     | 'hashtag'
-    | 'emoji';
+    | 'emoji'
     | 'filepath'
     | 'semver';
 

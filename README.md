@@ -125,7 +125,7 @@ const actual = infer(importedData);
 | `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
-| `emoji` | `😀`, `🎉`, `❤️`, `👍`, `❌`              |
+| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`              |
 | `filepath`   | `/usr/local/bin`, `C:\\Program Files\\node.exe`, `./src/index.js` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
