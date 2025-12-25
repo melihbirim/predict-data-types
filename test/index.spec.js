@@ -23,6 +23,9 @@ describe('DataTypes constants', () => {
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
+        expect(DataTypes.FILEPATH).to.equal('filepath');
+        expect(DataTypes.SEMVER).to.equal('semver');
+        expect(DataTypes.SEMVER).to.equal('semver');
 
     });
 });
@@ -306,7 +309,7 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '42abc': 'string',
-                '3.14.15': 'string',
+                '3.14.15': 'semver',
                 '--42': 'string',
                 '1e10e5': 'string'
             });
@@ -395,7 +398,7 @@ describe('predictDataTypes', () => {
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '256.256.256.256': 'string',
-                '192.168.1': 'string',
+                '192.168.1': 'semver',
                 'not-an-ip': 'string'
             });
         });
@@ -510,6 +513,27 @@ describe('predictDataTypes', () => {
                 '$ 100': 'string',
                 '100 $': 'string',
                 'dollars': 'string'
+            });
+        });
+    });
+
+    describe('File path detection', () => {
+        it('should detect unix, windows, and relative paths', () => {
+            const text = '/usr/local/bin, C:\\Program Files\\node.exe, ./src/index.js';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '/usr/local/bin': 'filepath',
+                'C:\\Program Files\\node.exe': 'filepath',
+                './src/index.js': 'filepath'
+            });
+        });
+
+        it('should not treat URLs or protocol strings as file paths', () => {
+            const text = 'http://example.com/file.txt, ftp://example.com/resource';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'http://example.com/file.txt': 'url',
+                'ftp://example.com/resource': 'string'
             });
         });
     });
@@ -701,6 +725,77 @@ describe('predictDataTypes', () => {
             // Long hashtag stays hashtag
             expect(infer('#developer', 'none', { preferHashtagOver3CharHex: true })).to.equal('hashtag');
         });
+
+        it('should infer filepath from single value and arrays', () => {
+            expect(infer('/usr/local/bin')).to.equal('filepath');
+            expect(infer(['./src/index.js', '../package.json'])).to.equal('filepath');
+        });
+
+        it('should infer filepath schema from objects', () => {
+            const schema = infer([
+                { path: '/usr/local/bin' },
+                { path: 'C:\\Program Files\\' }
+            ]);
+
+            expect(schema).to.deep.equal({
+                path: 'filepath'
+            });
+        });
+
+        it('should follow semver.org examples for valid and invalid versions', () => {
+            // Valid semver examples (from semver.org examples)
+            const valids = [
+                '1.0.0',
+                '2.0.0',
+                '1.0.0-alpha',
+                '1.0.0-alpha.1',
+                '1.0.0-0.3.7',
+                '1.0.0-x.7.z.92',
+                '1.0.0+20130313144700',
+                '1.0.0-beta+exp.sha.5114f85',
+                '1.2.3-beta.1+exp.sha.5114f85',
+                '0.0.0',
+                '999999999999999999.1.0'
+            ];
+
+            valids.forEach(v => {
+                expect(infer(v)).to.equal('semver');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('semver');
+            });
+
+            // Invalid semver examples (from semver.org guidance)
+            // Numbers that should be treated as numbers by the detector
+            const numericCases = ['1', '1.0'];
+            numericCases.forEach(v => {
+                expect(infer(v)).to.equal('number');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('number');
+            });
+
+            // Special-case: '1.0.0.0' is a valid IPv4 address and should be detected as 'ip'
+            expect(infer('1.0.0.0')).to.equal('ip');
+            const resIp = predictDataTypes('1.0.0.0');
+            if (Object.keys(resIp).length > 0) expect(resIp['1.0.0.0']).to.equal('ip');
+
+            const invalids = [
+                'v1.0.0',
+                '01.2.3', '1.02.3', '1.2.03', // leading zeros in core
+                '1.0.0-', '1.0.0-alpha..1', '1.0.0-alpha.01', // malformed prerelease
+                '1.0.0+!@#', '1.0.0+build+more'
+            ];
+
+            invalids.forEach(v => {
+                expect(infer(v)).to.equal('string');
+                const res = predictDataTypes(v);
+                if (Object.keys(res).length > 0) expect(res[v]).to.equal('string');
+            });
+
+            // Arrays: all-semver -> semver; mixed -> string
+            expect(infer(['1.0.0', '2.0.0'])).to.equal('semver');
+            expect(infer(['1.0.0', '1.0'])).to.equal('string');
+            expect(infer(['1.0.0', '5.6.7', '1.0'])).to.equal('string');
+        });
     });
 
     describe('JSON Schema format', () => {
@@ -796,6 +891,13 @@ describe('predictDataTypes', () => {
 
             expect(schema.properties.tag.type).to.equal('string');
             expect(schema.properties.tag).to.have.property('pattern');
+        });
+
+        it('should include pattern for filepath in JSON Schema', () => {
+            const schema = infer({ path: '/usr/local/bin' }, Formats.JSONSCHEMA);
+
+            expect(schema.properties.path.type).to.equal('string');
+            expect(schema.properties.path).to.have.property('pattern');
         });
 
 
