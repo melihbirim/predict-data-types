@@ -22,6 +22,7 @@ const DataTypes = {
     MENTION: 'mention',
     CRON: 'cron',
     HASHTAG: 'hashtag',
+    FILEPATH: 'filepath',
     SEMVER: 'semver'
 };
 
@@ -58,7 +59,7 @@ const PATTERNS = {
  * @constant
  */
 const TYPE_PRIORITY = [
-    'uuid', 'email', 'phone', 'url', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
+    'uuid', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
     'currency', 'percentage', 'date', 'cron', 'boolean',
     'number', 'array', 'object', 'string'
 ];
@@ -77,6 +78,7 @@ const JSON_SCHEMA_TYPE_MAP = {
     'uuid': 'string',
     'date': 'string',
     'ip': 'string',
+    'filepath': 'string',
     'semver': 'string',
     'color': 'string',
     'percentage': 'string',
@@ -111,7 +113,8 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'percentage': '^-?\\d+(?:\\.\\d+)?%$',
     'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
-    'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$'
+    'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
+    'filepath': '^(?:/[^?\n\r]+|(?:\.\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$'
 };
 
 /**
@@ -742,6 +745,8 @@ function detectFieldType(value, options = {}) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
+    } else if (isFilePath(trimmedValue)) {
+        return 'filepath';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
         return 'array';
     } else if (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) {
@@ -971,8 +976,23 @@ function inferSchemaFromObjects(rows, options = {}) {
 }
 
 /**
+ * Checks if a string matches common file path patterns (Unix abs, ./ ../ ~/ relative, Windows drive) and rejects protocol URLs.
+ * @param {string} value - Path candidate to validate
+ * @returns {boolean} True when the string looks like a supported file path
+ */
+function isFilePath(value = '') {
+    if (typeof value !== 'string') return false;
+    if (value.includes('://')) return false;
+
+    const unixAbs = /^\/[^?\n\r]+/;
+    const unixRel = /^(?:\.\.?|~)\/[^?\n\r]+/;
+    const winAbs  = /^[A-Za-z]:\\[^?\n\r]+/;
+    return unixAbs.test(value) || unixRel.test(value) || winAbs.test(value);
+}
+
+/**
  * Helper function to check if the input is a valid semantic versioning string
- * @param {String} input - The value to check
+ * @param {String} value - The value to check
  * @returns {Boolean} True if the input is a valid semantic versioning string
  */
 function isSemver(value) {
