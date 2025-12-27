@@ -729,6 +729,7 @@ function isHexColor(value) {
 function isRgbColor(value) {
     return PATTERNS.RGB_COLOR.test(value);
 }
+
 /**
  * Checks if a given value is a percentage
  * @param {string} value - The value to check
