@@ -1,6 +1,6 @@
 {
   "name": "predict-data-types",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "A lightweight, zero-dependency npm package that predicts data types for comma-separated values, including JSON objects, and validates URLs, phone numbers, email addresses, IP addresses, colors, percentages, and currency within string values.",
   "main": "index.js",
   "author": "Melih Birim",
