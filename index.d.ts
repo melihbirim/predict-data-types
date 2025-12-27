@@ -27,7 +27,8 @@ declare type DataType =
     | 'emoji'
     | 'filepath'
     | 'semver'
-    | 'time';
+    | 'time'
+    | 'isbn';
 
 /**
  * Data type constants for type-safe comparisons
@@ -56,6 +57,7 @@ declare const DataTypes: {
     readonly FILEPATH: 'filepath';
     readonly SEMVER: 'semver'; // semver : semantic versioning
     readonly TIME: 'time';
+    readonly ISBN: 'isbn';
 };
 
 /**

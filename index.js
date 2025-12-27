@@ -25,7 +25,8 @@ const DataTypes = {
     EMOJI: 'emoji',
     FILEPATH: 'filepath',
     SEMVER: 'semver',
-    TIME: 'time'
+    TIME: 'time',
+    ISBN: 'isbn'
 };
 
 /**
@@ -55,7 +56,8 @@ const PATTERNS = {
     EMOJI: /^\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*$/u,
     RGB_COLOR: /^rgba?\(\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/,
     SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
-    TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/
+    TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/,
+    ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i
 };
 
 /**
@@ -64,7 +66,7 @@ const PATTERNS = {
  * @constant
  */
 const TYPE_PRIORITY = [
-    'uuid', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
+    'uuid', 'isbn', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
     'currency', 'percentage', 'date', 'time', 'cron', 'boolean', 'emoji',
     'number', 'array', 'object', 'string'
 ];
@@ -94,6 +96,7 @@ const JSON_SCHEMA_TYPE_MAP = {
     'emoji': 'string',
     'macaddress': 'string',
     'time': 'string',
+    'isbn': 'string',
     'array': 'array',
     'object': 'object'
 };
@@ -122,7 +125,8 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
     'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
     'emoji': '^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})*$',
-    'filepath': '^(?:/[^?\n\r]+|(?:\.\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$'
+    'filepath': '^(?:/[^?\n\r]+|(?:\.\.\\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$',
+    'isbn': '^(?:ISBN(?:-1[03])?:?\\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\\s]?)?[0-9]{1,5}[-\\s]?[0-9]+[-\\s]?[0-9]+[-\\s]?[0-9X]$'
 };
 
 /**
@@ -735,6 +739,17 @@ function isPercentage(value) {
 function isCurrency(value) {
     return PATTERNS.CURRENCY.test(value);
 }
+
+/**
+ * Checks if a given value is a valid ISBN (International Standard Book Number)
+ * Supports both ISBN-10 and ISBN-13 formats with or without hyphens
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid ISBN, false otherwise
+ */
+function isISBN(value) {
+    return PATTERNS.ISBN.test(value);
+}
+
 function isHashtag(value, options = {}) {
     if (!value.startsWith('#')) return false;
 
@@ -995,12 +1010,19 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
+    } else if (isISBN(trimmedValue)) {
+        return 'isbn';
     } else if (
         !isNaN(parseFloat(trimmedValue)) &&
     isFinite(trimmedValue) &&
     !PATTERNS.LEADING_ZERO.test(trimmedValue)
     ) {
     // Numbers, but not those with leading zeros like '01'
+        // Prevent ISBN-like digit sequences from being detected as numbers
+        const digitCount = trimmedValue.replace(/\D/g, '').length;
+        if (digitCount >= 10 && digitCount <= 13) {
+            return 'string';
+        }
         return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
