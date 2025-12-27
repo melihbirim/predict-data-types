@@ -5,9 +5,9 @@
 /**
  * Supported data types that can be predicted
  */
-declare type DataType = 
+declare type DataType =
     | 'string'
-    | 'number' 
+    | 'number'
     | 'boolean'
     | 'email'
     | 'phone'
