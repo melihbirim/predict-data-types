@@ -28,7 +28,8 @@ declare type DataType =
     | 'filepath'
     | 'semver'
     | 'time'
-    | 'isbn';
+    | 'isbn'
+    | 'postcode';
 
 /**
  * Data type constants for type-safe comparisons
@@ -58,6 +59,7 @@ declare const DataTypes: {
     readonly SEMVER: 'semver'; // semver : semantic versioning
     readonly TIME: 'time';
     readonly ISBN: 'isbn';
+    readonly POSTCODE: 'postcode';
 };
 
 /**
