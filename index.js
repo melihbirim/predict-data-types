@@ -719,6 +719,13 @@ function isMACAddress(value) {
 function isHexColor(value) {
     return PATTERNS.HEX_COLOR.test(value);
 }
+
+/**
+ * Checks if a given value is a valid RGB or RGBA color
+ * Supports formats like rgb(255, 0, 0) and rgba(0, 255, 0, 0.5)
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid RGB/RGBA color, false otherwise
+ */
 function isRgbColor(value) {
     return PATTERNS.RGB_COLOR.test(value);
 }
@@ -750,6 +757,14 @@ function isISBN(value) {
     return PATTERNS.ISBN.test(value);
 }
 
+/**
+ * Checks if a given value is a valid hashtag (e.g., #hello, #OpenSource)
+ * Handles disambiguation from 3-character hex colors when option is enabled
+ * @param {string} value - The value to check
+ * @param {Object} [options={}] - Options object
+ * @param {boolean} [options.preferHashtagOver3CharHex=false] - If true, prefer hashtag interpretation for 4-char strings starting with #
+ * @returns {boolean} True if the value is a valid hashtag, false otherwise
+ */
 function isHashtag(value, options = {}) {
     if (!value.startsWith('#')) return false;
 
