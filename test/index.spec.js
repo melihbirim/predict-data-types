@@ -27,7 +27,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.FILEPATH).to.equal('filepath');
         expect(DataTypes.SEMVER).to.equal('semver');
         expect(DataTypes.SEMVER).to.equal('semver');
-
+        expect(DataTypes.TIME).to.equal('time');
     });
 });
 
@@ -60,7 +60,17 @@ describe('predictDataTypes', () => {
             '2023-01-01': 'date'
         });
     });
-
+    it('should predict data types with numbers and time',() =>{
+        const text = 'John,45,43.2,12:05,2025-01-01';
+        const types = predictDataTypes(text);
+        expect(types).to.deep.equal({
+            'John':'string',
+            '45':'number',
+            '43.2':'number',
+            '12:05':'time',
+            '2025-01-01':'date'
+        });
+    });
     it('should predict data types for strings with phone numbers', () => {
         const text = '555-555-5555, (555) 555-5555, +1 555-555-5555, invalid-phone-number';
         const types = predictDataTypes(text);
@@ -284,6 +294,37 @@ describe('predictDataTypes', () => {
                 '2023-13-32': 'string',
                 '32/13/2023': 'string',
                 'not-a-date': 'string'
+            });
+        });
+    });
+
+    describe('Time detection', () => {
+        it('should detect all 24h formats', () => {
+            const text = '14:30,9:05, 23:59:59, 0:00';
+            expect(predictDataTypes(text)).to.deep.equal({
+                '14:30': 'time','9:05': 'time', '23:59:59': 'time', '0:00': 'time'
+            });
+        });
+        it('should detect all 12h AM/PM formats', () => {
+            const text = '2:30 PM, 02:30:45 AM, 12:05, 11:59 PM, 12:00 AM, 2:30 p.m.';
+            expect(predictDataTypes(text)).to.deep.equal({
+                '2:30 PM': 'time', '02:30:45 AM': 'time', '12:05':'time',
+                '11:59 PM': 'time', '12:00 AM': 'time','2:30 p.m.':'time'
+            });
+        });
+
+        it('should detect variations with dots and timezone', () => {
+            const text = '2:30 p.m., 14:30:45Z,15:43:53 +05:30';
+            expect(predictDataTypes(text)).to.deep.equal({
+                '2:30 p.m.': 'time', '14:30:45Z': 'time', '15:43:53 +05:30':'time'
+            });
+        });
+
+        it('should reject invalid times', () => {
+            const text = '25:61, 14:70, 12:00XX, 99:99, 14:3 ,11:3 ppm, 1f.23 ,12:40 mm' ;
+            expect(predictDataTypes(text)).to.deep.equal({
+                '25:61': 'string', '14:70': 'string', '12:00XX': 'string',
+                '99:99': 'string', '14:3': 'string','11:3 ppm': 'string','1f.23':'string','12:40 mm':'string'
             });
         });
     });
@@ -575,6 +616,12 @@ describe('predictDataTypes', () => {
             expect(infer('https://example.com')).to.equal('url');
         });
 
+        it('should infer time from single values', () => {
+            expect(infer('14:30')).to.equal('time');
+            expect(infer('2:30 PM')).to.equal('time');
+            expect(infer('23:59:59')).to.equal('time');
+            expect(infer('12:05 AM')).to.equal('time');
+        });
         it('should detect social media mentions/usernames', () => {
             expect(infer('@username')).to.equal('mention');
             expect(infer('@user_name123')).to.equal('mention');

@@ -26,7 +26,7 @@ const { infer } = require("predict-data-types");
 infer("test@example.com"); // → 'email' ✅
 infer("2024-01-01"); // → 'date' ✅
 infer("42"); // → 'number' ✅
-
+infer('11:59 PM'); // → 'time' ✅
 infer(["true", "false", "true"]);
 // → 'boolean' ✅
 
@@ -44,7 +44,7 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 19+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, currency and file paths.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 19+ data types including primitives, emails, URLs, UUIDs, dates,time, IPs, colors, percentages, hashtags, mentions, currency and file paths.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
@@ -58,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 80+ comprehensive test cases
+- **Battle-Tested**: 85+ comprehensive test cases
 
 ## Installation
 
@@ -130,6 +130,7 @@ const actual = infer(importedData);
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
 | `semver`     | `0.0.0`                                |
+| `time`       | `23:59:59`, `2:30 PM`, `14:30`         |
 
 ## Usage
 
@@ -172,6 +173,7 @@ DataTypes.HASHTAG     // 'hashtag'
 DataTypes.EMOJI       // 'emoji'
 DataTypes.FILEPATH    // 'filepath'
 DataTypes.SEMVER      // 'semver'
+DataTypes.TIME        // 'time'
 ```
 
 ### Basic Example
@@ -202,6 +204,7 @@ const { infer, DataTypes } = require("predict-data-types");
 
 // Single value → DataType
 infer("2024-01-01"); // → 'date'
+infer("12:05 AM"); // → 'time'
 infer("test@example.com"); // → 'email'
 infer("@username"); // → 'mention'
 infer("42"); // → 'number'
@@ -400,7 +403,7 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
 DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG, DataTypes.FILEPATH,
-DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER
+DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER, DataTypes.TIME
 ```
 
 **`Formats`** - Output format constants:

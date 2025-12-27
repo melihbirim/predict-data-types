@@ -26,7 +26,8 @@ declare type DataType =
     | 'hashtag'
     | 'emoji'
     | 'filepath'
-    | 'semver';
+    | 'semver'
+    | 'time';
 
 /**
  * Data type constants for type-safe comparisons
@@ -54,6 +55,7 @@ declare const DataTypes: {
     readonly EMOJI: 'emoji';
     readonly FILEPATH: 'filepath';
     readonly SEMVER: 'semver'; // semver : semantic versioning
+    readonly TIME: 'time';
 };
 
 /**
@@ -119,6 +121,7 @@ declare namespace predictDataTypes {
      * const { infer } = require('predict-data-types');
      *
      * infer("2024-01-01") // → 'date'
+     * infer("11:59 PM") // → 'time'
      * infer("test@example.com") // → 'email'
      * infer("42") // → 'number'
      * ```
