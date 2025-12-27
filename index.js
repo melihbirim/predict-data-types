@@ -22,6 +22,7 @@ const DataTypes = {
     MENTION: 'mention',
     CRON: 'cron',
     HASHTAG: 'hashtag',
+    EMOJI: 'emoji',
     FILEPATH: 'filepath',
     SEMVER: 'semver'
 };
@@ -50,6 +51,7 @@ const PATTERNS = {
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
     HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    EMOJI: /^\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*$/u,
     SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
 };
 
@@ -60,7 +62,7 @@ const PATTERNS = {
  */
 const TYPE_PRIORITY = [
     'uuid', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
-    'currency', 'percentage', 'date', 'cron', 'boolean',
+    'currency', 'percentage', 'date', 'cron', 'boolean', 'emoji',
     'number', 'array', 'object', 'string'
 ];
 
@@ -86,6 +88,7 @@ const JSON_SCHEMA_TYPE_MAP = {
     'mention': 'string',
     'cron': 'string',
     'hashtag': 'string',
+    'emoji': 'string',
     'macaddress': 'string',
     'array': 'array',
     'object': 'object'
@@ -114,6 +117,7 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
     'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
+    'emoji': '^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})*$',
     'filepath': '^(?:/[^?\n\r]+|(?:\.\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$'
 };
 
@@ -605,6 +609,17 @@ function isValidCronPart(part, range) {
 
     return false;
 }
+/**
+ * Checks if a given value is a pure emoji string
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isEmoji(value) {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    return PATTERNS.EMOJI.test(trimmed);
+}
 
 /**
  * Tokenizes a string by splitting on commas while respecting quoted strings and nested objects/arrays
@@ -745,6 +760,8 @@ function detectFieldType(value, options = {}) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
+    } else if (isEmoji(trimmedValue)) {
+        return 'emoji';
     } else if (isFilePath(trimmedValue)) {
         return 'filepath';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
@@ -1003,4 +1020,3 @@ module.exports = predictDataTypes;
 module.exports.infer = infer;
 module.exports.DataTypes = DataTypes;
 module.exports.Formats = Formats;
-

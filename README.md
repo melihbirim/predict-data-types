@@ -51,7 +51,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **19 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, hashes, and file paths
+- **19 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, EMOJI hashes, and file paths
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
@@ -125,6 +125,7 @@ const actual = infer(importedData);
 | `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
+| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`              |
 | `filepath`   | `/usr/local/bin`, `C:\\Program Files\\node.exe`, `./src/index.js` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
@@ -168,6 +169,7 @@ DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
 DataTypes.CRON        // 'cron'
 DataTypes.HASHTAG     // 'hashtag'
+DataTypes.EMOJI       // 'emoji'
 DataTypes.FILEPATH    // 'filepath'
 DataTypes.SEMVER      // 'semver'
 ```

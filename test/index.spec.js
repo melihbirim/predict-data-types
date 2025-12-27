@@ -22,6 +22,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.CURRENCY).to.equal('currency');
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
+        expect(DataTypes.EMOJI).to.equal('emoji');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
         expect(DataTypes.FILEPATH).to.equal('filepath');
         expect(DataTypes.SEMVER).to.equal('semver');
@@ -902,5 +903,56 @@ describe('predictDataTypes', () => {
 
 
     });
-
+    describe('Emoji detection', () => {
+        it('should infer pure emoji as emoji', () => {
+            expect(predictDataTypes.infer('😀')).to.equal('emoji');
+            expect(predictDataTypes.infer('🎉')).to.equal('emoji');
+            expect(predictDataTypes.infer('❤️')).to.equal('emoji');
+            expect(predictDataTypes.infer('👍')).to.equal('emoji');
+            expect(predictDataTypes.infer('❌')).to.equal('emoji');
+            expect(predictDataTypes.infer('👩‍👩‍👧‍👦')).to.equal('emoji');
+        });
+        it('should infer emoji with text as string', () => {
+            expect(predictDataTypes.infer('Hello, world! 🌍')).to.equal('string');
+            expect(predictDataTypes.infer('👍 Great job!')).to.equal('string');
+            expect(predictDataTypes.infer('🎉 Happy Birthday!')).to.equal('string');
+        });
+        it('should detect multiple emoji as \'string\'', () => {
+            expect(predictDataTypes.infer('😀😀')).to.equal('string');
+            expect(predictDataTypes.infer('🎉🎉')).to.equal('string');
+            expect(predictDataTypes.infer('👍❤️')).to.equal('string');
+        });
+        it('should detect emoji around whitespace as \'emoji\'', () => {
+            expect(predictDataTypes.infer(' 🌍 ')).to.equal('emoji');
+            expect(predictDataTypes.infer(' 👍 ')).to.equal('emoji');
+            expect(predictDataTypes.infer(' 🎉 ')).to.equal('emoji');
+        });
+        it('should detect mixed emoji and symbols as \'string\'', () => {
+            expect(predictDataTypes.infer('😀!')).to.equal('string');
+            expect(predictDataTypes.infer('🎉?')).to.equal('string');
+            expect(predictDataTypes.infer('👍.')).to.equal('string');
+        });
+    });
+    describe('JSON Schema inference – Emoji', () => {
+        const { infer } = predictDataTypes;
+        it('should include emoji pattern for pure emoji values', () => {
+            const schema = infer({ emoji: '😀' }, Formats.JSONSCHEMA);
+            expect(schema.properties.emoji.type).to.equal('string');
+            expect(schema.properties.emoji).to.have.property('pattern');
+        });
+        it('should NOT include emoji pattern when emoji is mixed with text', () => {
+            const schema = infer({ value: 'Hello 🌍' }, Formats.JSONSCHEMA);
+            expect(schema.properties.value.type).to.equal('string');
+            expect(schema.properties.value).to.not.have.property('pattern');
+        });
+        it('should NOT include emoji pattern for multiple emojis', () => {
+            const schema = infer({ value: '😀😀' }, Formats.JSONSCHEMA);
+            expect(schema.properties.value.type).to.equal('string');
+            expect(schema.properties.value).to.not.have.property('pattern');
+        });
+        it('should include emoji pattern when emoji has surrounding whitespace', () => {
+            const schema = infer({ emoji: ' 👍 ' }, Formats.JSONSCHEMA);
+            expect(schema.properties.emoji).to.have.property('pattern');
+        });
+    });
 });
