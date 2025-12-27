@@ -567,6 +567,91 @@ describe('predictDataTypes', () => {
             });
         });
     });
+
+    describe('Postal code detection', () => {
+        it('should detect US ZIP codes', () => {
+            const text = '12345';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '12345': 'postcode'
+            });
+        });
+
+        it('should detect US ZIP+4 codes', () => {
+            const text = '12345-6789';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '12345-6789': 'postcode'
+            });
+        });
+
+        it('should detect UK postal codes with space', () => {
+            const text = 'SW1A 1AA, N1 1AA, KT1 1AA';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'SW1A 1AA': 'postcode',
+                'N1 1AA': 'postcode',
+                'KT1 1AA': 'postcode'
+            });
+        });
+
+        it('should detect UK postal codes without space', () => {
+            const text = 'SW1A1AA, N11AA, KT11AA';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'SW1A1AA': 'postcode',
+                'N11AA': 'postcode',
+                'KT11AA': 'postcode'
+            });
+        });
+
+        it('should detect Canadian postal codes with space', () => {
+            const text = 'M5H 2N2';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'M5H 2N2': 'postcode'
+            });
+        });
+
+        it('should detect Canadian postal codes without space', () => {
+            const text = 'M5H2N2';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'M5H2N2': 'postcode'
+            });
+        });
+
+        it('should detect French postal codes', () => {
+            const text = '75001';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '75001': 'postcode'
+            });
+        });
+
+        it('should not detect invalid postal codes', () => {
+            const text = '1234, ABCDEF, 123456789, ABC 123';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '1234': 'number',
+                'ABCDEF': 'string',
+                '123456789': 'number',
+                'ABC 123': 'string'
+            });
+        });
+
+        it('should detect multiple postal code formats', () => {
+            const text = '12345, SW1A 1AA, M5H 2N2, 12345-6789';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '12345': 'postcode',
+                'SW1A 1AA': 'postcode',
+                'M5H 2N2': 'postcode',
+                '12345-6789': 'postcode'
+            });
+        });
+    });
+
     describe('Percentage detection', () => {
         it('should detect valid percentages', () => {
             const text = '50%, 100%, 0.5%, -25%';

@@ -26,7 +26,8 @@ const DataTypes = {
     FILEPATH: 'filepath',
     SEMVER: 'semver',
     TIME: 'time',
-    ISBN: 'isbn'
+    ISBN: 'isbn',
+    POSTCODE: 'postcode'
 };
 
 /**
@@ -57,7 +58,8 @@ const PATTERNS = {
     RGB_COLOR: /^rgba?\(\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/,
     SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
     TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/,
-    ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i
+    ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i,
+    POSTAL_CODE: /^(?:\d{5}(?:-\d{4})?|[A-Z]\d[A-Z]?\s?\d[A-Z]\d|[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})$/i
 };
 
 /**
@@ -66,7 +68,7 @@ const PATTERNS = {
  * @constant
  */
 const TYPE_PRIORITY = [
-    'uuid', 'isbn', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
+    'uuid', 'isbn', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'postcode', 'mention', 'color', 'hashtag',
     'currency', 'percentage', 'date', 'time', 'cron', 'boolean', 'emoji',
     'number', 'array', 'object', 'string'
 ];
@@ -97,6 +99,7 @@ const JSON_SCHEMA_TYPE_MAP = {
     'macaddress': 'string',
     'time': 'string',
     'isbn': 'string',
+    'postcode': 'string',
     'array': 'array',
     'object': 'object'
 };
@@ -759,6 +762,20 @@ function isISBN(value) {
 }
 
 /**
+ * Checks if a given value is a valid postal/ZIP code
+ * Supports multiple international formats:
+ * - US: 12345 or 12345-6789 (ZIP or ZIP+4)
+ * - UK: SW1A 1AA, N1 1AA, KT1 1AA (with or without space)
+ * - Canada: M5H 2N2 (with or without space)
+ * - France: 75001 (5 digits)
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid postal code, false otherwise
+ */
+function isPostalCode(value) {
+    return PATTERNS.POSTAL_CODE.test(value);
+}
+
+/**
  * Checks if a given value is a valid hashtag (e.g., #hello, #OpenSource)
  * Handles disambiguation from 3-character hex colors when option is enabled
  * @param {string} value - The value to check
@@ -1028,6 +1045,8 @@ function detectFieldType(value, options = {}) {
         return 'currency';
     } else if (isISBN(trimmedValue)) {
         return 'isbn';
+    } else if (isPostalCode(trimmedValue)) {
+        return 'postcode';
     } else if (
         !isNaN(parseFloat(trimmedValue)) &&
     isFinite(trimmedValue) &&
