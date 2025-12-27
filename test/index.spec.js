@@ -26,7 +26,6 @@ describe('DataTypes constants', () => {
         expect(DataTypes.HASHTAG).to.equal('hashtag');
         expect(DataTypes.FILEPATH).to.equal('filepath');
         expect(DataTypes.SEMVER).to.equal('semver');
-        expect(DataTypes.SEMVER).to.equal('semver');
         expect(DataTypes.TIME).to.equal('time');
     });
 });
@@ -490,19 +489,38 @@ describe('predictDataTypes', () => {
                 '#ffffff': 'color'
             });
         });
-
         it('should not detect invalid hex colors', () => {
-            const text = '#GGGGGG, FF0000, #12345, #12';
+            const text = '#GGGGGG, #ZZZ, #12345, #';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '#GGGGGG': 'string',
-                'FF0000': 'string',
+                '#ZZZ': 'string',
                 '#12345': 'string',
-                '#12': 'string'
+                '#': 'string'
             });
         });
     });
+    describe('RGB color detection', () => {
+        const { infer } = predictDataTypes;
 
+        it('should detect valid RGB and RGBA colors', () => {
+            expect(infer('rgb(255, 0, 0)')).to.equal('color');
+            expect(infer('rgba(0, 255, 0, 0.5)')).to.equal('color');
+            expect(infer('rgb(128,128,128)')).to.equal('color');
+            expect(infer('rgba(255,255,255,1)')).to.equal('color');
+        });
+
+        it('should handle variations in spacing', () => {
+            expect(infer('rgb( 255 , 0 , 0 )')).to.equal('color');
+            expect(infer('rgba( 0, 0, 0, 0 )')).to.equal('color');
+        });
+
+        it('should reject out-of-range or malformed RGB strings', () => {
+            expect(infer('rgb(300, 0, 0)')).to.equal('string');
+            expect(infer('rgba(255, 0, 0, 2)')).to.equal('string');
+            expect(infer('rgb(255, 0)')).to.equal('string');
+        });
+    });
     describe('Percentage detection', () => {
         it('should detect valid percentages', () => {
             const text = '50%, 100%, 0.5%, -25%';

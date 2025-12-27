@@ -53,6 +53,7 @@ const PATTERNS = {
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
     HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
     EMOJI: /^\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*$/u,
+    RGB_COLOR: /^rgba?\(\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/,
     SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
     TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/
 };
@@ -714,7 +715,9 @@ function isMACAddress(value) {
 function isHexColor(value) {
     return PATTERNS.HEX_COLOR.test(value);
 }
-
+function isRgbColor(value) {
+    return PATTERNS.RGB_COLOR.test(value);
+}
 /**
  * Checks if a given value is a percentage
  * @param {string} value - The value to check
@@ -1022,7 +1025,7 @@ function detectFieldType(value, options = {}) {
     } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
         // When preferring hashtags, check 3-char values as hashtags first
         return 'hashtag';
-    } else if (isHexColor(trimmedValue)) {
+    } else if (isHexColor(trimmedValue) || isRgbColor(trimmedValue)) {
         return 'color';
     } else if (isHashtag(trimmedValue, options)) {
         return 'hashtag';

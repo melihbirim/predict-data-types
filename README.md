@@ -58,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 85+ comprehensive test cases
+- **Battle-Tested**: 96+ comprehensive test cases
 
 ## Installation
 
@@ -119,7 +119,7 @@ const actual = infer(importedData);
 | `date`       | `2023-12-31`, `31/12/2023`             |
 | `ip`         | `192.168.1.1`, `2001:0db8::1`          |
 | `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6` |
-| `color`      | `#FF0000`, `#fff`                      |
+| `color`      | `#FF0000`, `#fff`, `rgb(255, 0, 0)`, `rgba(0, 255, 0, 0.5)`|
 | `percentage` | `50%`, `-25%`                          |
 | `currency`   | `$100`, `€50.99`                       |
 | `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
