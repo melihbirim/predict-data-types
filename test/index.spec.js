@@ -27,6 +27,7 @@ describe('DataTypes constants', () => {
         expect(DataTypes.FILEPATH).to.equal('filepath');
         expect(DataTypes.SEMVER).to.equal('semver');
         expect(DataTypes.TIME).to.equal('time');
+        expect(DataTypes.ISBN).to.equal('isbn');
     });
 });
 
@@ -519,6 +520,51 @@ describe('predictDataTypes', () => {
             expect(infer('rgb(300, 0, 0)')).to.equal('string');
             expect(infer('rgba(255, 0, 0, 2)')).to.equal('string');
             expect(infer('rgb(255, 0)')).to.equal('string');
+        });
+    });
+    describe('ISBN detection', () => {
+        it('should detect valid ISBN-13 with hyphens', () => {
+            const text = '978-0-596-52068-7';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '978-0-596-52068-7': 'isbn'
+            });
+        });
+
+        it('should detect valid ISBN-10 with hyphens', () => {
+            const text = '0-596-52068-9';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '0-596-52068-9': 'isbn'
+            });
+        });
+
+        it('should detect ISBN without hyphens', () => {
+            const text = '9780596520687, 0596520689';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '9780596520687': 'isbn',
+                '0596520689': 'isbn'
+            });
+        });
+
+        it('should detect ISBN-10 with X checksum', () => {
+            const text = '043942089X, 155860832X';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '043942089X': 'isbn',
+                '155860832X': 'isbn'
+            });
+        });
+
+        it('should not detect invalid ISBN formats', () => {
+            const text = '123-4-567-89012-3, 12345678901, not-an-isbn';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '123-4-567-89012-3': 'string',
+                '12345678901': 'string',
+                'not-an-isbn': 'string'
+            });
         });
     });
     describe('Percentage detection', () => {

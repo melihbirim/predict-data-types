@@ -58,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 96+ comprehensive test cases
+- **Battle-Tested**: 104+ comprehensive test cases
 
 ## Installation
 
@@ -127,6 +127,7 @@ const actual = infer(importedData);
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
 | `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`              |
 | `filepath`   | `/usr/local/bin`, `C:\\Program Files\\node.exe`, `./src/index.js` |
+| `isbn`       | `978-0-596-52068-7`, `0596520689`, `043942089X` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
 | `semver`     | `0.0.0`                                |
