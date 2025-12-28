@@ -58,7 +58,7 @@ Zero-dependency package for automatic data type detection from strings, arrays, 
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 113+ comprehensive test cases
+- **Battle-Tested**: 123 comprehensive test cases
 
 ## Installation
 
@@ -133,6 +133,7 @@ const actual = infer(importedData);
 | `object`     | `{"name": "John"}`                     |
 | `semver`     | `0.0.0`                                |
 | `time`       | `23:59:59`, `2:30 PM`, `14:30`         |
+| `coordinate` | `40.7128, -74.0060`, `51.5074, -0.1278` |
 
 ## Usage
 
@@ -178,6 +179,7 @@ DataTypes.SEMVER      // 'semver'
 DataTypes.TIME        // 'time'
 DataTypes.ISBN        // 'isbn'
 DataTypes.POSTCODE    // 'postcode'
+DataTypes.COORDINATE  // 'coordinate'
 ```
 
 ### Basic Example
@@ -214,6 +216,7 @@ infer("@username"); // → 'mention'
 infer("42"); // → 'number'
 infer("#OpenSource"); // → 'hashtag'
 infer("/usr/local/bin"); // → 'filepath'
+infer("40.7128, -74.0060"); // → 'coordinate'
 infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
 
 // Ambiguous 3-char values (can be hex color or hashtag)
@@ -407,7 +410,7 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
 DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG, DataTypes.FILEPATH,
-DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER, DataTypes.TIME, DataTypes.ISBN, DataTypes.POSTCODE
+DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER, DataTypes.TIME, DataTypes.ISBN, DataTypes.POSTCODE, DataTypes.COORDINATE
 ```
 
 **`Formats`** - Output format constants:
