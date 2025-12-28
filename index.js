@@ -27,7 +27,9 @@ const DataTypes = {
     SEMVER: 'semver',
     TIME: 'time',
     ISBN: 'isbn',
-    POSTCODE: 'postcode'
+    POSTCODE: 'postcode',
+    COORDINATE: 'coordinate'
+
 };
 
 /**
@@ -59,7 +61,8 @@ const PATTERNS = {
     SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
     TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/,
     ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i,
-    POSTAL_CODE: /^(?:\d{5}(?:-\d{4})?|[A-Z]\d[A-Z]?\s?\d[A-Z]\d|[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})$/i
+    POSTAL_CODE: /^(?:\d{5}(?:-\d{4})?|[A-Z]\d[A-Z]?\s?\d[A-Z]\d|[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})$/i,
+    COORDINATE: /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/
 };
 
 /**
@@ -68,7 +71,7 @@ const PATTERNS = {
  * @constant
  */
 const TYPE_PRIORITY = [
-    'uuid', 'isbn', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'postcode', 'mention', 'color', 'hashtag',
+    'uuid', 'isbn', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'postcode', 'coordinate', 'mention', 'color', 'hashtag',
     'currency', 'percentage', 'date', 'time', 'cron', 'boolean', 'emoji',
     'number', 'array', 'object', 'string'
 ];
@@ -100,6 +103,7 @@ const JSON_SCHEMA_TYPE_MAP = {
     'time': 'string',
     'isbn': 'string',
     'postcode': 'string',
+    'coordinate': 'string',
     'array': 'array',
     'object': 'object'
 };
@@ -129,7 +133,8 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
     'emoji': '^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})*$',
     'filepath': '^(?:/[^?\n\r]+|(?:\.\.\\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$',
-    'isbn': '^(?:ISBN(?:-1[03])?:?\\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\\s]?)?[0-9]{1,5}[-\\s]?[0-9]+[-\\s]?[0-9]+[-\\s]?[0-9X]$'
+    'isbn': '^(?:ISBN(?:-1[03])?:?\\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\\s]?)?[0-9]{1,5}[-\\s]?[0-9]+[-\\s]?[0-9]+[-\\s]?[0-9X]$',
+    'coordinate': '^-?\\d+\\.?\\d*\\s*,\\s*-?\\d+\\.?\\d*$'
 };
 
 /**
@@ -776,6 +781,16 @@ function isPostalCode(value) {
 }
 
 /**
+ * Checks if a given value is a valid geographic coordinate pair (latitude, longitude)
+ * Validates that latitude is between -90 and 90, longitude between -180 and 180
+ * @param {string} value - The value to check (e.g., "40.7128, -74.0060")
+ * @returns {boolean} True if the value is a valid coordinate pair, false otherwise
+ */
+function isCoordinate(value) {
+    return PATTERNS.COORDINATE.test(value);
+}
+
+/**
  * Checks if a given value is a valid hashtag (e.g., #hello, #OpenSource)
  * Handles disambiguation from 3-character hex colors when option is enabled
  * @param {string} value - The value to check
@@ -1047,7 +1062,11 @@ function detectFieldType(value, options = {}) {
         return 'isbn';
     } else if (isPostalCode(trimmedValue)) {
         return 'postcode';
-    } else if (
+
+    }  else if (isCoordinate(trimmedValue)) {
+        return 'coordinate';
+
+    }  else if (
         !isNaN(parseFloat(trimmedValue)) &&
     isFinite(trimmedValue) &&
     !PATTERNS.LEADING_ZERO.test(trimmedValue)
@@ -1158,6 +1177,23 @@ function predictDataTypes(str, firstRowIsHeader = false) {
         return {};
     }
 
+    const trimmed = str.trim();
+
+    if (isCoordinate(trimmed)) {
+        return { [trimmed]: 'coordinate' };
+    }
+
+    const coordinateLikePattern = /^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/;
+    const threeNumberPattern = /^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
+
+    if (threeNumberPattern.test(trimmed)) {
+        return { [trimmed]: 'string' };
+    }
+
+    if (coordinateLikePattern.test(trimmed)) {
+        return { [trimmed]: 'string' };
+    }
+
     // Parse input into header and data components
     const { header, data } = parseHeaderAndData(str, firstRowIsHeader);
 
@@ -1177,6 +1213,9 @@ function predictDataTypes(str, firstRowIsHeader = false) {
     return types;
 }
 
+// Parse input i
+
+// Parse input into header and data components
 /**
  * Converts our schema format to JSON Schema
  * @param {Object} schema - Schema object with field names and types
