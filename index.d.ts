@@ -29,7 +29,8 @@ declare type DataType =
     | 'semver'
     | 'time'
     | 'isbn'
-    | 'postcode';
+    | 'postcode'
+    |'coordinate';
 
 /**
  * Data type constants for type-safe comparisons
@@ -60,6 +61,7 @@ declare const DataTypes: {
     readonly TIME: 'time';
     readonly ISBN: 'isbn';
     readonly POSTCODE: 'postcode';
+    readonly COORDINATE: 'coordinate'
 };
 
 /**

@@ -28,6 +28,10 @@ describe('DataTypes constants', () => {
         expect(DataTypes.SEMVER).to.equal('semver');
         expect(DataTypes.TIME).to.equal('time');
         expect(DataTypes.ISBN).to.equal('isbn');
+        expect(DataTypes.POSTCODE).to.equal('postcode');
+        expect(DataTypes.COORDINATE).to.equal('coordinate');
+
+
     });
 });
 
@@ -649,6 +653,68 @@ describe('predictDataTypes', () => {
                 'M5H 2N2': 'postcode',
                 '12345-6789': 'postcode'
             });
+        });
+    });
+
+    describe('Coordinate detection', () => {
+        it('should detect valid decimal degree coordinates', () => {
+            const text = '40.7128, -74.0060';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '40.7128, -74.0060': 'coordinate'
+            });
+        });
+
+        it('should detect single coordinate pairs at boundaries', () => {
+            expect(predictDataTypes('90, 180')).to.deep.equal({ '90, 180': 'coordinate' });
+            expect(predictDataTypes('-90, -180')).to.deep.equal({ '-90, -180': 'coordinate' });
+            expect(predictDataTypes('0, 0')).to.deep.equal({ '0, 0': 'coordinate' });
+        });
+
+        it('should detect coordinates with various spacing', () => {
+            expect(predictDataTypes('51.5074,-0.1278')).to.deep.equal({ '51.5074,-0.1278': 'coordinate' });
+            expect(predictDataTypes('35.6762, 139.6503')).to.deep.equal({ '35.6762, 139.6503': 'coordinate' });
+        });
+
+        it('should not detect coordinates with out-of-range latitude', () => {
+            expect(predictDataTypes('91.0, 0.0')).to.deep.equal({ '91.0, 0.0': 'string' });
+            expect(predictDataTypes('-91.0, 0.0')).to.deep.equal({ '-91.0, 0.0': 'string' });
+        });
+
+        it('should not detect coordinates with out-of-range longitude', () => {
+            expect(predictDataTypes('0.0, 181.0')).to.deep.equal({ '0.0, 181.0': 'string' });
+            expect(predictDataTypes('0.0, -181.0')).to.deep.equal({ '0.0, -181.0': 'string' });
+        });
+
+        it('should not detect single numbers as coordinates', () => {
+            const text = '40.7128';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '40.7128': 'number'
+            });
+        });
+
+        it('should not detect three numbers as coordinates', () => {
+            expect(predictDataTypes('40.7128, -74.0060, 100')).to.deep.equal({ '40.7128, -74.0060, 100': 'string' });
+        });
+    });
+
+    describe('infer - Coordinate detection', () => {
+        const { infer } = predictDataTypes;
+
+        it('should infer coordinate from valid pairs', () => {
+            expect(infer('40.7128, -74.0060')).to.equal('coordinate');
+            expect(infer('51.5074, -0.1278')).to.equal('coordinate');
+            expect(infer('0, 0')).to.equal('coordinate');
+        });
+
+        it('should infer coordinate from array of coordinates', () => {
+            expect(infer(['40.7128, -74.0060', '51.5074, -0.1278'])).to.equal('coordinate');
+        });
+
+        it('should not infer coordinate for out-of-range values', () => {
+            expect(infer('91.0, 0.0')).to.equal('string');
+            expect(infer('0.0, 181.0')).to.equal('string');
         });
     });
 
