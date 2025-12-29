@@ -23,8 +23,15 @@ const DataTypes = {
     CRON: 'cron',
     HASHTAG: 'hashtag',
     MIME: 'mime'
+
+    EMOJI: 'emoji',
     FILEPATH: 'filepath',
-    SEMVER: 'semver'
+    SEMVER: 'semver',
+    TIME: 'time',
+    ISBN: 'isbn',
+    POSTCODE: 'postcode',
+    COORDINATE: 'coordinate'
+
 };
 
 
@@ -55,6 +62,13 @@ const PATTERNS = {
     MIME: /^[a-z]+\/[a-z0-9.+-]+$/i
     SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
 
+    EMOJI: /^\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*$/u,
+    RGB_COLOR: /^rgba?\(\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/,
+    SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
+    TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/,
+    ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i,
+    POSTAL_CODE: /^(?:\d{5}(?:-\d{4})?|[A-Z]\d[A-Z]?\s?\d[A-Z]\d|[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})$/i,
+    COORDINATE: /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/
 };
 
 /**
@@ -63,8 +77,8 @@ const PATTERNS = {
  * @constant
  */
 const TYPE_PRIORITY = [
-    'uuid', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'mention', 'color', 'hashtag',
-    'currency', 'percentage', 'date', 'cron', 'boolean',
+    'uuid', 'isbn', 'email', 'phone', 'url', 'filepath', 'ip', 'semver', 'macaddress', 'postcode', 'coordinate', 'mention', 'color', 'hashtag',
+    'currency', 'percentage', 'date', 'time', 'cron', 'boolean', 'emoji',
     'number', 'array', 'object', 'string'
 ];
 
@@ -90,7 +104,12 @@ const JSON_SCHEMA_TYPE_MAP = {
     'mention': 'string',
     'cron': 'string',
     'hashtag': 'string',
+    'emoji': 'string',
     'macaddress': 'string',
+    'time': 'string',
+    'isbn': 'string',
+    'postcode': 'string',
+    'coordinate': 'string',
     'array': 'array',
     'object': 'object'
 };
@@ -118,7 +137,10 @@ const JSON_SCHEMA_PATTERN_MAP = {
     'currency': '^[$€£¥₹][\\d,]+(?:\\.\\d{1,2})?$|^[\\d,]+(?:\\.\\d{1,2})?[$€£¥₹]$',
     'mention': '^@[A-Za-z0-9][A-Za-z0-9_-]*$',
     'hashtag': '^#[A-Za-z][A-Za-z0-9_]*$',
-    'filepath': '^(?:/[^?\n\r]+|(?:\.\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$'
+    'emoji': '^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})*$',
+    'filepath': '^(?:/[^?\n\r]+|(?:\.\.\\.?|~)/[^?\n\r]+|[A-Za-z]:\\[^?\n\r]+)$',
+    'isbn': '^(?:ISBN(?:-1[03])?:?\\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\\s]?)?[0-9]{1,5}[-\\s]?[0-9]+[-\\s]?[0-9]+[-\\s]?[0-9X]$',
+    'coordinate': '^-?\\d+\\.?\\d*\\s*,\\s*-?\\d+\\.?\\d*$'
 };
 
 /**
@@ -202,8 +224,18 @@ const DATE_FORMATS = [
  */
 function parseMonth(monthString) {
     const monthNames = [
-        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'jun',
+        'jul',
+        'aug',
+        'sep',
+        'oct',
+        'nov',
+        'dec'
     ];
     const normalized = monthString.toLowerCase().substring(0, 3);
     const monthIndex = monthNames.indexOf(normalized);
@@ -222,7 +254,7 @@ function parseTimezone(tzString) {
     const sign = match[1] === '+' ? 1 : -1;
     const hours = parseInt(match[2], 10);
     const minutes = parseInt(match[3] || '00', 10);
-    return sign * ((hours * 60) + minutes);
+    return sign * (hours * 60 + minutes);
 }
 
 /**
@@ -232,8 +264,14 @@ function parseTimezone(tzString) {
  * @returns {Date|null} Parsed Date object or null if invalid
  */
 function parseWithFormat(input, format) {
-    const parts = input.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
-    const formatParts = format.trim().split(/[\s\/\-\:\.TZ]+/).filter(p => p);
+    const parts = input
+        .trim()
+        .split(/[\s\/\-\:\.TZ]+/)
+        .filter((p) => p);
+    const formatParts = format
+        .trim()
+        .split(/[\s\/\-\:\.TZ]+/)
+        .filter((p) => p);
 
     if (parts.length < 3) return null; // At minimum need year, month, day
 
@@ -293,21 +331,28 @@ function parseWithFormat(input, format) {
         }
     }
 
-    if (dateValues.year === undefined || dateValues.month === undefined || dateValues.day === undefined) {
+    if (
+        dateValues.year === undefined ||
+        dateValues.month === undefined ||
+        dateValues.day === undefined
+    ) {
         return null;
     }
 
     // Create date object (UTC if timezone specified, local otherwise)
-    const date = timezoneOffset !== null
-        ? new Date(Date.UTC(
-            dateValues.year,
-            dateValues.month,
-            dateValues.day,
-            dateValues.hour || 0,
-            dateValues.minute || 0,
-            dateValues.second || 0,
-            dateValues.millisecond || 0
-        ))
+    const date =
+    timezoneOffset !== null
+        ? new Date(
+            Date.UTC(
+                dateValues.year,
+                dateValues.month,
+                dateValues.day,
+                dateValues.hour || 0,
+                dateValues.minute || 0,
+                dateValues.second || 0,
+                dateValues.millisecond || 0
+            )
+        )
         : new Date(
             dateValues.year,
             dateValues.month,
@@ -328,9 +373,11 @@ function parseWithFormat(input, format) {
     }
 
     // Check if date rolled over (invalid date like Feb 30 becomes Mar 2)
-    if (date.getFullYear() !== dateValues.year ||
-        date.getMonth() !== dateValues.month ||
-        date.getDate() !== dateValues.day) {
+    if (
+        date.getFullYear() !== dateValues.year ||
+    date.getMonth() !== dateValues.month ||
+    date.getDate() !== dateValues.day
+    ) {
         return null;
     }
 
@@ -368,6 +415,231 @@ function isDate(value) {
     return parsedDate !== null;
 }
 
+
+// Time format patterns supported for parsing
+const TIME_FORMATS = [
+    // ISO – most specific
+    'HH:mm:ss.SSSZ',
+    'HH:mm:ssZ',
+
+    // 24-hour with milliseconds + timezone
+    'HH:mm:ss.SSS z',
+    'HH:mm:ss z',
+
+    // 12-hour with milliseconds
+    'hh:mm:ss.SSS a',
+    'hh:mm:ss.SSS A',
+
+    // 24-hour with milliseconds
+    'HH:mm:ss.SSS',
+
+    // 12-hour with seconds
+    'hh:mm:ss a',
+    'hh:mm:ss A',
+
+    // 24-hour with seconds
+    'HH:mm:ss',
+
+    // 12-hour without seconds
+    'hh:mm a',
+    'hh:mm A',
+
+    // 24-hour without seconds (smallest)
+    'HH:mm'
+];
+
+/**
+ * Parse AM/PM indicator
+ * @param {string} ampmString - 'AM', 'PM', 'am', 'pm', 'a', 'p'
+ * @returns {string|null} 'AM' or 'PM' or null if invalid
+ */
+function parseAMPM(ampmString) {
+    const normalized = ampmString.toUpperCase();
+    if (normalized === 'AM' || normalized === 'A' || normalized === 'A.M.') {
+        return 'AM';
+    } else if (normalized === 'PM' || normalized === 'P' || normalized === 'P.M.') {
+        return 'PM';
+    }
+    return null;
+}
+
+/**
+ * Parse a time string with a specific format
+ * @param {string} input - Time string to parse
+ * @param {string} format - Format pattern
+ * @returns {Object|null} {hours, minutes, seconds, milliseconds, timezoneOffset} or null
+ */
+function parseWithTimeFormat(input, format) {
+    const parts = [];
+    const inputTrimmed = input.trim();
+    const segments = inputTrimmed.split(' ');  // Split by space
+
+    if (segments.length === 1) {
+        // No space → time only (e.g., "14:30:45" or "14:30:45.123")
+        const timeComponents = segments[0].split(':');
+
+        if (Array.isArray(timeComponents)) {
+            timeComponents.forEach((component) => parts.push(component));
+        } else {
+            parts.push(timeComponents);
+        }
+
+    } else if (segments.length === 2) {
+        // Has space → time + timezone/ampm (e.g., "14:30:45 +05:30" or "02:30 PM")
+        const timeComponents = segments[0].trim().split(/[\s\:TZ]+/).filter(p => p);
+
+        if (Array.isArray(timeComponents)) {
+            timeComponents.forEach((component) => parts.push(component));
+        } else {
+            parts.push(timeComponents);
+        }
+
+        // Add the second segment (timezone or AM/PM)
+        parts.push(segments[1]);
+    }
+
+    if (parts.length < 2 || parts.length > 5) {
+        return null;
+    }
+
+    const formatParts = format.trim().split(/[\s\:\.TZ]+/).filter(p => p);
+
+    const timeValues = {};
+    let timezoneOffset = null;
+    let partIndex = 0;
+
+    for (let i = 0; i < formatParts.length && partIndex < parts.length; i++) {
+        const formatPart = formatParts[i];
+        const part = parts[partIndex];
+
+        if (formatPart === 'HH') {
+            const hour = parseInt(part, 10);
+            if (isNaN(hour) || hour < 0 || hour > 23) return null;
+            timeValues.hour = hour;
+            partIndex++;
+        } else if (formatPart === 'hh') {
+            const hour = parseInt(part, 10);
+            if (isNaN(hour) || hour < 1 || hour > 12) return null;
+            timeValues.hour = hour;
+            partIndex++;
+        } else if (formatPart === 'mm') {
+            if (!/^[0-5][0-9]$/.test(part)) return null;
+            const minute = parseInt(part, 10);
+            if (isNaN(minute) || minute < 0 || minute >  59) return null;
+            timeValues.minute = minute;
+            partIndex++;
+        } else if (formatPart === 'ss') {
+            const second = parseInt(part, 10);
+            if (isNaN(second) || second < 0 || second > 59) return null;
+            timeValues.second = second;
+            partIndex++;
+        } else if (formatPart === 'SSS') {
+            const ms = parseInt(part, 10);
+            if (isNaN(ms) || ms < 0 || ms > 999) return null;
+            timeValues.millisecond = ms;
+            partIndex++;
+        } else if (formatPart === 'a' || formatPart === 'A') {
+            const ampm = parseAMPM(part);
+            if (!ampm) {
+                return null;
+            }
+            timeValues.ampm = ampm;
+            partIndex++;
+        } else if (formatPart === 'z') {
+            timezoneOffset = parseTimezone(part);
+            if (timezoneOffset === null) return null;
+            partIndex++;
+        }
+    }
+    if (timeValues.hour === undefined || timeValues.minute === undefined) {
+        return null;
+    }
+
+    // Ensure all parts were consumed (no leftover unmatched parts)
+    if (partIndex !== parts.length) {
+        return null;
+    }
+
+    // Convert 12-hour to 24-hour BEFORE creating Date
+    let hour = timeValues.hour;
+    if (timeValues.ampm) {
+        if (timeValues.ampm.toUpperCase() === 'AM') {
+            if (hour === 12) {
+                hour = 0;  // 12:30 AM → 00:30
+            }
+        } else if (timeValues.ampm.toUpperCase() === 'PM') {
+            if (hour !== 12) {
+                hour += 12;  // 02:30 PM → 14:30
+            }
+            // 12:30 PM stays 12
+        }
+    }
+
+    const time = timezoneOffset !== null
+        ? new Date(Date.UTC(
+            1970, 0, 1,
+            hour,
+            timeValues.minute || 0,
+            timeValues.second || 0,
+            timeValues.millisecond || 0
+        ))
+        : new Date(
+            1970, 0, 1,
+            hour,
+            timeValues.minute || 0,
+            timeValues.second || 0,
+            timeValues.millisecond || 0
+        );
+
+    // Apply timezone offset if present
+    if (timezoneOffset !== null) {
+        const localTime = time.getTime();
+        const localOffset = time.getTimezoneOffset() * 60000;
+        const targetOffset = timezoneOffset * 60000;
+        const targetTime = localTime - localOffset + targetOffset;
+        time.setTime(targetTime);
+    }
+
+    // Validate time didn't roll over (e.g., 25:00 → next day)
+    if (time.getHours() !== hour ||
+        time.getMinutes() !== (timeValues.minute || 0) ||
+        time.getSeconds() !== (timeValues.second || 0)) {
+        return null;
+    }
+    return time;
+
+}
+
+
+
+
+/**
+ * Try to parse a time string with all supported formats
+ * @param {string} input - Time string to parse
+ * @returns {Object|null} Parsed time components or null
+ */
+function tryParseTime(input) {
+    for (const format of TIME_FORMATS) {
+        const time = parseWithTimeFormat(input, format);
+        if (time !== null) {
+            return time;
+        }
+    }
+    return null;
+}
+
+/**
+ * Check if a given value represents a valid time format
+ * @param {string} value - Time string to validate
+ * @returns {boolean} True if valid time format
+ */
+function isTime(value) {
+    const trimmedValue = value.trim();
+    if (trimmedValue.length < 3) return false;
+    return tryParseTime(trimmedValue) !== null;
+}
+
+
 /**
  * Checks if a given value represents a boolean (true/false, yes/no, on/off, 1/0)
  * @param {*} val - The value to check
@@ -376,9 +648,14 @@ function isDate(value) {
 function isBoolean(val) {
     if (typeof val === 'string') {
         const lower = val.toLowerCase();
-        return lower === 'true' || lower === 'false' ||
-               lower === 'yes' || lower === 'no' ||
-               lower === 'on' || lower === 'off';
+        return (
+            lower === 'true' ||
+            lower === 'false' ||
+            lower === 'yes' ||
+            lower === 'no' ||
+            lower === 'on' ||
+            lower === 'off'
+        );
     }
     return val === 1 || val === 0;
 }
@@ -400,7 +677,6 @@ function isURL(value) {
 function isUUID(value) {
     return PATTERNS.UUID.test(value);
 }
-
 
 /**
  * Checks if a given value is a valid phone number
@@ -459,6 +735,16 @@ function isHexColor(value) {
 }
 
 /**
+ * Checks if a given value is a valid RGB or RGBA color
+ * Supports formats like rgb(255, 0, 0) and rgba(0, 255, 0, 0.5)
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid RGB/RGBA color, false otherwise
+ */
+function isRgbColor(value) {
+    return PATTERNS.RGB_COLOR.test(value);
+}
+
+/**
  * Checks if a given value is a percentage
  * @param {string} value - The value to check
  * @returns {boolean} True if the value is a percentage, false otherwise
@@ -475,6 +761,49 @@ function isPercentage(value) {
 function isCurrency(value) {
     return PATTERNS.CURRENCY.test(value);
 }
+
+/**
+ * Checks if a given value is a valid ISBN (International Standard Book Number)
+ * Supports both ISBN-10 and ISBN-13 formats with or without hyphens
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid ISBN, false otherwise
+ */
+function isISBN(value) {
+    return PATTERNS.ISBN.test(value);
+}
+
+/**
+ * Checks if a given value is a valid postal/ZIP code
+ * Supports multiple international formats:
+ * - US: 12345 or 12345-6789 (ZIP or ZIP+4)
+ * - UK: SW1A 1AA, N1 1AA, KT1 1AA (with or without space)
+ * - Canada: M5H 2N2 (with or without space)
+ * - France: 75001 (5 digits)
+ * @param {string} value - The value to check
+ * @returns {boolean} True if the value is a valid postal code, false otherwise
+ */
+function isPostalCode(value) {
+    return PATTERNS.POSTAL_CODE.test(value);
+}
+
+/**
+ * Checks if a given value is a valid geographic coordinate pair (latitude, longitude)
+ * Validates that latitude is between -90 and 90, longitude between -180 and 180
+ * @param {string} value - The value to check (e.g., "40.7128, -74.0060")
+ * @returns {boolean} True if the value is a valid coordinate pair, false otherwise
+ */
+function isCoordinate(value) {
+    return PATTERNS.COORDINATE.test(value);
+}
+
+/**
+ * Checks if a given value is a valid hashtag (e.g., #hello, #OpenSource)
+ * Handles disambiguation from 3-character hex colors when option is enabled
+ * @param {string} value - The value to check
+ * @param {Object} [options={}] - Options object
+ * @param {boolean} [options.preferHashtagOver3CharHex=false] - If true, prefer hashtag interpretation for 4-char strings starting with #
+ * @returns {boolean} True if the value is a valid hashtag, false otherwise
+ */
 function isHashtag(value, options = {}) {
     if (!value.startsWith('#')) return false;
 
@@ -609,6 +938,17 @@ function isValidCronPart(part, range) {
 
     return false;
 }
+/**
+ * Checks if a given value is a pure emoji string
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isEmoji(value) {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    return PATTERNS.EMOJI.test(trimmed);
+}
 
 /**
  * Tokenizes a string by splitting on commas while respecting quoted strings and nested objects/arrays
@@ -622,7 +962,7 @@ function tokenize(text) {
     let i = 0;
 
     while (i < textLength) {
-        // Skip whitespace at the beginning
+    // Skip whitespace at the beginning
         while (i < textLength && text[i] === ' ') {
             i++;
         }
@@ -661,7 +1001,12 @@ function tokenize(text) {
             tokens.push(text.substring(tokenStart, i));
         } else {
             // Handle regular tokens
-            while (i < textLength && text[i] !== ',' && text[i] !== '{' && text[i] !== '[') {
+            while (
+                i < textLength &&
+        text[i] !== ',' &&
+        text[i] !== '{' &&
+        text[i] !== '['
+            ) {
                 i++;
             }
             tokens.push(text.substring(tokenStart, i));
@@ -687,7 +1032,7 @@ function parseHeaderAndData(str, firstRowIsHeader) {
     let data = str;
 
     if (firstRowIsHeader) {
-        // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
+    // Handle different line endings: \r\n (Windows), \n (Unix), \r (old Mac)
         const lines = str.split(/\r?\n|\r/);
         if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
             header = lines[0].split(',');
@@ -719,11 +1064,30 @@ function detectFieldType(value, options = {}) {
         return 'percentage';
     } else if (isCurrency(trimmedValue)) {
         return 'currency';
-    } else if (!isNaN(parseFloat(trimmedValue)) && isFinite(trimmedValue) && !PATTERNS.LEADING_ZERO.test(trimmedValue)) {
-        // Numbers, but not those with leading zeros like '01'
+    } else if (isISBN(trimmedValue)) {
+        return 'isbn';
+    } else if (isPostalCode(trimmedValue)) {
+        return 'postcode';
+
+    }  else if (isCoordinate(trimmedValue)) {
+        return 'coordinate';
+
+    }  else if (
+        !isNaN(parseFloat(trimmedValue)) &&
+    isFinite(trimmedValue) &&
+    !PATTERNS.LEADING_ZERO.test(trimmedValue)
+    ) {
+    // Numbers, but not those with leading zeros like '01'
+        // Prevent ISBN-like digit sequences from being detected as numbers
+        const digitCount = trimmedValue.replace(/\D/g, '').length;
+        if (digitCount >= 10 && digitCount <= 13) {
+            return 'string';
+        }
         return 'number';
     } else if (isDate(trimmedValue)) {
         return 'date';
+    } else if (isTime(trimmedValue)) {
+        return 'time';
     } else if (isURL(trimmedValue)) {
         return 'url';
     } else if (isUUID(trimmedValue)) {
@@ -745,12 +1109,14 @@ function detectFieldType(value, options = {}) {
     } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
         // When preferring hashtags, check 3-char values as hashtags first
         return 'hashtag';
-    } else if (isHexColor(trimmedValue)) {
+    } else if (isHexColor(trimmedValue) || isRgbColor(trimmedValue)) {
         return 'color';
     } else if (isHashtag(trimmedValue, options)) {
         return 'hashtag';
     } else if (isCron(trimmedValue)) {
         return 'cron';
+    } else if (isEmoji(trimmedValue)) {
+        return 'emoji';
     } else if (isFilePath(trimmedValue)) {
         return 'filepath';
     } else if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
@@ -773,13 +1139,13 @@ function processFields(data, header, firstRowIsHeader) {
     const types = {};
 
     for (let i = 0; i < data.length; i++) {
-        // When using headers, only process fields that have corresponding headers
+    // When using headers, only process fields that have corresponding headers
         if (firstRowIsHeader && i >= header.length) {
             continue; // Skip extra data fields beyond header length
         }
 
         // Handle missing header fields gracefully
-        const field = (header[i] && header[i].trim) ? header[i].trim() : `field_${i}`;
+        const field = header[i] && header[i].trim ? header[i].trim() : `field_${i}`;
         const fieldType = detectFieldType(data[i]);
         types[field] = fieldType;
     }
@@ -819,6 +1185,23 @@ function predictDataTypes(str, firstRowIsHeader = false) {
         return {};
     }
 
+    const trimmed = str.trim();
+
+    if (isCoordinate(trimmed)) {
+        return { [trimmed]: 'coordinate' };
+    }
+
+    const coordinateLikePattern = /^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/;
+    const threeNumberPattern = /^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
+
+    if (threeNumberPattern.test(trimmed)) {
+        return { [trimmed]: 'string' };
+    }
+
+    if (coordinateLikePattern.test(trimmed)) {
+        return { [trimmed]: 'string' };
+    }
+
     // Parse input into header and data components
     const { header, data } = parseHeaderAndData(str, firstRowIsHeader);
 
@@ -838,6 +1221,9 @@ function predictDataTypes(str, firstRowIsHeader = false) {
     return types;
 }
 
+// Parse input i
+
+// Parse input into header and data components
 /**
  * Converts our schema format to JSON Schema
  * @param {Object} schema - Schema object with field names and types
@@ -848,7 +1234,7 @@ function toJSONSchema(schema) {
     const properties = {};
     const required = [];
 
-    Object.keys(schema).forEach(fieldName => {
+    Object.keys(schema).forEach((fieldName) => {
         const dataType = schema[fieldName];
         const jsonSchemaType = JSON_SCHEMA_TYPE_MAP[dataType] || 'string';
 
@@ -908,7 +1294,11 @@ function infer(input, format = Formats.NONE, options = {}) {
 
         // Check if array contains objects (schema inference)
         const firstItem = input[0];
-        if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
+        if (
+            firstItem !== null &&
+      typeof firstItem === 'object' &&
+      !Array.isArray(firstItem)
+        ) {
             // Array of objects - infer schema
             const schema = inferSchemaFromObjects(input, options);
 
@@ -957,16 +1347,16 @@ function inferSchemaFromObjects(rows, options = {}) {
 
     // Collect all unique field names
     const fieldNames = new Set();
-    rows.forEach(row => {
-        Object.keys(row).forEach(key => fieldNames.add(key));
+    rows.forEach((row) => {
+        Object.keys(row).forEach((key) => fieldNames.add(key));
     });
 
     // Analyze each field across all rows
     const schema = {};
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
         const values = rows
-            .map(row => row[fieldName])
-            .filter(val => val !== undefined && val !== null && val !== '');
+            .map((row) => row[fieldName])
+            .filter((val) => val !== undefined && val !== null && val !== '');
 
         if (values.length === 0) {
             schema[fieldName] = 'string';
@@ -1009,4 +1399,3 @@ module.exports = predictDataTypes;
 module.exports.infer = infer;
 module.exports.DataTypes = DataTypes;
 module.exports.Formats = Formats;
-

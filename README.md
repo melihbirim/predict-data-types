@@ -26,7 +26,7 @@ const { infer } = require("predict-data-types");
 infer("test@example.com"); // → 'email' ✅
 infer("2024-01-01"); // → 'date' ✅
 infer("42"); // → 'number' ✅
-
+infer('11:59 PM'); // → 'time' ✅
 infer(["true", "false", "true"]);
 // → 'boolean' ✅
 
@@ -44,21 +44,21 @@ infer([
 
 ---
 
-Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 19+ data types including primitives, emails, URLs, UUIDs, dates, IPs, colors, percentages, hashtags, mentions, currency and file paths.
+Zero-dependency package for automatic data type detection from strings, arrays, and JSON objects. Detects 20+ data types including primitives, emails, URLs, UUIDs, dates, time, IPs, colors, percentages, hashtags, mentions, currency, postal codes, and file paths.
 
 > **💡 Important:** This library performs **runtime type detection** on string values, not static type checking. TypeScript is a compile-time type system for your code structure - this library analyzes actual data content at runtime. They solve completely different problems!
 
 ## Features
 
 - **Smart Type Inference**: One `infer()` function handles strings, arrays, objects, and arrays of objects
-- **19 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, hashes, and file paths
+- **20 Data Types**: Primitives plus emails, URLs, UUIDs, dates, IPs, colors, percentages, currency, hashtags, MAC addresses, mentions, CRON, emoji, postal codes, and file paths
 - **JSON Schema Generation**: Automatically generate JSON Schema from objects (compatible with Ajv, etc.)
 - **Type Constants**: Use `DataTypes` for type-safe comparisons instead of string literals
 - **CSV Support**: Parse comma-separated values with optional headers
 - **Zero Dependencies**: Completely standalone, no external packages
 - **TypeScript Support**: Full type definitions included
 - **45+ Date Formats**: Comprehensive date parsing including month names and timezones
-- **Battle-Tested**: 80+ comprehensive test cases
+- **Battle-Tested**: 123 comprehensive test cases
 
 ## Installation
 
@@ -119,13 +119,16 @@ const actual = infer(importedData);
 | `date`       | `2023-12-31`, `31/12/2023`             |
 | `ip`         | `192.168.1.1`, `2001:0db8::1`          |
 | `macaddress` | `00:1B:63:84:45:E6`, `00-1B-63-84-45-E6` |
-| `color`      | `#FF0000`, `#fff`                      |
+| `color`      | `#FF0000`, `#fff`, `rgb(255, 0, 0)`, `rgba(0, 255, 0, 0.5)`|
 | `percentage` | `50%`, `-25%`                          |
 | `currency`   | `$100`, `€50.99`                       |
 | `hashtag`    | `#hello`, `#OpenSource`, `#dev_community` |
 | `mention`    | `@username`, `@user_name123`, `@john-doe` |
 | `cron`       | `0 0 * * *`, `*/5 * * * *`, `0 9-17 * * 1-5` |
+| `emoji`      | `😀`, `🎉`, `❤️`, `👍`, `❌`              |
 | `filepath`   | `/usr/local/bin`, `C:\\Program Files\\node.exe`, `./src/index.js` |
+| `isbn`       | `978-0-596-52068-7`, `0596520689`, `043942089X` |
+| `postcode`   | `12345`, `12345-6789`, `SW1A 1AA`, `M5H 2N2`, `75001` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
 | `mime:image` | `image/png`, `image/jpeg`, `image/gif`, `image/svg+xml` |
@@ -133,6 +136,8 @@ const actual = infer(importedData);
 | `mime:text` | `text/html`, `text/plain`, `text/css`, `text/javascript` |
 | `mime:media` | `video/mp4`, `audio/mpeg` |
 | `semver`     | `0.0.0`                                |
+| `time`       | `23:59:59`, `2:30 PM`, `14:30`         |
+| `coordinate` | `40.7128, -74.0060`, `51.5074, -0.1278` |
 
 ## Usage
 
@@ -177,8 +182,13 @@ DataTypes.MIME_IMAGE        // 'mime:image'
 DataTypes.MIME_APPLICATION  // 'mime:application'
 DataTypes.MIME_TEXT         // 'mime:text'
 DataTypes.MIME_MEDIA        // 'mime:media'
+DataTypes.EMOJI       // 'emoji'
 DataTypes.FILEPATH    // 'filepath'
 DataTypes.SEMVER      // 'semver'
+DataTypes.TIME        // 'time'
+DataTypes.ISBN        // 'isbn'
+DataTypes.POSTCODE    // 'postcode'
+DataTypes.COORDINATE  // 'coordinate'
 ```
 
 ### Basic Example
@@ -213,11 +223,13 @@ const { infer, DataTypes } = require("predict-data-types");
 
 // Single value → DataType
 infer("2024-01-01"); // → 'date'
+infer("12:05 AM"); // → 'time'
 infer("test@example.com"); // → 'email'
 infer("@username"); // → 'mention'
 infer("42"); // → 'number'
 infer("#OpenSource"); // → 'hashtag'
 infer("/usr/local/bin"); // → 'filepath'
+infer("40.7128, -74.0060"); // → 'coordinate'
 infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
 // MIME types
 infer('image/png');          // 'mime:image'
@@ -420,7 +432,7 @@ infer({ tag: "#OpenSource" }, Formats.JSONSCHEMA);
 DataTypes.STRING, DataTypes.NUMBER, DataTypes.BOOLEAN, DataTypes.EMAIL,
 DataTypes.PHONE, DataTypes.URL, DataTypes.UUID, DataTypes.DATE,
 DataTypes.IP, DataTypes.COLOR, DataTypes.PERCENTAGE, DataTypes.CURRENCY, DataTypes.HASHTAG, DataTypes.FILEPATH,
-DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER
+DataTypes.ARRAY, DataTypes.OBJECT, DataTypes.SEMVER, DataTypes.TIME, DataTypes.ISBN, DataTypes.POSTCODE, DataTypes.COORDINATE
 ```
 
 **`Formats`** - Output format constants:

@@ -22,10 +22,15 @@ describe('DataTypes constants', () => {
         expect(DataTypes.CURRENCY).to.equal('currency');
         expect(DataTypes.MENTION).to.equal('mention');
         expect(DataTypes.CRON).to.equal('cron');
+        expect(DataTypes.EMOJI).to.equal('emoji');
         expect(DataTypes.HASHTAG).to.equal('hashtag');
         expect(DataTypes.FILEPATH).to.equal('filepath');
         expect(DataTypes.SEMVER).to.equal('semver');
-        expect(DataTypes.SEMVER).to.equal('semver');
+        expect(DataTypes.TIME).to.equal('time');
+        expect(DataTypes.ISBN).to.equal('isbn');
+        expect(DataTypes.POSTCODE).to.equal('postcode');
+        expect(DataTypes.COORDINATE).to.equal('coordinate');
+
 
     });
 });
@@ -59,7 +64,17 @@ describe('predictDataTypes', () => {
             '2023-01-01': 'date'
         });
     });
-
+    it('should predict data types with numbers and time',() =>{
+        const text = 'John,45,43.2,12:05,2025-01-01';
+        const types = predictDataTypes(text);
+        expect(types).to.deep.equal({
+            'John':'string',
+            '45':'number',
+            '43.2':'number',
+            '12:05':'time',
+            '2025-01-01':'date'
+        });
+    });
     it('should predict data types for strings with phone numbers', () => {
         const text = '555-555-5555, (555) 555-5555, +1 555-555-5555, invalid-phone-number';
         const types = predictDataTypes(text);
@@ -287,6 +302,37 @@ describe('predictDataTypes', () => {
         });
     });
 
+    describe('Time detection', () => {
+        it('should detect all 24h formats', () => {
+            const text = '14:30,9:05, 23:59:59, 0:00';
+            expect(predictDataTypes(text)).to.deep.equal({
+                '14:30': 'time','9:05': 'time', '23:59:59': 'time', '0:00': 'time'
+            });
+        });
+        it('should detect all 12h AM/PM formats', () => {
+            const text = '2:30 PM, 02:30:45 AM, 12:05, 11:59 PM, 12:00 AM, 2:30 p.m.';
+            expect(predictDataTypes(text)).to.deep.equal({
+                '2:30 PM': 'time', '02:30:45 AM': 'time', '12:05':'time',
+                '11:59 PM': 'time', '12:00 AM': 'time','2:30 p.m.':'time'
+            });
+        });
+
+        it('should detect variations with dots and timezone', () => {
+            const text = '2:30 p.m., 14:30:45Z,15:43:53 +05:30';
+            expect(predictDataTypes(text)).to.deep.equal({
+                '2:30 p.m.': 'time', '14:30:45Z': 'time', '15:43:53 +05:30':'time'
+            });
+        });
+
+        it('should reject invalid times', () => {
+            const text = '25:61, 14:70, 12:00XX, 99:99, 14:3 ,11:3 ppm, 1f.23 ,12:40 mm' ;
+            expect(predictDataTypes(text)).to.deep.equal({
+                '25:61': 'string', '14:70': 'string', '12:00XX': 'string',
+                '99:99': 'string', '14:3': 'string','11:3 ppm': 'string','1f.23':'string','12:40 mm':'string'
+            });
+        });
+    });
+
     // Number detection edge cases
     describe('Number detection', () => {
         it('should detect various number formats', () => {
@@ -448,16 +494,227 @@ describe('predictDataTypes', () => {
                 '#ffffff': 'color'
             });
         });
-
         it('should not detect invalid hex colors', () => {
-            const text = '#GGGGGG, FF0000, #12345, #12';
+            const text = '#GGGGGG, #ZZZ, #12345, #';
             const types = predictDataTypes(text);
             expect(types).to.deep.equal({
                 '#GGGGGG': 'string',
-                'FF0000': 'string',
+                '#ZZZ': 'string',
                 '#12345': 'string',
-                '#12': 'string'
+                '#': 'string'
             });
+        });
+    });
+    describe('RGB color detection', () => {
+        const { infer } = predictDataTypes;
+
+        it('should detect valid RGB and RGBA colors', () => {
+            expect(infer('rgb(255, 0, 0)')).to.equal('color');
+            expect(infer('rgba(0, 255, 0, 0.5)')).to.equal('color');
+            expect(infer('rgb(128,128,128)')).to.equal('color');
+            expect(infer('rgba(255,255,255,1)')).to.equal('color');
+        });
+
+        it('should handle variations in spacing', () => {
+            expect(infer('rgb( 255 , 0 , 0 )')).to.equal('color');
+            expect(infer('rgba( 0, 0, 0, 0 )')).to.equal('color');
+        });
+
+        it('should reject out-of-range or malformed RGB strings', () => {
+            expect(infer('rgb(300, 0, 0)')).to.equal('string');
+            expect(infer('rgba(255, 0, 0, 2)')).to.equal('string');
+            expect(infer('rgb(255, 0)')).to.equal('string');
+        });
+    });
+    describe('ISBN detection', () => {
+        it('should detect valid ISBN-13 with hyphens', () => {
+            const text = '978-0-596-52068-7';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '978-0-596-52068-7': 'isbn'
+            });
+        });
+
+        it('should detect valid ISBN-10 with hyphens', () => {
+            const text = '0-596-52068-9';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '0-596-52068-9': 'isbn'
+            });
+        });
+
+        it('should detect ISBN without hyphens', () => {
+            const text = '9780596520687, 0596520689';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '9780596520687': 'isbn',
+                '0596520689': 'isbn'
+            });
+        });
+
+        it('should detect ISBN-10 with X checksum', () => {
+            const text = '043942089X, 155860832X';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '043942089X': 'isbn',
+                '155860832X': 'isbn'
+            });
+        });
+
+        it('should not detect invalid ISBN formats', () => {
+            const text = '123-4-567-89012-3, 12345678901, not-an-isbn';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '123-4-567-89012-3': 'string',
+                '12345678901': 'string',
+                'not-an-isbn': 'string'
+            });
+        });
+    });
+
+    describe('Postal code detection', () => {
+        it('should detect US ZIP codes', () => {
+            const text = '12345';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '12345': 'postcode'
+            });
+        });
+
+        it('should detect US ZIP+4 codes', () => {
+            const text = '12345-6789';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '12345-6789': 'postcode'
+            });
+        });
+
+        it('should detect UK postal codes with space', () => {
+            const text = 'SW1A 1AA, N1 1AA, KT1 1AA';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'SW1A 1AA': 'postcode',
+                'N1 1AA': 'postcode',
+                'KT1 1AA': 'postcode'
+            });
+        });
+
+        it('should detect UK postal codes without space', () => {
+            const text = 'SW1A1AA, N11AA, KT11AA';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'SW1A1AA': 'postcode',
+                'N11AA': 'postcode',
+                'KT11AA': 'postcode'
+            });
+        });
+
+        it('should detect Canadian postal codes with space', () => {
+            const text = 'M5H 2N2';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'M5H 2N2': 'postcode'
+            });
+        });
+
+        it('should detect Canadian postal codes without space', () => {
+            const text = 'M5H2N2';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                'M5H2N2': 'postcode'
+            });
+        });
+
+        it('should detect French postal codes', () => {
+            const text = '75001';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '75001': 'postcode'
+            });
+        });
+
+        it('should not detect invalid postal codes', () => {
+            const text = '1234, ABCDEF, 123456789, ABC 123';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '1234': 'number',
+                'ABCDEF': 'string',
+                '123456789': 'number',
+                'ABC 123': 'string'
+            });
+        });
+
+        it('should detect multiple postal code formats', () => {
+            const text = '12345, SW1A 1AA, M5H 2N2, 12345-6789';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '12345': 'postcode',
+                'SW1A 1AA': 'postcode',
+                'M5H 2N2': 'postcode',
+                '12345-6789': 'postcode'
+            });
+        });
+    });
+
+    describe('Coordinate detection', () => {
+        it('should detect valid decimal degree coordinates', () => {
+            const text = '40.7128, -74.0060';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '40.7128, -74.0060': 'coordinate'
+            });
+        });
+
+        it('should detect single coordinate pairs at boundaries', () => {
+            expect(predictDataTypes('90, 180')).to.deep.equal({ '90, 180': 'coordinate' });
+            expect(predictDataTypes('-90, -180')).to.deep.equal({ '-90, -180': 'coordinate' });
+            expect(predictDataTypes('0, 0')).to.deep.equal({ '0, 0': 'coordinate' });
+        });
+
+        it('should detect coordinates with various spacing', () => {
+            expect(predictDataTypes('51.5074,-0.1278')).to.deep.equal({ '51.5074,-0.1278': 'coordinate' });
+            expect(predictDataTypes('35.6762, 139.6503')).to.deep.equal({ '35.6762, 139.6503': 'coordinate' });
+        });
+
+        it('should not detect coordinates with out-of-range latitude', () => {
+            expect(predictDataTypes('91.0, 0.0')).to.deep.equal({ '91.0, 0.0': 'string' });
+            expect(predictDataTypes('-91.0, 0.0')).to.deep.equal({ '-91.0, 0.0': 'string' });
+        });
+
+        it('should not detect coordinates with out-of-range longitude', () => {
+            expect(predictDataTypes('0.0, 181.0')).to.deep.equal({ '0.0, 181.0': 'string' });
+            expect(predictDataTypes('0.0, -181.0')).to.deep.equal({ '0.0, -181.0': 'string' });
+        });
+
+        it('should not detect single numbers as coordinates', () => {
+            const text = '40.7128';
+            const types = predictDataTypes(text);
+            expect(types).to.deep.equal({
+                '40.7128': 'number'
+            });
+        });
+
+        it('should not detect three numbers as coordinates', () => {
+            expect(predictDataTypes('40.7128, -74.0060, 100')).to.deep.equal({ '40.7128, -74.0060, 100': 'string' });
+        });
+    });
+
+    describe('infer - Coordinate detection', () => {
+        const { infer } = predictDataTypes;
+
+        it('should infer coordinate from valid pairs', () => {
+            expect(infer('40.7128, -74.0060')).to.equal('coordinate');
+            expect(infer('51.5074, -0.1278')).to.equal('coordinate');
+            expect(infer('0, 0')).to.equal('coordinate');
+        });
+
+        it('should infer coordinate from array of coordinates', () => {
+            expect(infer(['40.7128, -74.0060', '51.5074, -0.1278'])).to.equal('coordinate');
+        });
+
+        it('should not infer coordinate for out-of-range values', () => {
+            expect(infer('91.0, 0.0')).to.equal('string');
+            expect(infer('0.0, 181.0')).to.equal('string');
         });
     });
 
@@ -574,6 +831,12 @@ describe('predictDataTypes', () => {
             expect(infer('https://example.com')).to.equal('url');
         });
 
+        it('should infer time from single values', () => {
+            expect(infer('14:30')).to.equal('time');
+            expect(infer('2:30 PM')).to.equal('time');
+            expect(infer('23:59:59')).to.equal('time');
+            expect(infer('12:05 AM')).to.equal('time');
+        });
         it('should detect social media mentions/usernames', () => {
             expect(infer('@username')).to.equal('mention');
             expect(infer('@user_name123')).to.equal('mention');
@@ -902,5 +1165,56 @@ describe('predictDataTypes', () => {
 
 
     });
-
+    describe('Emoji detection', () => {
+        it('should infer pure emoji as emoji', () => {
+            expect(predictDataTypes.infer('😀')).to.equal('emoji');
+            expect(predictDataTypes.infer('🎉')).to.equal('emoji');
+            expect(predictDataTypes.infer('❤️')).to.equal('emoji');
+            expect(predictDataTypes.infer('👍')).to.equal('emoji');
+            expect(predictDataTypes.infer('❌')).to.equal('emoji');
+            expect(predictDataTypes.infer('👩‍👩‍👧‍👦')).to.equal('emoji');
+        });
+        it('should infer emoji with text as string', () => {
+            expect(predictDataTypes.infer('Hello, world! 🌍')).to.equal('string');
+            expect(predictDataTypes.infer('👍 Great job!')).to.equal('string');
+            expect(predictDataTypes.infer('🎉 Happy Birthday!')).to.equal('string');
+        });
+        it('should detect multiple emoji as \'string\'', () => {
+            expect(predictDataTypes.infer('😀😀')).to.equal('string');
+            expect(predictDataTypes.infer('🎉🎉')).to.equal('string');
+            expect(predictDataTypes.infer('👍❤️')).to.equal('string');
+        });
+        it('should detect emoji around whitespace as \'emoji\'', () => {
+            expect(predictDataTypes.infer(' 🌍 ')).to.equal('emoji');
+            expect(predictDataTypes.infer(' 👍 ')).to.equal('emoji');
+            expect(predictDataTypes.infer(' 🎉 ')).to.equal('emoji');
+        });
+        it('should detect mixed emoji and symbols as \'string\'', () => {
+            expect(predictDataTypes.infer('😀!')).to.equal('string');
+            expect(predictDataTypes.infer('🎉?')).to.equal('string');
+            expect(predictDataTypes.infer('👍.')).to.equal('string');
+        });
+    });
+    describe('JSON Schema inference – Emoji', () => {
+        const { infer } = predictDataTypes;
+        it('should include emoji pattern for pure emoji values', () => {
+            const schema = infer({ emoji: '😀' }, Formats.JSONSCHEMA);
+            expect(schema.properties.emoji.type).to.equal('string');
+            expect(schema.properties.emoji).to.have.property('pattern');
+        });
+        it('should NOT include emoji pattern when emoji is mixed with text', () => {
+            const schema = infer({ value: 'Hello 🌍' }, Formats.JSONSCHEMA);
+            expect(schema.properties.value.type).to.equal('string');
+            expect(schema.properties.value).to.not.have.property('pattern');
+        });
+        it('should NOT include emoji pattern for multiple emojis', () => {
+            const schema = infer({ value: '😀😀' }, Formats.JSONSCHEMA);
+            expect(schema.properties.value.type).to.equal('string');
+            expect(schema.properties.value).to.not.have.property('pattern');
+        });
+        it('should include emoji pattern when emoji has surrounding whitespace', () => {
+            const schema = infer({ emoji: ' 👍 ' }, Formats.JSONSCHEMA);
+            expect(schema.properties.emoji).to.have.property('pattern');
+        });
+    });
 });

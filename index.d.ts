@@ -5,9 +5,9 @@
 /**
  * Supported data types that can be predicted
  */
-declare type DataType = 
+declare type DataType =
     | 'string'
-    | 'number' 
+    | 'number'
     | 'boolean'
     | 'email'
     | 'phone'
@@ -24,8 +24,13 @@ declare type DataType =
     | 'mention'
     | 'cron'
     | 'hashtag'
+    | 'emoji'
     | 'filepath'
-    | 'semver';
+    | 'semver'
+    | 'time'
+    | 'isbn'
+    | 'postcode'
+    |'coordinate';
 
 /**
  * Data type constants for type-safe comparisons
@@ -50,8 +55,13 @@ declare const DataTypes: {
     readonly MENTION: 'mention';
     readonly CRON: 'cron';
     readonly HASHTAG: 'hashtag';
+    readonly EMOJI: 'emoji';
     readonly FILEPATH: 'filepath';
     readonly SEMVER: 'semver'; // semver : semantic versioning
+    readonly TIME: 'time';
+    readonly ISBN: 'isbn';
+    readonly POSTCODE: 'postcode';
+    readonly COORDINATE: 'coordinate'
 };
 
 /**
@@ -117,6 +127,7 @@ declare namespace predictDataTypes {
      * const { infer } = require('predict-data-types');
      *
      * infer("2024-01-01") // → 'date'
+     * infer("11:59 PM") // → 'time'
      * infer("test@example.com") // → 'email'
      * infer("42") // → 'number'
      * ```
