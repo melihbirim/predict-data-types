@@ -131,6 +131,10 @@ const actual = infer(importedData);
 | `postcode`   | `12345`, `12345-6789`, `SW1A 1AA`, `M5H 2N2`, `75001` |
 | `array`      | `[1, 2, 3]`                            |
 | `object`     | `{"name": "John"}`                     |
+| `mime:image` | `image/png`, `image/jpeg`, `image/gif`, `image/svg+xml` |
+| `mime:application` | `application/json`, `application/pdf`, `application/zip` |
+| `mime:text` | `text/html`, `text/plain`, `text/css`, `text/javascript` |
+| `mime:media` | `video/mp4`, `audio/mpeg` |
 | `semver`     | `0.0.0`                                |
 | `time`       | `23:59:59`, `2:30 PM`, `14:30`         |
 | `coordinate` | `40.7128, -74.0060`, `51.5074, -0.1278` |
@@ -173,6 +177,11 @@ DataTypes.CURRENCY    // 'currency'
 DataTypes.MENTION     // 'mention'
 DataTypes.CRON        // 'cron'
 DataTypes.HASHTAG     // 'hashtag'
+// MIME types
+DataTypes.MIME_IMAGE        // 'mime:image'
+DataTypes.MIME_APPLICATION  // 'mime:application'
+DataTypes.MIME_TEXT         // 'mime:text'
+DataTypes.MIME_MEDIA        // 'mime:media'
 DataTypes.EMOJI       // 'emoji'
 DataTypes.FILEPATH    // 'filepath'
 DataTypes.SEMVER      // 'semver'
@@ -196,6 +205,10 @@ console.log(types);
 //   '30': 'number',
 //   'true': 'boolean',
 //   'john@example.com': 'email',
+//   '2023-01-01': 'date'
+// 'image/png': 'mime:image',
+// 'application/json': 'mime:application',
+// 'text/html': 'mime:text',
 //   '2023-01-01': 'date',
 //   '0.0.0':'semver'
 // }
@@ -218,6 +231,15 @@ infer("#OpenSource"); // → 'hashtag'
 infer("/usr/local/bin"); // → 'filepath'
 infer("40.7128, -74.0060"); // → 'coordinate'
 infer(["#dev", "#opensource", "#community"]); // → 'hashtag'
+// MIME types
+infer('image/png');          // 'mime:image'
+infer('image/jpeg');         // 'mime:image'
+infer('application/json');   // 'mime:application'
+infer('application/pdf');    // 'mime:application'
+infer('text/html');          // 'mime:text'
+infer('text/css');           // 'mime:text'
+infer('video/mp4');          // 'mime:media'
+infer('audio/mpeg');         // 'mime:media'
 
 // Ambiguous 3-char values (can be hex color or hashtag)
 infer("#bad"); // → 'color' (default: hex takes priority)
