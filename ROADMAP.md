@@ -320,7 +320,7 @@ Easy to implement (great for first-time contributors):
 
 Medium difficulty:
 
-- ~~Geographic coordinates~~ ✅ (implemented)
+- Geographic coordinates (implemented)
 - File paths
 - RGB/RGBA colors
 - Binary/Octal/Hex numbers
