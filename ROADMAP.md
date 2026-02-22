@@ -60,11 +60,11 @@ This roadmap outlines planned features and improvements. Items are organized by 
   '2:30 PM' -> 'time'
   ```
 
-- [ ] **Geographic Coordinates**
+- [x] **Geographic Coordinates**
 
   ```javascript
-  '40.7128,-74.0060' -> 'coordinates'
-  '(40.7128, -74.0060)' -> 'coordinates'
+  '40.7128, -74.0060' -> 'coordinate'
+  '51.5074, -0.1278' -> 'coordinate'
   ```
 
 - [ ] **Duration/Time Intervals**
@@ -320,7 +320,7 @@ Easy to implement (great for first-time contributors):
 
 Medium difficulty:
 
-- Geographic coordinates
+- Geographic coordinates (implemented)
 - File paths
 - RGB/RGBA colors
 - Binary/Octal/Hex numbers
