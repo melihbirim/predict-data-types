@@ -22,6 +22,7 @@ const DataTypes = {
     MENTION: 'mention',
     CRON: 'cron',
     HASHTAG: 'hashtag',
+    MIME: 'mime',
     EMOJI: 'emoji',
     FILEPATH: 'filepath',
     SEMVER: 'semver',
@@ -31,6 +32,7 @@ const DataTypes = {
     COORDINATE: 'coordinate'
 
 };
+
 
 /**
  * Output format constants for schema generation
@@ -56,9 +58,11 @@ const PATTERNS = {
     MENTION: /^@[A-Za-z0-9][A-Za-z0-9_-]*$/,
     MAC_ADDRESS: /^(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/,
     HASHTAG: /^#[A-Za-z][A-Za-z0-9_]*$/,
+    MIME: /^[a-z]+\/[a-z0-9.+-]+$/i,
+    SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
+
     EMOJI: /^\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*$/u,
     RGB_COLOR: /^rgba?\(\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/,
-    SEMANTIC_VERSION: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/,
     TIME: /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?:\s?[APap][Mm])?$/,
     ISBN: /^(?:ISBN(?:-1[03])?:?\s)?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)(?:97[89][-\s]?)?[0-9]{1,5}[-\s]?[0-9]+[-\s]?[0-9]+[-\s]?[0-9X]$/i,
     POSTAL_CODE: /^(?:\d{5}(?:-\d{4})?|[A-Z]\d[A-Z]?\s?\d[A-Z]\d|[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})$/i,
@@ -1096,6 +1100,8 @@ function detectFieldType(value, options = {}) {
         return 'phone';
     } else if (isEmail(trimmedValue)) {
         return 'email';
+    } else if (PATTERNS.MIME.test(trimmedValue)) {
+        return 'mime';
     } else if (isMention(trimmedValue)) {
         return 'mention';
     } else if (options.preferHashtagOver3CharHex && trimmedValue.length === 4 && isHashtag(trimmedValue, options)) {
